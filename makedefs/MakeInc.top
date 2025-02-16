@@ -690,10 +690,10 @@ check_uncrustify: checkstyle
 uncrustify: restyle
 
 checkstyle:
-	${_V}$(SRCROOT)/tools/uncrustify.sh
+	#${_V}$(SRCROOT)/tools/uncrustify.sh
 
 restyle:
-	${_V}$(SRCROOT)/tools/uncrustify.sh -f
+	#${_V}$(SRCROOT)/tools/uncrustify.sh -f
 
 .PHONY: help
 

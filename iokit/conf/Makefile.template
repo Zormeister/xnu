@@ -45,6 +45,7 @@ CFLAGS_DEBUG += -DIOASSERT=1
 IOUserClient.cpo_CXXWARNFLAGS_ADD += -Wno-missing-prototypes
 IOKitDebug.cpo_CXXWARNFLAGS_ADD += -Wno-missing-prototypes
 IOKitBSDInit.cpo_CXXWARNFLAGS_ADD += -Wno-missing-prototypes -Wno-documentation
+IODMACommand.iig.cpo_CXXWARNFLAGS_ADD += -Wno-duplicate-decl-specifier
 IOPMrootDomain.cpo_CXXWARNFLAGS_ADD += -Wno-missing-prototypes
 
 #

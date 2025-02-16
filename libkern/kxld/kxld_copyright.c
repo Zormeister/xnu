@@ -49,6 +49,9 @@
 
 #define kCopyrightToken "Copyright © "
 #define kRightsToken " Apple Inc. All rights reserved."
+#define kRightsTokenAlt " PureDarwin Project. All rights reserved."
+// me when
+#define kRightsTokenAltAlt " Zormeister. All rights reserved."
 
 /******************************************************************************
 * Globals
@@ -269,6 +272,12 @@ kxld_validate_copyright_string(const char *str)
 
 	copyright = kxld_strstr(str, kCopyrightToken);
 	rights = kxld_strstr(str, kRightsToken);
+    if (!rights) {
+        rights = kxld_strstr(str, kRightsTokenAlt);
+        if (!rights) {
+            rights = kxld_strstr(str, kRightsTokenAltAlt);
+        }
+    }
 
 	if (!copyright || !rights || copyright > rights) {
 		goto finish;

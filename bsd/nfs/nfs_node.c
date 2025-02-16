@@ -952,8 +952,6 @@ nfs_vnop_reclaim(
 		if ((np->n_openflags & N_DELEG_MASK) && !force) {
 			/* try to return the delegation */
 			np->n_openflags &= ~N_DELEG_MASK;
-			nfs4_delegreturn_rpc(nmp, np->n_fhp, np->n_fhsize, &np->n_dstateid,
-			    R_RECOVER, vfs_context_thread(ctx), vfs_context_ucred(ctx));
 		}
 		if (np->n_attrdirfh) {
 			FREE(np->n_attrdirfh, M_TEMP);

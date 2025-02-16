@@ -252,7 +252,7 @@ static void
 do_cwas(i386_cpu_info_t *cpuinfo, boolean_t on_slave)
 {
 	extern int force_thread_policy_tecs;
-	cwa_classifier_e wa_reqd;
+	//cwa_classifier_e wa_reqd;
 
 	/*
 	 * Workaround for reclaiming perf counter 3 due to TSX memory ordering erratum.

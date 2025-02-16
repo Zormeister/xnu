@@ -69,6 +69,7 @@
 #include <net/if_types.h>
 #include <net/if_ipsec.h>
 #include <net/if_llreach.h>
+#include <net/if_vlan_var.h>
 #include <net/if_utun.h>
 #include <net/kpi_interfacefilter.h>
 #include <net/classq/classq.h>

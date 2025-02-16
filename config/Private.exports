@@ -652,3 +652,6 @@ __Block_tryRetain
 __Block_use_RR2
 __Block_use_stret
 _IOPMRootDomainGetWillShutdown
+_pmap_in_ppl
+_pmap_free_reserved_ppl_page
+_pmap_claim_reserved_ppl_page

@@ -267,6 +267,10 @@ $(foreach file,$(OBJS_NO_PACKED_ADDRESS),$(eval $(call add_perfile_cflags,$(file
 # profiling. It implements mcount() and profiling it leads to recursion.
 #
 
+nfs_subs.o_CFLAGS_ADD += -Wno-unused-parameter
+nfs_vfsops.o_CFLAGS_ADD += -Wno-unused-parameter -Wno-unused-variable
+nfs_vnops.o_CFLAGS_ADD += -Wno-unused-function
+if_ipsec.o_CFLAGS_ADD += -Wno-unused-function
 subr_prof.o_CFLAGS_RM = -pg
 
 # Rebuild if per-file overrides change

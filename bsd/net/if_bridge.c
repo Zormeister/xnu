@@ -139,6 +139,7 @@
 #include <net/if_types.h>
 #include <net/if_var.h>
 #include <net/if_media.h>
+#include <net/pfvar.h>
 #include <net/net_api_stats.h>
 #include <net/pfvar.h>
 

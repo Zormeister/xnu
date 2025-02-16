@@ -494,14 +494,14 @@ is_xeon_sp(uint8_t platid)
 	if (platid != PLATID_MAYBE_XEON_SP) {
 		return 0;
 	}
-	boolean_t intrs = ml_set_interrupts_enabled(FALSE);
-	outl(cfgAdr, XeonCapID5);
-	uint32_t cap5reg = inl(cfgDat);
-	ml_set_interrupts_enabled(intrs);
-	/* Read from PCI config space 1:30:3:0x98 [bits 13:9] */
-	if (bitfield32(cap5reg, 13, 9) == 3) {
-		return 1;
-	}
+	//boolean_t intrs = ml_set_interrupts_enabled(FALSE);
+	//outl(cfgAdr, XeonCapID5);
+	//uint32_t cap5reg = inl(cfgDat);
+	//ml_set_interrupts_enabled(intrs);
+	///* Read from PCI config space 1:30:3:0x98 [bits 13:9] */
+	//if (bitfield32(cap5reg, 13, 9) == 3) {
+	//	return 1;
+	//}
 	return 0;
 }
 
