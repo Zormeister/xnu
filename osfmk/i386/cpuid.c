@@ -302,6 +302,20 @@ cpuid_do_was(void)
 	do_cwas(cpuid_info(), TRUE);
 }
 
+static uint32_t
+cpuid_get_cpuid_cache_leaf( i386_cpu_info_t * info_p )
+{
+	switch (info_p->cpu_vendor)
+	{
+		case CPU_VENDOR_INTEL:
+			return 0x00000004;
+		case CPU_VENDOR_AMD:
+			return 0x8000001D;
+		default:
+			panic("");
+	}
+}
+
 /* this function is Intel-specific */
 static void
 cpuid_set_cache_info( i386_cpu_info_t * info_p )
@@ -365,10 +379,10 @@ cpuid_set_cache_info( i386_cpu_info_t * info_p )
 		uint32_t        cache_partitions;
 		uint32_t        colors;
 
-		reg[eax] = 4;           /* cpuid request 4 */
+		reg[eax] = cpuid_get_cpuid_cache_leaf(info_p);           /* cpuid request 4 or 8000001D */
 		reg[ecx] = index;       /* index starting at 0 */
 		cpuid(reg);
-		DBG("cpuid(4) index=%d eax=0x%x\n", index, reg[eax]);
+		DBG("cpuid(%x) index=%d eax=0x%x\n", cpuid_get_cpuid_cache_leaf(info_p), index, reg[eax]);
 		cache_type = bitfield32(reg[eax], 4, 0);
 		if (cache_type == 0) {
 			break;          /* no more caches */
@@ -564,6 +578,18 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 	bcopy((char *)&reg[ecx], &info_p->cpuid_vendor[8], 4);
 	bcopy((char *)&reg[edx], &info_p->cpuid_vendor[4], 4);
 	info_p->cpuid_vendor[12] = 0;
+
+	/* get our CPU vendor values here. */
+	/* hoping that this data is set early enough. */
+	if ((strncmp(CPUID_VID_INTEL, info_p->cpuid_vendor,
+	    min(strlen(CPUID_STRING_UNKNOWN) + 1,
+	    sizeof(info_p->cpuid_vendor)))) == 0) {
+		info_p->cpu_vendor = CPU_VENDOR_INTEL;
+	} else if ((strncmp(CPUID_VID_AMD, info_p->cpuid_vendor,
+	    min(strlen(CPUID_STRING_UNKNOWN) + 1,
+	    sizeof(info_p->cpuid_vendor)))) == 0) {
+		info_p->cpu_vendor = CPU_VENDOR_AMD;
+	}
 
 	/* get extended cpuid results */
 	cpuid_fn(0x80000000, reg);
@@ -834,7 +860,7 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 }
 
 static uint32_t
-cpuid_set_cpufamily(i386_cpu_info_t *info_p)
+cpuid_get_cpufamily_intel(i386_cpu_info_t *info_p)
 {
 	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
 
@@ -863,6 +889,13 @@ cpuid_set_cpufamily(i386_cpu_info_t *info_p)
 		case CPUID_MODEL_IVYBRIDGE_EP:
 			cpufamily = CPUFAMILY_INTEL_IVYBRIDGE;
 			break;
+		case CPUID_MODEL_BAYTRAIL:
+		case CPUID_MODEL_TANGIER:
+		case CPUID_MODEL_AVOTON:
+		case CPUID_MODEL_ANNIEDALE:
+		case CPUID_MODEL_SOFIA:
+			cpufamily = CPUFAMILY_INTEL_SILVERMONT;
+			break;
 		case CPUID_MODEL_HASWELL:
 		case CPUID_MODEL_HASWELL_EP:
 		case CPUID_MODEL_HASWELL_ULT:
@@ -873,17 +906,201 @@ cpuid_set_cpufamily(i386_cpu_info_t *info_p)
 		case CPUID_MODEL_BRYSTALWELL:
 			cpufamily = CPUFAMILY_INTEL_BROADWELL;
 			break;
+		case CPUID_MODEL_BRASWELL:
+			cpufamily = CPUFAMILY_INTEL_AIRMONT;
+			break;
 		case CPUID_MODEL_SKYLAKE:
 		case CPUID_MODEL_SKYLAKE_DT:
 		case CPUID_MODEL_SKYLAKE_W:
 			cpufamily = CPUFAMILY_INTEL_SKYLAKE;
 			break;
+		case CPUID_MODEL_APOLLOLAKE:
+		case CPUID_MODEL_DENVERTON:
+			cpufamily = CPUFAMILY_INTEL_GOLDMONT;
+			break;
 		case CPUID_MODEL_KABYLAKE:
 		case CPUID_MODEL_KABYLAKE_DT:
 			cpufamily = CPUFAMILY_INTEL_KABYLAKE;
 			break;
+		case CPUID_MODEL_GEMINILAKE:
+			cpufamily = CPUFAMILY_INTEL_GOLDMONTPLUS;
+			break;
+		case CPUID_MODEL_ICELAKE_SP:
+		case CPUID_MODEL_ICELAKE_DE:
+		case CPUID_MODEL_ICELAKE:
+		case CPUID_MODEL_ICELAKE_DT:
+		case CPUID_MODEL_ICELAKE_H:
+			cpufamily = CPUFAMILY_INTEL_ICELAKE;
+			break;
+		case CPUID_MODEL_COMETLAKE_DT:
+			cpufamily = CPUFAMILY_INTEL_COMETLAKE;
+			break;
+		case CPUID_MODEL_LAKEFIELD:
+		case CPUID_MODEL_ELKHARTLAKE:
+		case CPUID_MODEL_JASPERLAKE:
+			cpufamily = CPUFAMILY_INTEL_TREMONT;
+			break;
+		case CPUID_MODEL_TIGERLAKE_U:
+		case CPUID_MODEL_TIGERLAKE_H:
+			cpufamily = CPUFAMILY_INTEL_TIGERLAKE;
+			break;
+		case CPUID_MODEL_ROCKETLAKE:
+			cpufamily = CPUFAMILY_INTEL_ROCKETLAKE;
+			break;
+		case CPUID_MODEL_ALDERLAKE:
+		case CPUID_MODEL_ALDERLAKE_P:
+			cpufamily = CPUFAMILY_INTEL_ALDERLAKE;
+			break;
+		case CPUID_MODEL_RAPTORLAKE:
+		case CPUID_MODEL_RAPTORLAKE_P:
+			cpufamily = CPUFAMILY_INTEL_RAPTORLAKE;
+			break;
+		case CPUID_MODEL_SAPPHIRERAPIDS:
+			cpufamily = CPUFAMILY_INTEL_SAPPHIRERAPIDS;
+			break;
+		case CPUID_MODEL_EMERALDRAPIDS:
+			cpufamily = CPUFAMILY_INTEL_EMERALDRAPIDS;
+			break;
 		}
 		break;
+	}
+
+	return cpufamily;
+}
+
+/*
+ * Always default to the lowest architecture known in the family.
+ * This is so we avoid any compatibility problems.
+ */
+static uint32_t
+cpuid_get_cpufamily_amd(i386_cpu_info_t *info_p)
+{
+	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
+
+	switch (info_p->cpuid_family) {
+	case 0x15:
+		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_AMD_ZAMBEZI:
+			cpufamily = CPUFAMILY_AMD_BULLDOZER;
+			break;
+		case CPUID_MODEL_AMD_VISHERA:
+		case CPUID_MODEL_AMD_TRINITY:
+		case CPUID_MODEL_AMD_RICHLAND:
+			cpufamily = CPUFAMILY_AMD_PILEDRIVER;
+			break;
+		case CPUID_MODEL_AMD_KAVERI:
+		case CPUID_MODEL_AMD_GODAVARI:
+			cpufamily = CPUFAMILY_AMD_STEAMROLLER;
+			break;
+		case CPUID_MODEL_AMD_CARRIZO:
+		case CPUID_MODEL_AMD_BRISTOL_RIDGE:
+		case CPUID_MODEL_AMD_STONEY_RIDGE:
+			cpufamily = CPUFAMILY_AMD_EXCAVATOR;
+			break;
+		default:
+			kprintf("cpuid_get_cpufamily_amd: Unknown CPUID Model for Family 15h.\n");
+			cpufamily = CPUFAMILY_AMD_BULLDOZER; /* Default to Bulldozer in the event we have no idea what family we really are. */
+			break;
+		}
+		break;
+	case 0x16:
+		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_AMD_KABINI:
+			cpufamily = CPUFAMILY_AMD_JAGUAR;
+			break;
+		case CPUID_MODEL_AMD_MULLINS:
+			cpufamily = CPUFAMILY_AMD_PUMA;
+			break;
+		default:
+			kprintf("cpuid_get_cpufamily_amd: Unknown CPUID Model for Family 16h.\n");
+			cpufamily = CPUFAMILY_AMD_JAGUAR; /* Default to Jaguar in the event we have no idea what family we really are. */
+			break;
+		}
+	case 0x17:
+		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_AMD_SUMMIT_RIDGE: /* Includes Whitehaven (Zen HEDT), Naples (Zen Server) */
+		case CPUID_MODEL_AMD_RAVEN_RIDGE: /* Includes Raven Ridge 2 */
+		case CPUID_MODEL_AMD_DALI:
+			cpufamily = CPUFAMILY_AMD_ZEN;
+			break;
+		case CPUID_MODEL_AMD_PINNACLE_RIDGE: /* Includes Colfax (Zen+ HEDT) */
+		case CPUID_MODEL_AMD_PICASSO:
+			cpufamily = CPUFAMILY_AMD_ZENX;
+			break;
+		case CPUID_MODEL_AMD_ROME: /* Includes Castle Peak (HEDT Zen 2?) */
+		case CPUID_MODEL_AMD_RENOIR:
+		case CPUID_MODEL_AMD_LUCIENNE:
+		case CPUID_MODEL_AMD_MATISSE:
+		case CPUID_MODEL_AMD_VAN_GOGH:
+		case CPUID_MODEL_AMD_MENDOCINO:
+			cpufamily = CPUFAMILY_AMD_ZEN2;
+			break;
+		default:
+			kprintf("cpuid_get_cpufamily_amd: Unknown CPUID Model for Family 17h.\n");
+			cpufamily = CPUFAMILY_AMD_ZEN; /* Default to Zen 1 in the event we have no idea what family we really are. */
+			break;
+		}
+	case 0x19:
+		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_AMD_CHAGALL:
+		case CPUID_MODEL_AMD_MILAN:
+		case CPUID_MODEL_AMD_STORMPEAK:
+		case CPUID_MODEL_AMD_VERMEER:
+		case CPUID_MODEL_AMD_CEZANNE:
+		case CPUID_MODEL_AMD_BADAMI:
+			cpufamily = CPUFAMILY_AMD_ZEN3;
+			break;
+		case CPUID_MODEL_AMD_REMBRANDT: /* Merge with Zen 3? */
+			cpufamily = CPUFAMILY_AMD_ZEN3X;
+			break;
+		case CPUID_MODEL_AMD_RAPHAEL:
+		case CPUID_MODEL_AMD_PHOENIX_RANGE:
+		case CPUID_MODEL_AMD_PHOENIX2_RANGE:
+		case CPUID_MODEL_AMD_STONESDENSE:
+			cpufamily = CPUFAMILY_AMD_ZEN4;
+			break;
+		default:
+			kprintf("cpuid_get_cpufamily_amd: Unknown CPUID Model for Family 19h.\n");
+			cpufamily = CPUFAMILY_AMD_ZEN3; /* Default to Zen 3 in the event we have no idea what family we really are. */
+			break;
+		}
+	case 0x1a:
+		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_AMD_BREITHORN_RANGE:
+		case CPUID_MODEL_AMD_BREITHORNDENSE_RANGE:
+		case CPUID_MODEL_AMD_STRIXPOINT_RANGE:
+		case CPUID_MODEL_AMD_STRIXPOINT2_RANGE:
+		case CPUID_MODEL_AMD_STRIXPOINT3_RANGE:
+		case CPUID_MODEL_AMD_GRANITE_RIDGE_RANGE:
+		case CPUID_MODEL_AMD_WEISSHORN_RANGE:
+		case CPUID_MODEL_AMD_KRACKANPOINT_RANGE:
+		case CPUID_MODEL_AMD_SARLAK_RANGE:
+			cpufamily = CPUFAMILY_AMD_ZEN5;
+			break;
+		default:
+			kprintf("cpuid_get_cpufamily_amd: Unknown CPUID Model for Family 1Ah\n");
+			cpufamily = CPUFAMILY_AMD_ZEN5;
+			break;
+		}
+	}
+
+	return cpufamily;
+}
+
+static uint32_t
+cpuid_set_cpufamily(i386_cpu_info_t *info_p)
+{
+	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
+
+	switch (info_p->cpu_vendor) {
+		case CPU_VENDOR_INTEL:
+			cpufamily = cpuid_get_cpufamily_intel(info_p);
+			break;
+		case CPU_VENDOR_AMD:
+			cpufamily = cpuid_get_cpufamily_amd(info_p);
+			break;
+		default:
+			panic("cpuid_set_cpufamily(%p): bad CPU vendor", info_p);
 	}
 
 	info_p->cpuid_cpufamily = cpufamily;
@@ -906,9 +1123,7 @@ cpuid_set_info(void)
 	cpuid_set_generic_info(info_p);
 
 	/* verify we are running on a supported CPU */
-	if ((strncmp(CPUID_VID_INTEL, info_p->cpuid_vendor,
-	    min(strlen(CPUID_STRING_UNKNOWN) + 1,
-	    sizeof(info_p->cpuid_vendor)))) ||
+	if ((info_p->cpu_vendor == CPU_VENDOR_UNKNOWN) ||
 	    (cpuid_set_cpufamily(info_p) == CPUFAMILY_UNKNOWN)) {
 		panic("Unsupported CPU");
 	}
@@ -959,6 +1174,77 @@ cpuid_set_info(void)
 			info_p->core_count   = bitfield32((uint32_t)msr, 19, 16);
 			info_p->thread_count = bitfield32((uint32_t)msr, 15, 0);
 			cpuid_set_cache_info(info_p);
+			break;
+		}
+		case CPUFAMILY_AMD_BULLDOZER:
+		case CPUFAMILY_AMD_PILEDRIVER:
+		case CPUFAMILY_AMD_STEAMROLLER:
+		case CPUFAMILY_AMD_EXCAVATOR:
+		case CPUFAMILY_AMD_JAGUAR:
+		case CPUFAMILY_AMD_PUMA: {
+			/* 
+			 * BIOS and Kernel Developer’s Guide (BKDG) for AMD Family 15h Models 00h-0Fh Processors states that
+			 * CPUID 0x8000008, ECX bits 0 to 7 are the number of cores.
+			 */
+			uint32_t cpuid[4];
+			do_cpuid(0x80000008, cpuid);
+			/* AMD's usage of leaf ECX is cursed because as of 15h 10h-1Fh it switches to 'Threads per Compute Unit' */
+			/* Then again, I looked at how OpenCore deals with this and it just sets it as the thread count. */
+			info_p->cpuid_cores_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
+			info_p->cpuid_logical_per_package = info_p->cpuid_cores_per_package;
+
+			/* Get the PkgType field. */
+			do_cpuid(0x80000001, cpuid);
+			/* 
+			 * Mappings:
+			 * Family 15h:
+			 * 00-0F:
+			 *  - 1: AM3r2
+			 *  - 3: G34r1
+			 *  - 5: G32r1
+			 * 10-1F:
+			 *  - 0: FP2
+			 *  - 1: FS1r2
+			 *  - 2: FM2
+			 * 30-3F:
+			 *  - 0: FP3
+			 *  - 1: FM2r2
+			 * 60-6F:
+			 *  - 0: FP4
+			 *  - 2: AM4 (why is this underlined in the doc?)
+			 *  - 3: FM2r2
+			 * 70-7F:
+			 *  - 0: FP4
+			 *  - 2: AM4
+			 *  - 4: FT4
+			 *
+			 * Family 16h:
+			 * 00-0F:
+			 *  - 0: FT3
+			 *  - 1: FS1b
+			 * 30-3F:
+			 *  - 0: FT3b
+			 *  - 3: FP4
+			 */
+			info_p->cpuid_package_type = bitfield32(cpuid[ebx], 31, 28);
+			break;
+		}
+		case CPUFAMILY_AMD_ZEN:
+		case CPUFAMILY_AMD_ZENX:
+		case CPUFAMILY_AMD_ZEN2:
+		case CPUFAMILY_AMD_ZEN3:
+		case CPUFAMILY_AMD_ZEN3X:
+		case CPUFAMILY_AMD_ZEN4:
+		case CPUFAMILY_AMD_ZEN5: {
+			uint32_t cpuid[4];
+			do_cpuid(0x80000008, cpuid);
+			/* thread count as of Zen. */
+			info_p->cpuid_logical_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
+			do_cpuid(0x8000001E, cpuid);
+			info_p->cpuid_cores_per_package = info_p->cpuid_logical_per_package / (bitfield32(cpuid[ecx], 15, 8) + 1);
+			/* Get the PkgType field. */
+			do_cpuid(0x80000001, cpuid);
+			info_p->cpuid_package_type = bitfield32(cpuid[ebx], 31, 28);
 			break;
 		}
 		default: {

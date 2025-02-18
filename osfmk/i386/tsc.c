@@ -90,6 +90,77 @@ uint64_t        tsc_at_boot = 0;
 
 #define CPU_FAMILY_PENTIUM_M    (0x6)
 
+/* === IMPORT ROUTINES FROM MY DOWNSTREAM PureDarwin REPOSITORY === */
+static bool
+amd_is_divisor_reserved_zen(uint64_t field)
+{
+    switch (field) {
+        case 0x1B:
+        case 0x1D:
+        case 0x1F:
+        case 0x21:
+        case 0x23:
+        case 0x25:
+        case 0x27:
+        case 0x29:
+        case 0x2B:
+        case 0x2D ... 0x3F:
+            return true;
+        default:
+            return false;
+    }
+}
+
+/* Referenced from AMDs 17h Family Open-Source Register Reference and AMD's 16h BIOS and Kernel Developer guide */
+static uint32_t
+amd_get_divisor_for_tsc_freq(uint64_t field)
+{
+    i386_cpu_info_t *infop = cpuid_info();
+    
+    switch (field) {
+        case 0x00:
+            if (infop->cpuid_family >= 0x17) {
+                return 0; /* switched to OFF on Zen */
+            } else {
+                return 1;
+            }
+        case 0x01:
+            if (infop->cpuid_family >= 0x17) {
+                panic("Invalid TSC divisor field! 0x%llx", field);
+            } else {
+                return 2;
+            }
+        case 0x02:
+            if (infop->cpuid_family >= 0x17) {
+                panic("Invalid TSC divisor field! 0x%llx", field);
+            } else {
+                return 4;
+            }
+        case 0x03:
+            if (infop->cpuid_family >= 0x17) {
+                panic("Invalid TSC divisor field! 0x%llx", field);
+            } else {
+                return 8;
+            }
+        case 0x04:
+            if (infop->cpuid_family >= 0x17) {
+                panic("Invalid TSC divisor field! 0x%llx", field);
+            } else {
+                return 16;
+            }
+        default:
+            if (infop->cpuid_family <= 0x16) {
+                panic("Invalid TSC divisor field! 0x%llx", field);
+            } else {
+                if (amd_is_divisor_reserved_zen(field)) {
+                    panic("P0 divisor is reserved!");
+                }
+                return field / 8;
+            }
+    }
+}
+
+
 /*
  * This routine extracts a frequency property in Hz from the device tree.
  * Also reads any initial TSC value at boot from the device tree.
@@ -212,6 +283,112 @@ tsc_init(void)
 
 		break;
 	}
+	case CPUFAMILY_AMD_BULLDOZER:
+	case CPUFAMILY_AMD_PILEDRIVER:
+	case CPUFAMILY_AMD_STEAMROLLER:
+	case CPUFAMILY_AMD_EXCAVATOR:
+	case CPUFAMILY_AMD_JAGUAR:
+	case CPUFAMILY_AMD_PUMA: {
+		uint64_t msr;
+		uint64_t did;
+		uint64_t fid;
+		uint64_t freq;
+
+		busFreq = EFI_get_frequency("FSBFrequency");
+		if (busFreq == 0) {
+			panic("tsc_init: FSBFrequency wasn't set by EFI");
+		}
+		busFCvtt2n = ((1 * Giga) << 32) / busFreq;
+		busFCvtn2t = ((1 * Giga) << 32) / busFCvtt2n; /* Using this instead of the default alleviates HDA crackling on AMD's APU line... on macOS. */
+
+		msr = rdmsr64(MSR_AMD_PSTATE_P0); /* P0 MSR */
+		did = bitfield32(msr, 8, 6); /* CpuDid */
+		fid = bitfield32(msr, 5, 0); /* CpuFid */
+		freq = 100 * (fid + 0x10) / amd_get_divisor_for_tsc_freq(did);
+		kprintf("P0/TSC freq: %lluMHz\n", freq);
+		tscFreq = (freq * kilo) * 1000ULL; /* MHz 		/* Establish TSC syncing timer. Because otherwise XNU will freak. */
+		/* slto_us = 0xFFFFFFFF -> KHz -> Hz */
+
+		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
+		tscFCvtn2t = ((1 * Giga) << 32) / tscFCvtt2n;
+		tscGranularity = tscFreq / busFreq;
+		bus2tsc = tmrCvt(busFCvtt2n, tscFCvtn2t);
+		break;
+	}
+	case CPUFAMILY_AMD_ZEN:
+	case CPUFAMILY_AMD_ZENX:
+	case CPUFAMILY_AMD_ZEN2:
+	case CPUFAMILY_AMD_ZEN3:
+	case CPUFAMILY_AMD_ZEN3X:
+	case CPUFAMILY_AMD_ZEN4: {
+		uint64_t msr;
+		uint64_t did;
+		uint64_t fid;
+		uint64_t freq;
+
+		busFreq = EFI_get_frequency("FSBFrequency");
+		if (busFreq == 0) {
+			panic("tsc_init: FSBFrequency wasn't set by EFI");
+		}
+		busFCvtt2n = ((1 * Giga) << 32) / busFreq;
+		busFCvtn2t = ((1 * Giga) << 32) / busFCvtt2n; /* Using this instead of the default alleviates HDA crackling on AMD's APU line... on macOS. */
+
+		msr = rdmsr64(MSR_AMD_PSTATE_P0);
+		did = bitfield32(msr, 13, 8); /* CpuDid */
+		fid = bitfield32(msr, 7, 0);
+		freq = 200 * fid / amd_get_divisor_for_tsc_freq(did);
+
+		/* Lock the TSC at P0. Don't know if this will help with anything in particular. */
+		msr = rdmsr64(MSR_AMD_HARDWARE_CFG);
+		if (!(msr & MSR_AMD_HARDWARE_CFG_TSC_LOCK_AT_P0)) {
+			msr |= MSR_AMD_HARDWARE_CFG_TSC_LOCK_AT_P0;
+		}
+		wrmsr64(MSR_AMD_HARDWARE_CFG, msr);
+
+		kprintf("P0/TSC freq: %lluMHz\n", freq);
+		tscFreq = (freq * kilo) * 1000ULL; /* MHz 		/* Establish TSC syncing timer. Because otherwise XNU will freak. */
+		/* slto_us = 0xFFFFFFFF -> KHz -> Hz */
+
+		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
+		tscFCvtn2t = ((1 * Giga) << 32) / tscFCvtt2n;
+		tscGranularity = tscFreq / busFreq;
+		bus2tsc = tmrCvt(busFCvtt2n, tscFCvtn2t);
+		break;
+    }
+	case CPUFAMILY_AMD_ZEN5: {
+		uint64_t msr;
+		uint64_t fid;
+		uint64_t freq;
+
+		busFreq = EFI_get_frequency("FSBFrequency");
+		if (busFreq == 0) {
+			panic("tsc_init: FSBFrequency wasn't set by EFI");
+		}
+		busFCvtt2n = ((1 * Giga) << 32) / busFreq;
+		busFCvtn2t = ((1 * Giga) << 32) / busFCvtt2n; /* Using this instead of the default alleviates HDA crackling on AMD's APU line... on macOS. */
+
+		msr = rdmsr64(MSR_AMD_PSTATE_P0);
+		fid = bitfield32(msr, 11, 0); /* CpuFid */
+		if (fid > 0xF) { fid *= 5; }
+
+		/* Lock the TSC at P0. Don't know if this will help with anything in particular. */
+		msr = rdmsr64(MSR_AMD_HARDWARE_CFG);
+		if (!(msr & MSR_AMD_HARDWARE_CFG_TSC_LOCK_AT_P0)) {
+			msr |= MSR_AMD_HARDWARE_CFG_TSC_LOCK_AT_P0;
+		}
+		wrmsr64(MSR_AMD_HARDWARE_CFG, msr);
+
+		kprintf("P0/TSC freq: %lluMHz\n", freq);
+		tscFreq = (freq * Mega);
+		/* slto_us = 0xFFFFFFFF -> KHz -> Hz*/
+
+		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
+		tscFCvtn2t = ((1 * Giga) << 32) / tscFCvtt2n;
+		tscGranularity = tscFreq / busFreq;
+		bus2tsc = tmrCvt(busFCvtt2n, tscFCvtn2t);
+		panic("i haven't implemented this. my bad. - freq is zero.");
+		break;
+    }
 	default: {
 		uint64_t msr_flex_ratio;
 		uint64_t msr_platform_info;

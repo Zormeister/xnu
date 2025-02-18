@@ -729,6 +729,16 @@ ml_init_lock_timeout(void)
 #endif
 	uint32_t        slto;
 	uint32_t        prt;
+	i386_cpu_info_t *cpu_infop = cpuid_info();
+
+	/* This isn't a quirk as much as it is a hotfix. */
+	/* For some ungodly reason, the timeout keeps hitting when I try to use Catalina stabley. */
+	/* Though, with an experimental graphics kext, can it even be called stable? */
+	if (cpu_infop->cpu_vendor == CPU_VENDOR_AMD) {
+		/* My cursed setup has slto_us=-1 in the boot arguments. */
+		/* I guess this gives it more time to process things? */
+		default_timeout_ns = 0xFFFFFFFF * NSEC_PER_USEC;
+	}
 
 	if (PE_parse_boot_argn("slto_us", &slto, sizeof(slto))) {
 		default_timeout_ns = slto * NSEC_PER_USEC;
