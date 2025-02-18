@@ -237,6 +237,8 @@ tsc_init(void)
 
 	switch (cpuid_cpufamily()) {
 	case CPUFAMILY_INTEL_KABYLAKE:
+	case CPUFAMILY_INTEL_ICELAKE:
+	case CPUFAMILY_INTEL_COMETLAKE:
 	case CPUFAMILY_INTEL_SKYLAKE: {
 		/*
 		 * SkyLake and later has an Always Running Timer (ART) providing
@@ -306,8 +308,7 @@ tsc_init(void)
 		fid = bitfield32(msr, 5, 0); /* CpuFid */
 		freq = 100 * (fid + 0x10) / amd_get_divisor_for_tsc_freq(did);
 		kprintf("P0/TSC freq: %lluMHz\n", freq);
-		tscFreq = (freq * kilo) * 1000ULL; /* MHz 		/* Establish TSC syncing timer. Because otherwise XNU will freak. */
-		/* slto_us = 0xFFFFFFFF -> KHz -> Hz */
+		tscFreq = (freq * Mega);
 
 		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
 		tscFCvtn2t = ((1 * Giga) << 32) / tscFCvtt2n;
@@ -346,8 +347,7 @@ tsc_init(void)
 		wrmsr64(MSR_AMD_HARDWARE_CFG, msr);
 
 		kprintf("P0/TSC freq: %lluMHz\n", freq);
-		tscFreq = (freq * kilo) * 1000ULL; /* MHz 		/* Establish TSC syncing timer. Because otherwise XNU will freak. */
-		/* slto_us = 0xFFFFFFFF -> KHz -> Hz */
+		tscFreq = (freq * Mega);
 
 		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
 		tscFCvtn2t = ((1 * Giga) << 32) / tscFCvtt2n;
@@ -370,6 +370,7 @@ tsc_init(void)
 		msr = rdmsr64(MSR_AMD_PSTATE_P0);
 		fid = bitfield32(msr, 11, 0); /* CpuFid */
 		if (fid > 0xF) { fid *= 5; }
+		kprintf("tsc_init: Family 1Ah FID Value: %llu", fid);
 
 		/* Lock the TSC at P0. Don't know if this will help with anything in particular. */
 		msr = rdmsr64(MSR_AMD_HARDWARE_CFG);
@@ -380,7 +381,6 @@ tsc_init(void)
 
 		kprintf("P0/TSC freq: %lluMHz\n", freq);
 		tscFreq = (freq * Mega);
-		/* slto_us = 0xFFFFFFFF -> KHz -> Hz*/
 
 		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
 		tscFCvtn2t = ((1 * Giga) << 32) / tscFCvtt2n;

@@ -280,4 +280,16 @@
 #define CORE_NCTRS 8 /* Placeholder; KPC is not enabled for this target */
 #endif  /* ARM64_BOARD_CONFIG_BCM2837 */
 
+#ifdef ARM64_BOARD_CONFIG_BCM2712
+#define BCM2837
+#define BCM2712
+#define BCM2837_BRINGUP
+#define ARM_ARCH_TIMER
+#include <pexpert/arm64/BCM2712.h>
+#define __ARM_L2CACHE_SIZE_LOG__ 19
+#define ARM_BOARD_CLASS_BCM2712
+#define CPU_COUNT 4
+#define CORE_NCTRS 8 /* Placeholder; KPC is not enabled for this target */
+#endif
+
 #endif /* ! _PEXPERT_ARM_BOARD_CONFIG_H */
