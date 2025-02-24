@@ -292,4 +292,6 @@
 #define CORE_NCTRS 8 /* Placeholder; KPC is not enabled for this target */
 #endif
 
+/* TODO: VMQEMU stuff */
+
 #endif /* ! _PEXPERT_ARM_BOARD_CONFIG_H */
