@@ -38,7 +38,7 @@
 #  VPN =            [ ipsec flow_divert necp content_filter ]
 #  PF =             [ pf ]
 #  MULTIPATH =      [ multipath mptcp ]
-#  IOKIT_BASE =     [ iokit iokitcpp no_kextd no_kernel_hid config_sleep ]
+#  IOKIT_BASE =     [ iokit iokitcpp no_kextd no_kernel_hid config_sleep config_no_rtc ]
 #  IOKIT_RELEASE =  [ IOKIT_BASE ]
 #  IOKIT_DEV =      [ IOKIT_BASE iokitstats iotracking ]
 #  IOKIT_DEBUG =    [ IOKIT_BASE iokitstats iotracking]

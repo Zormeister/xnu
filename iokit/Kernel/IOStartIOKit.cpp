@@ -72,7 +72,7 @@ IOKitInitializeTime( void )
 	t.tv_nsec = 0;
 
 // RTC is not present on this target
-#ifndef BCM2837
+#ifndef CONFIG_NO_RTC
 	IOService::waitForService(
 		IOService::resourceMatching("IORTC"), &t );
 #endif

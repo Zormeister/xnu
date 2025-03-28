@@ -503,6 +503,7 @@ options		CONFIG_SLEEP	#			# <config_sleep>
 options   CONFIG_MAX_THREADS=64	# IOConfigThread threads
 options         NO_KEXTD                		# <no_kextd>
 options         NO_KERNEL_HID           		# <no_kernel_hid>
+options     CONFIG_NO_RTC # BCM2837 and other taregts have no RTC # <config_no_rtc>
 
 #
 # Libkern configuration options
