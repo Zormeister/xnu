@@ -702,6 +702,7 @@ options		CONFIG_SCHED_GRRR_CORE		# <config_sched_grrr>
 options		CONFIG_SCHED_MULTIQ		# <config_sched_multiq>
 options		CONFIG_SCHED_TIMESHARE_CORE	# <config_sched_traditional,config_sched_multiq>
 options		CONFIG_CLUTCH			# <config_clutch>
+options 	CONFIG_SCHED_AUTO_JOIN		# <config_sched_auto_join>
 
 options		CONFIG_SCHED_IDLE_IN_PLACE	# <config_sched_idle_in_place>
 options		CONFIG_SCHED_SFI		# <config_sched_sfi>
@@ -722,6 +723,7 @@ options		MACH_KDP	    # KDP		# <mach_kdp>
 options		CONFIG_SERIAL_KDP   # KDP over serial	# <config_serial_kdp>
 options		CONFIG_KDP_INTERACTIVE_DEBUGGING	# <kdp_interactive_debugging>
 
+options 	CONFIG_TASKWATCH
 #
 # Kernel Power On Self Tests
 #
