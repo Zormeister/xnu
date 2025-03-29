@@ -300,6 +300,32 @@ uint32_t sched_clutch_root_count(sched_clutch_root_t);
 
 /* Grouping specific external routines */
 extern sched_clutch_t sched_clutch_for_thread(thread_t);
+extern sched_clutch_t sched_clutch_for_thread_group(struct thread_group *);
+
+#if CONFIG_SCHED_EDGE
+
+/*
+ * Getter and Setter for Edge configuration. Used by CLPC to affect thread migration behavior.
+ */
+void sched_edge_matrix_get(sched_clutch_edge *edge_matrix, bool *edge_request_bitmap, uint64_t flags, uint64_t matrix_order);
+void sched_edge_matrix_set(sched_clutch_edge *edge_matrix, bool *edge_changes_bitmap, uint64_t flags, uint64_t matrix_order);
+void sched_edge_tg_preferred_cluster_change(struct thread_group *tg, uint32_t *tg_bucket_preferred_cluster, sched_perfcontrol_preferred_cluster_options_t options);
+
+uint16_t sched_edge_cluster_cumulative_count(sched_clutch_root_t root_clutch, sched_bucket_t bucket);
+
+#if DEVELOPMENT || DEBUG
+/*
+ * Sysctl support for dynamically configuring edge properties.
+ *
+ * <Edge Multi-cluster Support Needed>
+ */
+kern_return_t sched_edge_sysctl_configure_e_to_p(uint64_t);
+kern_return_t sched_edge_sysctl_configure_p_to_e(uint64_t);
+sched_clutch_edge sched_edge_e_to_p(void);
+sched_clutch_edge sched_edge_p_to_e(void);
+#endif /* DEVELOPMENT || DEBUG */
+
+#endif /* CONFIG_SCHED_EDGE */
 
 #endif /* CONFIG_SCHED_CLUTCH */
 

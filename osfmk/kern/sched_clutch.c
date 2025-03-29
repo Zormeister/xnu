@@ -46,9 +46,9 @@
 #include <kern/sched_clutch.h>
 #include <sys/kdebug.h>
 
-#if __AMP__
+#if CONFIG_SCHED_EDGE
 #include <kern/sched_amp_common.h>
-#endif /* __AMP__ */
+#endif /* CONFIG_SCHED_EDGE */
 
 #if CONFIG_SCHED_CLUTCH
 
@@ -61,6 +61,12 @@ static void sched_clutch_root_pri_update(sched_clutch_root_t);
 static sched_clutch_root_bucket_t sched_clutch_root_highest_root_bucket(sched_clutch_root_t, uint64_t);
 static void sched_clutch_root_urgency_inc(sched_clutch_root_t, thread_t);
 static void sched_clutch_root_urgency_dec(sched_clutch_root_t, thread_t);
+
+#if CONFIG_SCHED_EDGE
+/* Support for foreign threads on AMP platforms */
+static boolean_t sched_clutch_root_foreign_empty(sched_clutch_root_t);
+static thread_t sched_clutch_root_highest_foreign_thread_remove(sched_clutch_root_t);
+#endif /* CONFIG_SCHED_EDGE */
 
 /* Root bucket level hierarchy management */
 static uint64_t sched_clutch_root_bucket_deadline_calculate(sched_clutch_root_bucket_t, uint64_t);
@@ -106,10 +112,11 @@ static uint32_t sched_clutch_root_urgency(sched_clutch_root_t);
 static uint32_t sched_clutch_root_count_sum(sched_clutch_root_t);
 static int sched_clutch_root_priority(sched_clutch_root_t);
 
-#if __AMP__
+#if CONFIG_SCHED_EDGE
 /* System based routines */
-static bool sched_clutch_pset_available(processor_set_t);
-#endif /* __AMP__ */
+static bool sched_edge_pset_available(processor_set_t);
+static uint32_t sched_edge_thread_bound_cluster_id(thread_t);
+#endif /* CONFIG_SCHED_EDGE */
 
 /* Helper debugging routines */
 static inline void sched_clutch_hierarchy_locked_assert(sched_clutch_root_t);
@@ -123,6 +130,7 @@ static inline void sched_clutch_hierarchy_locked_assert(sched_clutch_root_t);
  */
 priority_queue_compare_fn_t sched_clutch_root_bucket_compare;
 
+extern processor_set_t pset_array[MAX_PSETS];
 
 /*
  * Special markers for buckets that have invalid WCELs/quantums etc.
@@ -307,6 +315,11 @@ sched_clutch_root_init(
 	root_clutch->scr_priority = NOPRI;
 	root_clutch->scr_urgency = 0;
 	root_clutch->scr_pset = pset;
+#if CONFIG_SCHED_EDGE
+	root_clutch->scr_cluster_id = pset->pset_cluster_id;
+#else /* CONFIG_SCHED_EDGE */
+	root_clutch->scr_cluster_id = 0;
+#endif /* CONFIG_SCHED_EDGE */
 
 	/* Initialize the queue which maintains all runnable clutch_buckets for timesharing purposes */
 	queue_init(&root_clutch->scr_clutch_buckets);

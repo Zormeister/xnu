@@ -927,6 +927,10 @@ extern bool processor_active_thread_no_smt(processor_t processor);
 
 extern void thread_set_options(uint32_t thopt);
 
+#if CONFIG_THREAD_GROUPS
+struct thread_group *thread_get_current_voucher_thread_group(thread_t thread);
+#endif /* CONFIG_THREAD_GROUPS */
+
 
 #else   /* MACH_KERNEL_PRIVATE */
 
