@@ -54,7 +54,7 @@
 #  MACH_RELEASE =   [ MACH_BASE config_skip_precise_user_kernel_time debugger_for_zone_info ]
 #  MACH_DEV =       [ MACH_BASE task_zone_info config_io_accounting importance_trace ]
 #  MACH_DEBUG =     [ MACH_BASE task_zone_info config_io_accounting importance_trace importance_debug ]
-#  SCHED_BASE =     [ config_sched_traditional config_sched_multiq config_sched_deferred_ast ]
+#  SCHED_BASE =     [ config_sched_traditional config_sched_multiq config_sched_deferred_ast config_clutch config_taskwatch ]
 #  SCHED_RELEASE =  [ SCHED_BASE ]
 #  SCHED_DEV =      [ SCHED_BASE ]
 #  SCHED_DEBUG =    [ SCHED_BASE config_sched_grrr config_sched_proto ]
