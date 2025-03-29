@@ -310,7 +310,36 @@ typedef enum perfcontrol_class {
 	PERFCONTROL_CLASS_UI             = 7,
 	/* Above UI Thread */
 	PERFCONTROL_CLASS_ABOVEUI        = 8,
+	/* Maximum class */
+	PERFCONTROL_CLASS_MAX            = 9,
 } perfcontrol_class_t;
+
+/*
+ * struct sched_clutch_edge
+ *
+ * Represents an edge from one cluster to another in the Edge Scheduler.
+ * An edge has the following properties:
+ * - Edge Weight: A value which indicates the likelihood of migrating threads
+ *   across that edge. The actual unit of the edge weight is in (usecs) of
+ *   scheduling delay.
+ * - Migration Allowed: Bit indicating if migrations are allowed across this
+ *   edge from src to dst.
+ * - Steal Allowed: Bit indicating whether the dst cluster is allowed to steal
+ *   across that edge when a processor in that cluster goes idle.
+ *
+ * These values can be modified by CLPC for better load balancing, thermal
+ * mitigations etc.
+ */
+typedef union sched_clutch_edge {
+	struct {
+		uint32_t
+		/* boolean_t */ sce_migration_allowed : 1,
+		/* boolean_t */ sce_steal_allowed     : 1,
+		    _reserved             : 30;
+		uint32_t        sce_migration_weight;
+	};
+	uint64_t sce_edge_packed;
+} sched_clutch_edge;
 
 #endif  /* KERNEL_PRIVATE */
 
