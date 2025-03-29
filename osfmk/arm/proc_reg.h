@@ -243,6 +243,22 @@
 #endif /* defined(ARM_BOARD_WFE_TIMEOUT_NS) */
 
 /*
+ * MAX_PSETS allows the scheduler to create statically sized
+ * scheduling data structures (such as an array of processor sets, clutch
+ * buckets in Edge scheduler etc.). All current AMP platforms are dual
+ * pset and all non-AMP platforms are single pset architectures. This
+ * define might need to be conditionalized better (or moved to a better
+ * header) in the future.
+ *
+ * <Edge Multi-cluster Support Needed>
+ */
+#if __ARM_AMP__
+#define MAX_PSETS 2
+#else /*__ARM_AMP__ */
+#define MAX_PSETS 1
+#endif /* __ARM_AMP__ */
+
+/*
  * The clutch scheduler is enabled only on non-AMP platforms for now.
  */
 #if !__ARM_AMP__ && CONFIG_CLUTCH
