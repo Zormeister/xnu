@@ -335,6 +335,10 @@ struct thread {
 	uint64_t                        same_pri_latency;
 #define THREAD_NOT_RUNNABLE (~0ULL)
 
+#if CONFIG_THREAD_GROUPS
+	struct thread_group     *thread_group;
+#endif
+
 
 #if defined(CONFIG_SCHED_MULTIQ)
 	sched_group_t                   sched_group;

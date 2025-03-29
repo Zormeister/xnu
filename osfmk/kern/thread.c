@@ -1340,6 +1340,9 @@ thread_create_internal(
 	new_thread->max_priority = parent_task->max_priority;
 	new_thread->task_priority = parent_task->priority;
 
+#if CONFIG_THREAD_GROUPS
+	thread_group_init_thread(new_thread, parent_task);
+#endif /* CONFIG_THREAD_GROUPS */
 
 	int new_priority = (priority < 0) ? parent_task->priority: priority;
 	new_priority = (priority < 0)? parent_task->priority: priority;
@@ -2891,6 +2894,9 @@ thread_set_voucher_name(mach_port_name_t voucher_name)
 	thread_mtx_unlock(thread);
 
 	bank_swap_thread_bank_ledger(thread, bankledger);
+#if CONFIG_THREAD_GROUPS
+	thread_group_set_bank(thread, banktg);
+#endif /* CONFIG_THREAD_GROUPS */
 
 	KERNEL_DEBUG_CONSTANT_IST(KDEBUG_TRACE,
 	    MACHDBG_CODE(DBG_MACH_IPC, MACH_THREAD_SET_VOUCHER) | DBG_FUNC_NONE,
@@ -2980,6 +2986,9 @@ thread_set_mach_voucher(
 	thread_mtx_unlock(thread);
 
 	bank_swap_thread_bank_ledger(thread, bankledger);
+#if CONFIG_THREAD_GROUPS
+	thread_group_set_bank(thread, banktg);
+#endif /* CONFIG_THREAD_GROUPS */
 
 	KERNEL_DEBUG_CONSTANT_IST(KDEBUG_TRACE,
 	    MACHDBG_CODE(DBG_MACH_IPC, MACH_THREAD_SET_VOUCHER) | DBG_FUNC_NONE,
@@ -3040,6 +3049,31 @@ thread_get_current_voucher_origin_pid(
 	return kr;
 }
 
+#if CONFIG_THREAD_GROUPS
+/*
+ * Returns the current thread's voucher-carried thread group
+ *
+ * Reference is borrowed from this being the current voucher, so it does NOT
+ * return a reference to the group.
+ */
+struct thread_group *
+thread_get_current_voucher_thread_group(thread_t thread)
+{
+	assert(thread == current_thread());
+
+	if (thread->ith_voucher == NULL) {
+		return NULL;
+	}
+
+	ledger_t bankledger = NULL;
+	struct thread_group *banktg = NULL;
+
+	bank_get_bank_ledger_thread_group_and_persona(thread->ith_voucher, &bankledger, &banktg, NULL);
+
+	return banktg;
+}
+
+#endif /* CONFIG_THREAD_GROUPS */
 
 boolean_t
 thread_has_thread_name(thread_t th)
