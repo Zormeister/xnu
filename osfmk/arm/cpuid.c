@@ -136,6 +136,9 @@ cpuid_get_cpufamily(void)
 		case CPU_PART_CORTEXA7:
 			cpufamily = CPUFAMILY_ARM_15;
 			break;
+		case CPU_PART_CORTEXA5:
+			cpufamily = CPUFAMILY_ARM_12;
+			break;
 		case CPU_PART_1136JFS:
 		case CPU_PART_1176JZFS:
 			cpufamily = CPUFAMILY_ARM_11;
