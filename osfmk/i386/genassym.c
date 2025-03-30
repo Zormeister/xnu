@@ -479,21 +479,21 @@ main(
 	    offsetof(struct timer, tstamp));
 
 	DECLARE("THREAD_TIMER",
-	    offsetof(struct processor, processor_data.thread_timer));
+	    offsetof(struct processor, thread_timer));
 	DECLARE("KERNEL_TIMER",
-	    offsetof(struct processor, processor_data.kernel_timer));
+	    offsetof(struct processor, kernel_timer));
 	DECLARE("SYSTEM_TIMER",
 	    offsetof(struct thread, system_timer));
 	DECLARE("USER_TIMER",
 	    offsetof(struct thread, user_timer));
 	DECLARE("SYSTEM_STATE",
-	    offsetof(struct processor, processor_data.system_state));
+	    offsetof(struct processor, system_state));
 	DECLARE("USER_STATE",
-	    offsetof(struct processor, processor_data.user_state));
+	    offsetof(struct processor, user_state));
 	DECLARE("IDLE_STATE",
-	    offsetof(struct processor, processor_data.idle_state));
+	    offsetof(struct processor, idle_state));
 	DECLARE("CURRENT_STATE",
-	    offsetof(struct processor, processor_data.current_state));
+	    offsetof(struct processor, current_state));
 
 	DECLARE("OnProc", OnProc);
 
