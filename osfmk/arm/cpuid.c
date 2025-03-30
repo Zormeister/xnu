@@ -143,6 +143,11 @@ cpuid_get_cpufamily(void)
 		case CPU_PART_1176JZFS:
 			cpufamily = CPUFAMILY_ARM_11;
 			break;
+		case CPU_PART_1020T:
+		case CPU_PART_1022E:
+		case CPU_PART_1026EJS:
+			cpufamily = CPUFAMILY_ARM_10;
+			break;
 		case CPU_PART_926EJS:
 		case CPU_PART_920T:
 			cpufamily = CPUFAMILY_ARM_9;

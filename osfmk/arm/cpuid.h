@@ -93,6 +93,11 @@ typedef union {
 #define CPU_PART_920T               0x920
 #define CPU_PART_926EJS             0x926 /* ARM926EJ-S */
 
+/* ARM10 (ARMv5TE/ARMv5TEJ) */
+#define CPU_PART_1020T              0xA20 /* ARM1020T or ARM1020E */
+#define CPU_PART_1022E              0xA22 /* ARM1022E */
+#define CPU_PART_1026EJS            0xA26 /* ARM1026EJ-S */
+
 /* ARM11  (ARMv6 architecture) */
 #define CPU_PART_1136JFS            0xB36 /* ARM1136JF-S or ARM1136J-S */
 #define CPU_PART_1176JZFS           0xB76 /* ARM1176JZF-S */
