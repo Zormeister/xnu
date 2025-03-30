@@ -90,7 +90,6 @@ uint64_t        tsc_at_boot = 0;
 
 #define CPU_FAMILY_PENTIUM_M    (0x6)
 
-/* === IMPORT ROUTINES FROM MY DOWNSTREAM PureDarwin REPOSITORY === */
 static bool
 amd_is_divisor_reserved_zen(uint64_t field)
 {
@@ -291,10 +290,10 @@ tsc_init(void)
 	case CPUFAMILY_AMD_EXCAVATOR:
 	case CPUFAMILY_AMD_JAGUAR:
 	case CPUFAMILY_AMD_PUMA: {
-		uint64_t msr;
-		uint64_t did;
-		uint64_t fid;
-		uint64_t freq;
+		uint64_t msr = 0;
+		uint64_t did = 0;
+		uint64_t fid = 0;
+		uint64_t freq = 0;
 
 		busFreq = EFI_get_frequency("FSBFrequency");
 		if (busFreq == 0) {
@@ -322,10 +321,10 @@ tsc_init(void)
 	case CPUFAMILY_AMD_ZEN3:
 	case CPUFAMILY_AMD_ZEN3X:
 	case CPUFAMILY_AMD_ZEN4: {
-		uint64_t msr;
-		uint64_t did;
-		uint64_t fid;
-		uint64_t freq;
+		uint64_t msr = 0;
+		uint64_t did = 0;
+		uint64_t fid = 0;
+		uint64_t freq = 0;
 
 		busFreq = EFI_get_frequency("FSBFrequency");
 		if (busFreq == 0) {
@@ -356,9 +355,9 @@ tsc_init(void)
 		break;
     }
 	case CPUFAMILY_AMD_ZEN5: {
-		uint64_t msr;
-		uint64_t fid;
-		uint64_t freq;
+		uint64_t msr = 0;
+		uint64_t fid = 0;
+		uint64_t freq = 0;
 
 		busFreq = EFI_get_frequency("FSBFrequency");
 		if (busFreq == 0) {
