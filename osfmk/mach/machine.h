@@ -438,6 +438,7 @@ __END_DECLS
 #define CPUFAMILY_AMD_ZEN4              0x4cbfaf43
 #define CPUFAMILY_AMD_ZEN5              0x1b5515e1
 #define CPUFAMILY_ARM_9                 0xe73283ae
+#define CPUFAMILY_ARM_10                0xfdb816d5
 #define CPUFAMILY_ARM_11                0x8ff620d8
 #define CPUFAMILY_ARM_XSCALE            0x53b005f5
 #define CPUFAMILY_ARM_12                0xbd1b0ae9
