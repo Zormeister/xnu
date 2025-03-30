@@ -313,6 +313,11 @@
 
 #define CPUID_MODEL_RANGE(n) CPUID_MODEL_##n_START ... CPUID_MODEL_##n_END
 
+/* AMD 14h Family Model IDs */
+/* Oddly enough I couldn't find a lot on these chips. */
+#define CPUID_MODEL_AMD_ONTARIO_B0 0x01
+#define CPUID_MODEL_AMD_ONTARIO_C0 0x02 /* Found in a C-60, stepping ON-C0 */
+
 /* AMD 15h Family Model IDs */
 #define CPUID_MODEL_AMD_ZAMBEZI 0x01
 #define CPUID_MODEL_AMD_ZURICH CPUID_MODEL_AMD_ZAMBEZI

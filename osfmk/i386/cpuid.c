@@ -978,6 +978,9 @@ cpuid_get_cpufamily_amd(i386_cpu_info_t *info_p)
 	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
 
 	switch (info_p->cpuid_family) {
+	case 0x14:
+		/* There were never any microarch jumps necessitating model checking in Family 14h. */
+		return CPUFAMILY_AMD_BOBCAT;
 	case 0x15:
 		switch (info_p->cpuid_model) {
 		case CPUID_MODEL_AMD_ZAMBEZI:
