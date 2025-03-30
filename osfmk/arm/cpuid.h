@@ -168,6 +168,20 @@ typedef union {
 
 #endif /* !RC_HIDE_XNU_LIGHTNING */
 
+#define CPU_PART_CORTEXA12          0xC0D
+#define CPU_PART_CORTEXA15          0xC0F
+#define CPU_PART_CORTEXA17          0xC0E
+#define CPU_PART_CORTEXA32          0xD01
+#define CPU_PART_CORTEXA53          0xD03
+#define CPU_PART_CORTEXA35          0xD04
+#define CPU_PART_CORTEXA55          0xD05
+#define CPU_PART_CORTEXA57          0xD07
+#define CPU_PART_CORTEXA72          0xD08
+#define CPU_PART_CORTEXA73          0xD09
+#define CPU_PART_CORTEXA75          0xD0A
+#define CPU_PART_CORTEXA76          0xD0B
+#define CPU_PART_CORTEXA77          0xD0D
+
 /* Cache type identification */
 
 /* Supported Cache Types */
