@@ -332,4 +332,21 @@ typedef void (*os_function_t)(void *_Nullable);
 typedef void (^os_block_t)(void);
 #endif
 
+#if KERNEL
+#if __has_feature(ptrauth_calls)
+#include <ptrauth.h>
+#define OS_PTRAUTH_SIGNED_PTR(type) __ptrauth(ptrauth_key_process_independent_data, 1, ptrauth_string_discriminator(type))
+#define OS_PTRAUTH_DISCRIMINATOR(str) ptrauth_string_discriminator(str)
+#define __ptrauth_only
+#else //  __has_feature(ptrauth_calls)
+#define OS_PTRAUTH_SIGNED_PTR(type)
+#define OS_PTRAUTH_DISCRIMINATOR(str) 0
+#define __ptrauth_only __unused
+#endif // __has_feature(ptrauth_calls)
+#endif // KERNEL
+
+#if KERNEL_PRIVATE
+#define XNU_PTRAUTH_SIGNED_PTR OS_PTRAUTH_SIGNED_PTR
+#endif // KERNEL_PRIVATE
+
 #endif // __OS_BASE__
