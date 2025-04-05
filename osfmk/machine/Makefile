@@ -10,6 +10,7 @@ PRIVATE_DATAFILES = \
 	cpu_capabilities.h
 
 KERNELFILES = \
+	atomic_impl.h	\
 	atomic.h	\
 	config.h		\
 	cpu_capabilities.h	\
