@@ -23,7 +23,7 @@ with open(trace_code_file, 'rt') as codes:
     for line in codes:
 	m = id_name_pattern.match(line)
 	if m:
-            code_table += [(int(m.group(1),base=16), m.group(2))]
+        code_table += [(int(m.group(1),base=16), m.group(2))]
 
 # emit typedef:
 print "typedef struct {"
@@ -33,6 +33,6 @@ print "} kd_event_t;"
 # emit structure declaration and sorted initialization:
 print "kd_event_t kd_events[] = {"
 for mapping in sorted(code_table, key=lambda x: x[0]):
-        print "        {0x%x, \"%s\"}," % mapping
+    print "        {0x%x, \"%s\"}," % mapping
 print "};"
 
