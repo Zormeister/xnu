@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # This script scans the trace.codes file, containing a mapping of event id to
 # event name for all events, and writes to stdout a C declaration for a table
