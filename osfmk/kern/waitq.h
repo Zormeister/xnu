@@ -106,6 +106,11 @@ enum waitq_type {
 	WQT_SET     = 0x3,
 };
 
+__options_decl(waitq_options_t, uint32_t, {
+	WQ_OPTION_NONE                 = 0,
+	WQ_OPTION_HANDOFF              = 1,
+});
+
 #if CONFIG_WAITQ_STATS
 #define NWAITQ_BTFRAMES 5
 struct wq_stats {

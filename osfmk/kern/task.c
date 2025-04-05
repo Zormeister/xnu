@@ -180,11 +180,10 @@ extern int kpc_force_all_ctrs(task_t, int);
 #endif
 
 SECURITY_READ_ONLY_LATE(task_t) kernel_task;
-
-static SECURITY_READ_ONLY_LATE(zone_t) task_zone;
-ZONE_INIT(&task_zone, "tasks", sizeof(struct task),
-    ZC_NOENCRYPT | ZC_ZFREE_CLEARMEM,
-    ZONE_ID_TASK, NULL);
+SECURITY_READ_ONLY_LATE(zone_t) task_zone;
+lck_attr_t      task_lck_attr;
+lck_grp_t       task_lck_grp;
+lck_grp_attr_t  task_lck_grp_attr;
 
 extern int exc_via_corpse_forking;
 extern int corpse_for_fatal_memkill;
@@ -209,7 +208,7 @@ zinfo_usage_store_t tasks_tkm_shared;
 
 /* A container to accumulate statistics for expired tasks */
 expired_task_statistics_t               dead_task_statistics;
-LCK_SPIN_DECLARE_ATTR(dead_task_statistics_lock, &task_lck_grp, &task_lck_attr);
+lck_spin_t              dead_task_statistics_lock;
 
 ledger_template_t task_ledger_template = NULL;
 
