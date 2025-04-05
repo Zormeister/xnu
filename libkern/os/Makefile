@@ -7,7 +7,6 @@ include $(MakeInc_cmd)
 include $(MakeInc_def)
 
 KERNELFILES = \
-	atomic.h \
 	base.h \
 	object.h \
 	log.h \
@@ -17,9 +16,6 @@ KERNELFILES = \
 	cpp_util.h
 
 PRIVATE_KERNELFILES = \
-	atomic_private.h \
-	atomic_private_arch.h \
-	atomic_private_impl.h \
 	hash.h \
 	object_private.h \
 	ptrtools.h \
