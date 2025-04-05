@@ -34,11 +34,11 @@ jobs:
             cd ~/dtrace
             echo "#include <stdint.h>" > include/llvm-Support/DataTypes.h
             sed -i -e 's,include "llvm/Support/DataTypes,include "llvm-Support/DataTypes,' include/llvm-Support/PointerLikeTypeTraits.h
-            xcodebuild install CODE_SIGNING_ALLOWED=NO DSTROOT=$(xcrun --sdk macosx -show-sdk-platform-path) INSTALL_PATH="/usr/local/bin" -target ctfdump -target ctfmerge -sdk macosx
+            xcodebuild install CODE_SIGNING_ALLOWED=NO DSTROOT=$(xcrun --sdk macosx -show-sdk-platform-path) INSTALL_PATH="/usr/local/bin" -target ctfconvert -target ctfdump -target ctfmerge -sdk macosx
         - name: Install Kernel Headers
           run: |
             cd ~/xnu*/
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_PATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="DEVELOPMENT" ARCH_CONFIGS="X86_64 ARM64" installhdrs
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="DEVELOPMENT" ARCH_CONFIGS="X86_64 ARM64" installhdrs
         - name: Prepare libfirehose_kernel
           run: |
             cd ~/libdispatch
