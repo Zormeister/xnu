@@ -26,6 +26,7 @@ jobs:
             cp ~/libplatform/private/os/internal/* $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal/
         - name: Prepare libfirehose_kernel
           run: |
+            cd ~/libdispatch
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             cp ~/libdispatch/os/firehose_buffer_private.h $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             awk '/include "<DEVELOPER/ {next;} /SDKROOT =/ {print "SDKROOT = macosx"; next;} {print $0}' xcodeconfig/libdispatch.xcconfig > .__tmp__ && mv -f .__tmp__ xcodeconfig/libdispatch.xcconfig
