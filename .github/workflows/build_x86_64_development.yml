@@ -12,7 +12,7 @@ jobs:
         - name: Clone Sources
           run: |
             git clone --branch 6153 https://github.com/Zormeister/xnu ~/xnu-6153.141.1~1
-            git clone --branch rel/dtrace-388 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
+            git clone --branch rel/dtrace-338 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
             git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
             git clone --branch rel/libdispatch-1173 https://github.com/apple-oss-distributions/libdispatch.git ~/libdispatch
