@@ -59,7 +59,6 @@ EXPORT_FILES = \
 	macro_help.h \
 	mpqueue.h \
 	page_decrypt.h \
-	percpu.h \
 	pms.h \
 	policy_internal.h \
 	processor.h \
