@@ -127,21 +127,6 @@ type task_t = mach_port_t
 #endif	/* KERNEL_SERVER */
 		;
 
-type task_policy_set_t = mach_port_t
-#if	KERNEL_SERVER
-		intran: task_policy_set_t convert_port_to_task_policy_set(mach_port_t)
-		destructor: task_policy_set_deallocate(task_policy_set_t)
-#endif	/* KERNEL_SERVER */
-		;
-
-type task_policy_get_t = mach_port_t
-#if	KERNEL_SERVER
-		intran: task_policy_get_t convert_port_to_task_policy_get(mach_port_t)
-		destructor: task_policy_get_deallocate(task_policy_get_t)
-#endif	/* KERNEL_SERVER */
-		;
-
-
 type task_name_t = mach_port_t
 #if	KERNEL_SERVER
 		intran: task_name_t convert_port_to_task_name(mach_port_t)
@@ -158,14 +143,6 @@ type task_inspect_t = mach_port_t
 #endif	/* KERNEL_SERVER */
 		;
 
-type task_read_t = mach_port_t
-#if	KERNEL_SERVER
-		intran: task_read_t convert_port_to_task_read(mach_port_t)
-		outtran: mach_port_t convert_task_read_to_port(task_read_t)
-		destructor: task_read_deallocate(task_read_t)
-#endif	/* KERNEL_SERVER */
-		;
-
 type thread_t = mach_port_t
 #if	KERNEL_SERVER
 		intran: thread_t convert_port_to_thread(mach_port_t)
@@ -179,14 +156,6 @@ type thread_inspect_t = mach_port_t
 		intran: thread_inspect_t convert_port_to_thread_inspect(mach_port_t)
 		outtran: mach_port_t convert_thread_inspect_to_port(thread_inspect_t)
 		destructor: thread_inspect_deallocate(thread_inspect_t)
-#endif	/* KERNEL_SERVER */
-		;
-
-type thread_read_t = mach_port_t
-#if	KERNEL_SERVER
-		intran: thread_read_t convert_port_to_thread_read(mach_port_t)
-		outtran: mach_port_t convert_thread_read_to_port(thread_read_t)
-		destructor: thread_read_deallocate(thread_read_t)
 #endif	/* KERNEL_SERVER */
 		;
 
@@ -248,13 +217,6 @@ type ipc_space_t = mach_port_t
 #if	KERNEL_SERVER
 		intran: ipc_space_t convert_port_to_space(mach_port_t)
 		destructor: space_deallocate(ipc_space_t)
-#endif	/* KERNEL_SERVER */
-		;
-
-type ipc_space_read_t = mach_port_t
-#if	KERNEL_SERVER
-		intran: ipc_space_read_t convert_port_to_space_read(mach_port_t)
-		destructor: space_read_deallocate(ipc_space_read_t)
 #endif	/* KERNEL_SERVER */
 		;
 
