@@ -8,7 +8,7 @@ export SYMROOT=$PWD/sym
 
 SDK=$(xcrun --sdk macosx.internal -show-sdk-path)
 
-if [ ! -d "$SDK" ]; then
+if [ ! -f "$SDK" ]; then
 SDK=$(xcrun --sdk macosx -show-sdk-path)
 fi
 
