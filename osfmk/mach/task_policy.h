@@ -110,7 +110,8 @@ typedef integer_t       *task_policy_t;
 #define TASK_BASE_LATENCY_QOS_POLICY    10
 #define TASK_BASE_THROUGHPUT_QOS_POLICY 11
 
-typedef enum task_role {
+
+enum task_role {
 	TASK_RENICED                    = -1,
 	TASK_UNSPECIFIED                = 0,
 	TASK_FOREGROUND_APPLICATION     = 1,
@@ -121,7 +122,9 @@ typedef enum task_role {
 	TASK_NONUI_APPLICATION          = 6,
 	TASK_DEFAULT_APPLICATION        = 7,
 	TASK_DARWINBG_APPLICATION       = 8,
-} task_role_t;
+};
+
+typedef integer_t       task_role_t;
 
 struct task_category_policy {
 	task_role_t             role;
@@ -190,9 +193,7 @@ typedef struct task_qos_policy *task_qos_policy_t;
  * When they do, we will update TASK_POLICY_INTERNAL_STRUCT_VERSION.
  */
 
-#define TASK_POLICY_INTERNAL_STRUCT_VERSION 4
-
-#define trp_tal_enabled trp_reserved  /*  trp_tal_enabled is unused, reuse its slot to grow trp_role */
+#define TASK_POLICY_INTERNAL_STRUCT_VERSION 2
 
 struct task_requested_policy {
 	uint64_t        trp_int_darwinbg        :1,     /* marked as darwinbg via setpriority */
@@ -208,7 +209,8 @@ struct task_requested_policy {
 
 	    trp_apptype             :3,                 /* What apptype did launchd tell us this was (inherited) */
 	    trp_boosted             :1,                 /* Has a non-zero importance assertion count */
-	    trp_role                :5,                 /* task's system role */
+	    trp_role                :4,                 /* task's system role */
+	    trp_tal_enabled         :1,                 /* TAL mode is enabled */
 	    trp_over_latency_qos    :3,                 /* Timer latency QoS override */
 	    trp_over_through_qos    :3,                 /* Computation throughput QoS override */
 	    trp_sfi_managed         :1,                 /* SFI Managed task */
@@ -248,9 +250,8 @@ struct task_effective_policy {
 	    tep_live_donor          :1,                 /* task is a live importance boost donor */
 	    tep_qos_clamp           :3,                 /* task qos clamp (applies to qos-disabled threads too) */
 	    tep_qos_ceiling         :3,                 /* task qos ceiling (applies to only qos-participating threads) */
-	    tep_adaptive_bg         :1,                 /* task is bg solely due to the adaptive daemon clamp */
 
-	    tep_reserved            :30;
+	    tep_reserved            :31;
 };
 
 #endif /* PRIVATE */
@@ -335,7 +336,7 @@ typedef struct task_policy_state *task_policy_state_t;
 #define TASK_APPTYPE_DAEMON_ADAPTIVE     3
 #define TASK_APPTYPE_DAEMON_BACKGROUND   4
 #define TASK_APPTYPE_APP_DEFAULT         5
-#define TASK_APPTYPE_APP_TAL             6 /* unused */
+#define TASK_APPTYPE_APP_TAL             6
 #define TASK_APPTYPE_DRIVER              7
 
 /* task policy state flags */
@@ -343,7 +344,6 @@ typedef struct task_policy_state *task_policy_state_t;
 #define TASK_IMP_DONOR                       0x00000002
 #define TASK_IMP_LIVE_DONOR                  0x00000004
 #define TASK_DENAP_RECEIVER                  0x00000008
-#define TASK_IS_PIDSUSPENDED                 0x00000010
 
 /* requested_policy */
 #define POLICY_REQ_INT_DARWIN_BG             0x00000001
