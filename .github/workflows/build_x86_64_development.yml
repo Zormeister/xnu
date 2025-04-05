@@ -34,7 +34,7 @@ jobs:
             cd ~/dtrace
             echo "#include <stdint.h>" > include/llvm-Support/DataTypes.h
             sed -i -e 's,include "llvm/Support/DataTypes,include "llvm-Support/DataTypes,' include/llvm-Support/PointerLikeTypeTraits.h
-            xcodebuild install DSTROOT=$(xcrun -sdk macosx -show-sdk-platform-path)/../../Toolchains/XcodeDefault.xctoolchain -target ctfdump -target ctfmerge-sdk macosx
+            xcodebuild install DSTROOT=$(xcrun -sdk macosx -show-sdk-platform-path)/../../Toolchains/XcodeDefault.xctoolchain -target ctfdump -target ctfmerge -sdk macosx
         - name: Install Kernel Headers
           run: |
             cd ~/xnu*/
