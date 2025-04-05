@@ -1,0 +1,42 @@
+name: x86-64 DEVELOPMENT Build
+
+on: push
+  
+jobs:
+    build:
+      runs-on: macos-latest
+  
+      steps:
+        - name: Clone
+          uses: actions/checkout@v2
+        - name: Clone Sources
+          run: |
+            git clone --branch 6153 https://github.com/Zormeister/xnu ~/xnu-6153.141.1~1
+            git clone --branch rel/dtrace-388 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
+            git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
+            git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
+            git clone --branch rel/libdispatch-1173 https://github.com/apple-oss-distributions/libdispatch.git ~/libdispatch
+        - name: Prepare AvailabilityVersions
+          run: |
+            mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec
+            cp ~/AvailabilityVersions/availability.pl $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec/availability.pl
+        - name: Prepare libplatform
+          run: |
+            mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal
+            cp ~/libplatform/private/os/internal/* $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal/
+        - name: Prepare libfirehose_kernel
+          run: |
+            mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
+            cp ~/libdispatch/os/firehose_buffer_private.h $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
+            awk '/include "<DEVELOPER/ {next;} /SDKROOT =/ {print "SDKROOT = macosx"; next;} {print $0}' xcodeconfig/libdispatch.xcconfig > .__tmp__ && mv -f .__tmp__ xcodeconfig/libdispatch.xcconfig
+            xcodebuild install DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel
+        - name: Build Kernel
+          run: |
+            cd ~/xnu*/
+            make -j1 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD ARCH_CONFIGS="x86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" |& tee build.log
+        - name: Upload Kernel build log
+          if: success() || failure() # run this step even if the previous step failed
+          uses: actions/upload-artifact@v4
+          with:
+            name: XNU-Build-Log_DEVELOPMENT_x86_64
+            path: /Users/runner/src/xnu-6153.141.1~1/build.log
