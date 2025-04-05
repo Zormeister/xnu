@@ -157,7 +157,7 @@ kprintf(const char *fmt, ...)
 
 		pal_preemption_assert();
 
-		in_panic_context = debug_is_current_cpu_in_panic_state();
+		in_panic_context = processor_in_panic_context(current_processor());
 
 		// If current CPU is in panic context, be a little more impatient.
 		kprintf_lock_grabbed = simple_lock_try_lock_mp_signal_safe_loop_duration(&kprintf_lock,
