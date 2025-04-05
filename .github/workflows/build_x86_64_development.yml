@@ -49,10 +49,16 @@ jobs:
         - name: Build Kernel
           run: |
             cd ~/xnu*/
-            make -j1 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD ARCH_CONFIGS="x86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" |& tee build.log
-        - name: Upload Kernel build log
-          if: success() || failure() # run this step even if the previous step failed
+            make -j1 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD ARCH_CONFIGS="x86_64" RC_DARWIN_KERNEL_VERSION="19.6.0"
+        - name: Package Kernel into tarball
+          run: |
+            cd ~/xnu*/
+            make -j1 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD ARCH_CONFIGS="x86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_kernels
+            cd $PWD/KernelRoot
+            tar -cvf kernel_development.tar.xz .
+        - name: Upload Kernel Root tarball
+          if: success()
           uses: actions/upload-artifact@v4
           with:
-            name: XNU-Build-Log_DEVELOPMENT_x86_64
-            path: /Users/runner/src/xnu-6153.141.1~1/build.log
+            name: kernel_development_x86.tar.xz
+            path: /Users/runner/src/xnu-6153.141.1~1/KernelRoot/kernel_development.tar.xz
