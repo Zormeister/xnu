@@ -22,8 +22,8 @@ code_table = []
 with open(trace_code_file, 'rt') as codes:
     for line in codes:
 	    m = id_name_pattern.match(line)
-	if m:
-        code_table += [(int(m.group(1),base=16), m.group(2))]
+	    if m:
+            code_table += [(int(m.group(1),base=16), m.group(2))]
 
 # emit typedef:
 print "typedef struct {"
