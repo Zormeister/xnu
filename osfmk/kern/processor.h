@@ -85,6 +85,7 @@
 #include <kern/cpu_quiesce.h>
 #include <kern/sched_clutch.h>
 #include <kern/assert.h>
+#include <kern/thread_group.h>
 #include <machine/limits.h>
 
 /*
@@ -253,6 +254,13 @@ struct processor {
 	thread_urgency_t        current_urgency;        /* cached urgency of current thread */
 	bool                    current_is_NO_SMT;         /* cached TH_SFLAG_NO_SMT of current thread */
 	bool                    current_is_bound;       /* current thread is bound to this processor */
+#if CONFIG_THREAD_GROUPS
+	struct thread_group     *current_thread_group;  /* thread_group of current thread */
+#endif /* CONFIG_THREAD_GROUPS */
+
+#if CONFIG_SCHED_TRADITIONAL
+	int                     runq_bound_count;       /* # of threads bound to this processor */
+#endif /* CONFIG_SCHED_TRADITIONAL */
 
 	int                     starting_pri;           /* priority of current thread as it was when scheduled */
 	int                     cpu_id;                 /* platform numeric id */

@@ -899,6 +899,26 @@ i_coal_jetsam_init(coalition_t coal, boolean_t privileged)
 	queue_head_init(coal->j.services);
 	queue_head_init(coal->j.other);
 
+#if CONFIG_THREAD_GROUPS
+	switch (coal->role) {
+	case COALITION_ROLE_SYSTEM:
+		coal->j.thread_group = thread_group_find_by_id_and_retain(THREAD_GROUP_SYSTEM);
+		break;
+	case COALITION_ROLE_BACKGROUND:
+		coal->j.thread_group = thread_group_find_by_id_and_retain(THREAD_GROUP_BACKGROUND);
+		break;
+	case COALITION_ROLE_ADAPTIVE:
+		if (merge_adaptive_coalitions) {
+			coal->j.thread_group = thread_group_find_by_id_and_retain(THREAD_GROUP_ADAPTIVE);
+		} else {
+			coal->j.thread_group = thread_group_create_and_retain();
+		}
+		break;
+	default:
+		coal->j.thread_group = thread_group_create_and_retain();
+	}
+	assert(coal->j.thread_group != NULL);
+#endif
 	return KERN_SUCCESS;
 }
 
@@ -913,6 +933,12 @@ i_coal_jetsam_dealloc(__unused coalition_t coal)
 	assert(queue_empty(&coal->j.other));
 	assert(coal->j.leader == TASK_NULL);
 
+#if CONFIG_THREAD_GROUPS
+	/* disassociate from the thread group */
+	assert(coal->j.thread_group != NULL);
+	thread_group_release(coal->j.thread_group);
+	coal->j.thread_group = NULL;
+#endif
 }
 
 static kern_return_t
@@ -1139,8 +1165,16 @@ coalition_create_internal(int type, int role, boolean_t privileged, coalition_t 
 	coalition_count++;
 	enqueue_tail(&coalitions_q, &new_coal->coalitions);
 
+#if CONFIG_THREAD_GROUPS
+	KDBG_RELEASE(MACHDBG_CODE(DBG_MACH_COALITION, MACH_COALITION_NEW),
+	    new_coal->id, new_coal->type,
+	    (new_coal->type == COALITION_TYPE_JETSAM && new_coal->j.thread_group) ?
+	    thread_group_get_id(new_coal->j.thread_group) : 0);
+
+#else
 	KDBG_RELEASE(MACHDBG_CODE(DBG_MACH_COALITION, MACH_COALITION_NEW),
 	    new_coal->id, new_coal->type);
+#endif
 	lck_mtx_unlock(&coalitions_list_lock);
 
 	coal_dbg("id:%llu, type:%s", new_coal->id, coal_type_str(new_coal->type));
@@ -1180,8 +1214,15 @@ coalition_release(coalition_t coal)
 	assert(coal->reaped);
 	assert(coal->focal_task_count == 0);
 	assert(coal->nonfocal_task_count == 0);
+#if CONFIG_THREAD_GROUPS
+	KDBG_RELEASE(MACHDBG_CODE(DBG_MACH_COALITION, MACH_COALITION_FREE),
+	    coal->id, coal->type,
+	    coal->type == COALITION_TYPE_JETSAM ?
+	    coal->j.thread_group : 0);
+#else
 	KDBG_RELEASE(MACHDBG_CODE(DBG_MACH_COALITION, MACH_COALITION_FREE),
 	    coal->id, coal->type);
+#endif
 
 	coal_call(coal, dealloc);
 
@@ -1473,6 +1514,73 @@ coalition_set_efficient(coalition_t coal)
 	coalition_unlock(coal);
 }
 
+#if CONFIG_THREAD_GROUPS
+struct thread_group *
+task_coalition_get_thread_group(task_t task)
+{
+	coalition_t coal = task->coalition[COALITION_TYPE_JETSAM];
+	/* return system thread group for non-jetsam coalitions */
+	if (coal == COALITION_NULL) {
+		return init_coalition[COALITION_TYPE_JETSAM]->j.thread_group;
+	}
+	return coal->j.thread_group;
+}
+
+
+struct thread_group *
+kdp_coalition_get_thread_group(coalition_t coal)
+{
+	if (coal->type != COALITION_TYPE_JETSAM) {
+		return NULL;
+	}
+	assert(coal->j.thread_group != NULL);
+	return coal->j.thread_group;
+}
+
+struct thread_group *
+coalition_get_thread_group(coalition_t coal)
+{
+	if (coal->type != COALITION_TYPE_JETSAM) {
+		return NULL;
+	}
+	assert(coal->j.thread_group != NULL);
+	return thread_group_retain(coal->j.thread_group);
+}
+
+void
+coalition_set_thread_group(coalition_t coal, struct thread_group *tg)
+{
+	assert(coal != COALITION_NULL);
+	assert(tg != NULL);
+
+	if (coal->type != COALITION_TYPE_JETSAM) {
+		return;
+	}
+	struct thread_group *old_tg = coal->j.thread_group;
+	assert(old_tg != NULL);
+	coal->j.thread_group = tg;
+
+	KDBG_RELEASE(MACHDBG_CODE(DBG_MACH_COALITION, MACH_COALITION_THREAD_GROUP_SET),
+	    coal->id, coal->type, thread_group_get_id(tg));
+
+	thread_group_release(old_tg);
+}
+
+void
+task_coalition_thread_group_focal_update(task_t task)
+{
+	assert(task->coalition[COALITION_FOCAL_TASKS_ACCOUNTING] != COALITION_NULL);
+	thread_group_flags_update_lock();
+	uint32_t focal_count = task_coalition_focal_count(task);
+	if (focal_count) {
+		thread_group_set_flags_locked(task_coalition_get_thread_group(task), THREAD_GROUP_FLAGS_UI_APP);
+	} else {
+		thread_group_clear_flags_locked(task_coalition_get_thread_group(task), THREAD_GROUP_FLAGS_UI_APP);
+	}
+	thread_group_flags_update_unlock();
+}
+
+#endif
 
 void
 coalition_for_each_task(coalition_t coal, void *ctx,

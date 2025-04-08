@@ -816,6 +816,18 @@ sched_set_thread_mode(thread_t thread, sched_mode_t new_mode)
 		break;
 	}
 
+#if CONFIG_SCHED_AUTO_JOIN
+	/*
+	 * Realtime threads might have auto-joined a work interval based on
+	 * make runnable relationships. If such an RT thread is now being demoted
+	 * to non-RT, unjoin the thread from the work interval.
+	 */
+	if ((thread->sched_flags & TH_SFLAG_THREAD_GROUP_AUTO_JOIN) && (new_mode != TH_MODE_REALTIME)) {
+		assert((thread->sched_mode == TH_MODE_REALTIME) || (thread->th_work_interval_flags & TH_WORK_INTERVAL_FLAGS_AUTO_JOIN_LEAK));
+		work_interval_auto_join_demote(thread);
+	}
+#endif /* CONFIG_SCHED_AUTO_JOIN */
+
 	thread->sched_mode = new_mode;
 
 	SCHED(update_thread_bucket)(thread);

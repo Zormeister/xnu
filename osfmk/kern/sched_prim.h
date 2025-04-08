@@ -72,7 +72,6 @@
 #include <mach/kern_return.h>
 #include <kern/clock.h>
 #include <kern/kern_types.h>
-#include <kern/percpu.h>
 #include <kern/thread.h>
 #include <kern/block_hint.h>
 
@@ -410,19 +409,6 @@ __private_extern__ kern_return_t clear_wait_internal(
 	thread_t                thread,
 	wait_result_t   result);
 
-struct sched_statistics {
-	uint32_t        csw_count;
-	uint32_t        preempt_count;
-	uint32_t        preempted_rt_count;
-	uint32_t        preempted_by_rt_count;
-	uint32_t        rt_sched_count;
-	uint32_t        interrupt_count;
-	uint32_t        ipi_count;
-	uint32_t        timer_pop_count;
-	uint32_t        idle_transitions;
-	uint32_t        quantum_timer_expirations;
-};
-PERCPU_DECL(struct sched_statistics, sched_stats);
 extern bool             sched_stats_active;
 
 extern void sched_stats_handle_csw(

@@ -125,9 +125,6 @@
 #include <kern/host.h>
 #include <stdatomic.h>
 
-struct sched_statistics PERCPU_DATA(sched_stats);
-bool sched_stats_active;
-
 int
 rt_runq_count(processor_set_t pset)
 {
@@ -147,16 +144,16 @@ rt_runq_count_decr(processor_set_t pset)
 }
 
 #define         DEFAULT_PREEMPTION_RATE         100             /* (1/s) */
-TUNABLE(int, default_preemption_rate, "preempt", DEFAULT_PREEMPTION_RATE);
+int                     default_preemption_rate = DEFAULT_PREEMPTION_RATE;
 
 #define         DEFAULT_BG_PREEMPTION_RATE      400             /* (1/s) */
-TUNABLE(int, default_bg_preemption_rate, "bg_preempt", DEFAULT_BG_PREEMPTION_RATE);
+int                     default_bg_preemption_rate = DEFAULT_BG_PREEMPTION_RATE;
 
 #define         MAX_UNSAFE_QUANTA               800
-TUNABLE(int, max_unsafe_quanta, "unsafe", MAX_UNSAFE_QUANTA);
+int                     max_unsafe_quanta = MAX_UNSAFE_QUANTA;
 
 #define         MAX_POLL_QUANTA                 2
-TUNABLE(int, max_poll_quanta, "poll", MAX_POLL_QUANTA);
+int                     max_poll_quanta = MAX_POLL_QUANTA;
 
 #define         SCHED_POLL_YIELD_SHIFT          4               /* 1/16 */
 int             sched_poll_yield_shift = SCHED_POLL_YIELD_SHIFT;
@@ -707,7 +704,7 @@ thread_unblock(
 	if (__improbable(aticontext && !(thread_get_tag_internal(thread) & THREAD_TAG_CALLOUT))) {
 		DTRACE_SCHED2(iwakeup, struct thread *, thread, struct proc *, thread->task->bsd_info);
 
-		uint64_t ttd = current_processor()->timer_call_ttd;
+		uint64_t ttd = PROCESSOR_DATA(current_processor(), timer_call_ttd);
 
 		if (ttd) {
 			if (ttd <= timer_deadline_tracking_bin_1) {
@@ -2373,14 +2370,14 @@ thread_invoke(
 			self->last_run_time = ctime;
 			processor_timer_switch_thread(ctime, &thread->system_timer);
 			timer_update(&thread->runnable_timer, ctime);
-			processor->kernel_timer = &thread->system_timer;
+			PROCESSOR_DATA(processor, kernel_timer) = &thread->system_timer;
 
 			/*
 			 * Since non-precise user/kernel time doesn't update the state timer
 			 * during privilege transitions, synthesize an event now.
 			 */
 			if (!thread->precise_user_kernel_time) {
-				timer_update(processor->current_state, ctime);
+				timer_update(PROCESSOR_DATA(processor, current_state), ctime);
 			}
 
 			KERNEL_DEBUG_CONSTANT_IST(KDEBUG_TRACE,
@@ -2529,14 +2526,14 @@ need_stack:
 	self->last_run_time = ctime;
 	processor_timer_switch_thread(ctime, &thread->system_timer);
 	timer_update(&thread->runnable_timer, ctime);
-	processor->kernel_timer = &thread->system_timer;
+	PROCESSOR_DATA(processor, kernel_timer) = &thread->system_timer;
 
 	/*
 	 * Since non-precise user/kernel time doesn't update the state timer
 	 * during privilege transitions, synthesize an event now.
 	 */
 	if (!thread->precise_user_kernel_time) {
-		timer_update(processor->current_state, ctime);
+		timer_update(PROCESSOR_DATA(processor, current_state), ctime);
 	}
 
 	KERNEL_DEBUG_CONSTANT_IST(KDEBUG_TRACE,
@@ -5287,8 +5284,8 @@ processor_idle(
 
 	uint64_t ctime = mach_absolute_time();
 
-	timer_switch(&processor->system_state, ctime, &processor->idle_state);
-	processor->current_state = &processor->idle_state;
+	timer_switch(&PROCESSOR_DATA(processor, system_state), ctime, &PROCESSOR_DATA(processor, idle_state));
+	PROCESSOR_DATA(processor, current_state) = &PROCESSOR_DATA(processor, idle_state);
 
 	cpu_quiescent_counter_leave(ctime);
 
@@ -5360,8 +5357,8 @@ processor_idle(
 
 	ctime = mach_absolute_time();
 
-	timer_switch(&processor->idle_state, ctime, &processor->system_state);
-	processor->current_state = &processor->system_state;
+	timer_switch(&PROCESSOR_DATA(processor->idle_state), ctime, &PROCESSOR_DATA(processor->system_state));
+	PROCESSOR_DATA(processor, current_state) = &PROCESSOR_DATA(processor->system_state);
 
 	cpu_quiescent_counter_join(ctime);
 
@@ -5921,10 +5918,10 @@ thread_clear_eager_preempt(thread_t thread)
 void
 sched_stats_handle_csw(processor_t processor, int reasons, int selfpri, int otherpri)
 {
-	struct sched_statistics *stats;
+	struct processor_sched_statistics *stats;
 	boolean_t to_realtime = FALSE;
 
-	stats = PERCPU_GET_RELATIVE(sched_stats, processor, processor);
+	stats = &processor->processor_data.sched_stats;
 	stats->csw_count++;
 
 	if (otherpri >= BASEPRI_REALTIME) {

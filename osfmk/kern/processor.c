@@ -289,6 +289,9 @@ processor_state_update_idle(processor_t processor)
 	processor->current_pri = IDLEPRI;
 	processor->current_sfi_class = SFI_CLASS_KERNEL;
 	processor->current_recommended_pset_type = PSET_SMP;
+#if CONFIG_THREAD_GROUPS
+	processor->current_thread_group = NULL;
+#endif
 	processor->current_perfctl_class = PERFCONTROL_CLASS_IDLE;
 	processor->current_urgency = THREAD_URGENCY_NONE;
 	processor->current_is_NO_SMT = false;
@@ -309,6 +312,9 @@ processor_state_update_from_thread(processor_t processor, thread_t thread)
 	processor->current_is_NO_SMT = (thread->sched_flags & TH_SFLAG_NO_SMT);
 #endif
 	processor->current_is_bound = thread->bound_processor != PROCESSOR_NULL;
+#if CONFIG_THREAD_GROUPS
+	processor->current_thread_group = thread_group_get(thread);
+#endif
 }
 
 void
@@ -1419,8 +1425,36 @@ pset_reference(
 	return;
 }
 
+#if CONFIG_THREAD_GROUPS
 
-#if CONFIG_SCHED_CLUTCH
+pset_cluster_type_t
+thread_group_pset_recommendation(__unused struct thread_group *tg, __unused cluster_type_t recommendation)
+{
+#if __AMP__
+	switch (recommendation) {
+	case CLUSTER_TYPE_SMP:
+	default:
+		/*
+		 * In case of SMP recommendations, check if the thread
+		 * group has special flags which restrict it to the E
+		 * cluster.
+		 */
+		if (thread_group_smp_restricted(tg)) {
+			return PSET_AMP_E;
+		}
+		return PSET_AMP_P;
+	case CLUSTER_TYPE_E:
+		return PSET_AMP_E;
+	case CLUSTER_TYPE_P:
+		return PSET_AMP_P;
+	}
+#else /* __AMP__ */
+	return PSET_SMP;
+#endif /* __AMP__ */
+}
+
+#endif
+
 
 /*
  * The clutch scheduler decides the recommendation of a thread based
@@ -1438,20 +1472,91 @@ pset_reference(
  * on a thread group instead of individual thread basis.
  *
  */
-pset_cluster_type_t
-recommended_pset_type(thread_t thread)
-{
-	(void)thread;
-	return PSET_SMP;
-}
 
-#else /* CONFIG_SCHED_CLUTCH */
 
 pset_cluster_type_t
 recommended_pset_type(thread_t thread)
 {
+#if CONFIG_THREAD_GROUPS && __AMP__
+	if (thread == THREAD_NULL) {
+		return PSET_AMP_E;
+	}
+ 
+	if (thread->sched_flags & TH_SFLAG_ECORE_ONLY) {
+		return PSET_AMP_E;
+	} else if (thread->sched_flags & TH_SFLAG_PCORE_ONLY) {
+		return PSET_AMP_P;
+	}
+ 
+	if (thread->base_pri <= MAXPRI_THROTTLE) {
+		if (os_atomic_load(&sched_perfctl_policy_bg, relaxed) != SCHED_PERFCTL_POLICY_FOLLOW_GROUP) {
+			return PSET_AMP_E;
+		}
+	} else if (thread->base_pri <= BASEPRI_UTILITY) {
+		if (os_atomic_load(&sched_perfctl_policy_util, relaxed) != SCHED_PERFCTL_POLICY_FOLLOW_GROUP) {
+			return PSET_AMP_E;
+		}
+	}
+ 
+#if DEVELOPMENT || DEBUG
+	extern bool system_ecore_only;
+	extern processor_set_t pcore_set;
+	if (system_ecore_only) {
+		if (thread->task->pset_hint == pcore_set) {
+			return PSET_AMP_P;
+		}
+		return PSET_AMP_E;
+	}
+#endif
+ 
+	struct thread_group *tg = thread_group_get(thread);
+	cluster_type_t recommendation = thread_group_recommendation(tg);
+	switch (recommendation) {
+	case CLUSTER_TYPE_SMP:
+	default:
+		if (thread->task == kernel_task) {
+			return PSET_AMP_E;
+		}
+		return PSET_AMP_P;
+	case CLUSTER_TYPE_E:
+		return PSET_AMP_E;
+	case CLUSTER_TYPE_P:
+		return PSET_AMP_P;
+	}
+#else
 	(void)thread;
 	return PSET_SMP;
+#endif
 }
-
-#endif /* CONFIG_SCHED_CLUTCH */
+ 
+ #if CONFIG_THREAD_GROUPS && __AMP__
+ 
+void
+sched_perfcontrol_inherit_recommendation_from_tg(perfcontrol_class_t perfctl_class, boolean_t inherit)
+{
+	sched_perfctl_class_policy_t sched_policy = inherit ? SCHED_PERFCTL_POLICY_FOLLOW_GROUP : SCHED_PERFCTL_POLICY_RESTRICT_E;
+ 
+	KDBG(MACHDBG_CODE(DBG_MACH_SCHED, MACH_AMP_PERFCTL_POLICY_CHANGE) | DBG_FUNC_NONE, perfctl_class, sched_policy, 0, 0);
+ 
+	switch (perfctl_class) {
+	case PERFCONTROL_CLASS_UTILITY:
+		os_atomic_store(&sched_perfctl_policy_util, sched_policy, relaxed);
+		break;
+	case PERFCONTROL_CLASS_BACKGROUND:
+		os_atomic_store(&sched_perfctl_policy_bg, sched_policy, relaxed);
+		break;
+	default:
+		panic("perfctl_class invalid");
+		break;
+	}
+}
+ 
+#elif defined(__arm64__)
+ 
+/* Define a stub routine since this symbol is exported on all arm64 platforms */
+void
+sched_perfcontrol_inherit_recommendation_from_tg(__unused perfcontrol_class_t perfctl_class, __unused boolean_t inherit)
+{
+}
+ 
+#endif /* defined(__arm64__) */

@@ -139,6 +139,10 @@ static void             stackshot_coalition_jetsam_count(void *arg, int i, coali
 static void             stackshot_coalition_jetsam_snapshot(void *arg, int i, coalition_t coal);
 #endif /* CONFIG_COALITIONS */
 
+#if CONFIG_THREAD_GROUPS
+static void             stackshot_thread_group_count(void *arg, int i, struct thread_group *tg);
+static void             stackshot_thread_group_snapshot(void *arg, int i, struct thread_group *tg);
+#endif /* CONFIG_THREAD_GROUPS */
 
 extern uint32_t         workqueue_get_pwq_state_kdp(void *proc);
 
@@ -1621,6 +1625,13 @@ kcdata_record_thread_snapshot(
 		}
 	}
 
+#if CONFIG_THREAD_GROUPS
+	if (trace_flags & STACKSHOT_THREAD_GROUP) {
+		uint64_t thread_group_id = thread->thread_group ? thread_group_get_id(thread->thread_group) : 0;
+		kcd_exit_on_error(kcdata_get_memory_addr(kcd, STACKSHOT_KCTYPE_THREAD_GROUP, sizeof(thread_group_id), &out_addr));
+		stackshot_memcpy((void*)out_addr, &thread_group_id, sizeof(uint64_t));
+	}
+#endif /* CONFIG_THREAD_GROUPS */
 
 	if (collect_iostats) {
 		kcd_exit_on_error(kcdata_record_thread_iostats(kcd, thread));
@@ -2163,7 +2174,50 @@ kdp_stackshot_kcdata_format(int pid, uint32_t trace_flags, uint32_t * pBytesTrac
 	trace_flags &= ~(STACKSHOT_SAVE_JETSAM_COALITIONS);
 #endif /* CONFIG_COALITIONS */
 
+#if CONFIG_THREAD_GROUPS
+	struct thread_group_snapshot_v2 *thread_groups = NULL;
+	int num_thread_groups = 0;
+
+#if INTERRUPT_MASKED_DEBUG && MONOTONIC
+	uint64_t thread_group_begin_cpu_cycle_count = 0;
+
+	if (!panic_stackshot && (trace_flags & STACKSHOT_THREAD_GROUP)) {
+		thread_group_begin_cpu_cycle_count = mt_cur_cpu_cycles();
+	}
+#endif
+
+
+	/* Iterate over thread group names */
+	if (trace_flags & STACKSHOT_THREAD_GROUP) {
+		/* Variable size array - better not have it on the stack. */
+		kcdata_compression_window_open(stackshot_kcdata_p);
+
+		if (thread_group_iterate_stackshot(stackshot_thread_group_count, &num_thread_groups) != KERN_SUCCESS) {
+			trace_flags &= ~(STACKSHOT_THREAD_GROUP);
+		}
+
+		if (num_thread_groups > 0) {
+			kcd_exit_on_error(kcdata_get_memory_addr_for_array(stackshot_kcdata_p, STACKSHOT_KCTYPE_THREAD_GROUP_SNAPSHOT, sizeof(struct thread_group_snapshot_v2), num_thread_groups, &out_addr));
+			thread_groups = (struct thread_group_snapshot_v2 *)out_addr;
+		}
+
+		if (thread_group_iterate_stackshot(stackshot_thread_group_snapshot, thread_groups) != KERN_SUCCESS) {
+			error = KERN_FAILURE;
+			goto error_exit;
+		}
+
+		kcd_exit_on_error(kcdata_compression_window_close(stackshot_kcdata_p));
+	}
+
+#if INTERRUPT_MASKED_DEBUG && MONOTONIC
+	if (!panic_stackshot && (thread_group_begin_cpu_cycle_count != 0)) {
+		kcd_exit_on_error(kcdata_add_uint64_with_description(stackshot_kcdata_p, (mt_cur_cpu_cycles() - thread_group_begin_cpu_cycle_count),
+		    "thread_groups_cpu_cycle_count"));
+	}
+#endif
+#else
 	trace_flags &= ~(STACKSHOT_THREAD_GROUP);
+#endif /* CONFIG_THREAD_GROUPS */
 
 
 	/* Iterate over tasks */
@@ -2653,6 +2707,12 @@ stackshot_coalition_jetsam_snapshot(void *arg, int i, coalition_t coal)
 		jcs->jcs_flags |= kCoalitionPrivileged;
 	}
 
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *thread_group = kdp_coalition_get_thread_group(coal);
+	if (thread_group) {
+		jcs->jcs_thread_group = thread_group_get_id(thread_group);
+	}
+#endif /* CONFIG_THREAD_GROUPS */
 
 	leader = kdp_coalition_get_leader(coal);
 	if (leader) {
@@ -2663,6 +2723,27 @@ stackshot_coalition_jetsam_snapshot(void *arg, int i, coalition_t coal)
 }
 #endif /* CONFIG_COALITIONS */
 
+#if CONFIG_THREAD_GROUPS
+static void
+stackshot_thread_group_count(void *arg, int i, struct thread_group *tg)
+{
+#pragma unused(i, tg)
+	unsigned int *n = (unsigned int*)arg;
+	(*n)++;
+}
+
+static void
+stackshot_thread_group_snapshot(void *arg, int i, struct thread_group *tg)
+{
+	struct thread_group_snapshot_v2 *thread_groups = (struct thread_group_snapshot_v2 *)arg;
+	struct thread_group_snapshot_v2 *tgs = &thread_groups[i];
+	uint64_t flags = kdp_thread_group_get_flags(tg);
+	tgs->tgs_id = thread_group_get_id(tg);
+	stackshot_memcpy(tgs->tgs_name, thread_group_get_name(tg), THREAD_GROUP_MAXNAME);
+	tgs->tgs_flags = ((flags & THREAD_GROUP_FLAGS_EFFICIENT) ? kThreadGroupEfficient : 0) |
+	    ((flags & THREAD_GROUP_FLAGS_UI_APP) ? kThreadGroupUIApp : 0);
+}
+#endif /* CONFIG_THREAD_GROUPS */
 
 /* Determine if a thread has waitinfo that stackshot can provide */
 static int
