@@ -159,6 +159,41 @@ IOPerfControlClient::allocateToken(thread_group *thread_group)
 {
 	uint64_t token = kIOPerfControlClientWorkUntracked;
 
+#if CONFIG_THREAD_GROUPS
+	auto s = IOSimpleLockLockDisableInterrupt(workTableLock);
+
+	uint64_t num_tries = 0;
+	size_t index = workTableNextIndex;
+	// - 1 since entry 0 is for kIOPerfControlClientWorkUntracked
+	while (num_tries < workTableLength - 1) {
+		if (workTable[index].thread_group == nullptr) {
+			thread_group_retain(thread_group);
+			workTable[index].thread_group = thread_group;
+			token = index;
+			// next integer between 1 and workTableLength - 1
+			workTableNextIndex = (index % (workTableLength - 1)) + 1;
+			break;
+		}
+		// next integer between 1 and workTableLength - 1
+		index = (index % (workTableLength - 1)) + 1;
+		num_tries += 1;
+	}
+#if (DEVELOPMENT || DEBUG)
+	if (token == kIOPerfControlClientWorkUntracked) {
+		/* When investigating a panic here, first check that the driver is not leaking tokens.
+		 * If the driver is not leaking tokens and maximum is less than kMaxWorkTableNumEntries,
+		 * the driver should be modified to pass a larger value to copyClient.
+		 * If the driver is not leaking tokens and maximum is equal to kMaxWorkTableNumEntries,
+		 * this code will have to be modified to support dynamic table growth to support larger
+		 * numbers of tokens.
+		 */
+		panic("Tokens allocated for this device exceeded maximum of %zu.\n",
+		    workTableLength - 1); // - 1 since entry 0 is for kIOPerfControlClientWorkUntracked
+	}
+#endif
+
+	IOSimpleLockUnlockEnableInterrupt(workTableLock, s);
+#endif
 
 	return token;
 }
@@ -166,6 +201,22 @@ IOPerfControlClient::allocateToken(thread_group *thread_group)
 void
 IOPerfControlClient::deallocateToken(uint64_t token)
 {
+#if CONFIG_THREAD_GROUPS
+	assertf(token != kIOPerfControlClientWorkUntracked, "Attempt to deallocate token kIOPerfControlClientWorkUntracked\n");
+	assertf(token <= workTableLength, "Attempt to deallocate token %llu which is greater than the table size of %zu\n", token, workTableLength);
+	auto s = IOSimpleLockLockDisableInterrupt(workTableLock);
+
+	auto &entry = workTable[token];
+	auto *thread_group = entry.thread_group;
+	bzero(&entry, sizeof(entry));
+	workTableNextIndex = token;
+
+	IOSimpleLockUnlockEnableInterrupt(workTableLock, s);
+
+	// This can call into the performance controller if the last reference is dropped here. Are we sure
+	// the driver isn't holding any locks? If not, we may want to async this to another context.
+	thread_group_release(thread_group);
+#endif
 }
 
 bool
@@ -234,23 +285,118 @@ IOPerfControlClient::unregisterDevice(__unused IOService *driver, IOService *dev
 uint64_t
 IOPerfControlClient::workSubmit(IOService *device, WorkSubmitArgs *args)
 {
+#if CONFIG_THREAD_GROUPS
+	auto *thread_group = thread_group_get(current_thread());
+	if (!thread_group) {
+		return kIOPerfControlClientWorkUntracked;
+	}
+
+	PerfControllerInterface::WorkState state{
+		.thread_group_id = thread_group_get_id(thread_group),
+		.thread_group_data = thread_group_get_machine_data(thread_group),
+		.work_data = nullptr,
+		.work_data_size = 0,
+		.started = false,
+	};
+	if (!shared->interface.workCanSubmit(device, &state, args)) {
+		return kIOPerfControlClientWorkUntracked;
+	}
+
+	uint64_t token = allocateToken(thread_group);
+	if (token != kIOPerfControlClientWorkUntracked) {
+		state.work_data = &workTable[token].perfcontrol_data;
+		state.work_data_size = sizeof(workTable[token].perfcontrol_data);
+		shared->interface.workSubmit(device, tokenToGlobalUniqueToken(token), &state, args);
+	}
+	return token;
+#else
 	return kIOPerfControlClientWorkUntracked;
+#endif
 }
 
 uint64_t
 IOPerfControlClient::workSubmitAndBegin(IOService *device, WorkSubmitArgs *submitArgs, WorkBeginArgs *beginArgs)
 {
+#if CONFIG_THREAD_GROUPS
+	auto *thread_group = thread_group_get(current_thread());
+	if (!thread_group) {
+		return kIOPerfControlClientWorkUntracked;
+	}
+
+	PerfControllerInterface::WorkState state{
+		.thread_group_id = thread_group_get_id(thread_group),
+		.thread_group_data = thread_group_get_machine_data(thread_group),
+		.work_data = nullptr,
+		.work_data_size = 0,
+		.started = false,
+	};
+	if (!shared->interface.workCanSubmit(device, &state, submitArgs)) {
+		return kIOPerfControlClientWorkUntracked;
+	}
+
+	uint64_t token = allocateToken(thread_group);
+	if (token != kIOPerfControlClientWorkUntracked) {
+		auto &entry = workTable[token];
+		state.work_data = &entry.perfcontrol_data;
+		state.work_data_size = sizeof(workTable[token].perfcontrol_data);
+		shared->interface.workSubmit(device, tokenToGlobalUniqueToken(token), &state, submitArgs);
+		state.started = true;
+		shared->interface.workBegin(device, tokenToGlobalUniqueToken(token), &state, beginArgs);
+		markEntryStarted(token, true);
+	}
+	return token;
+#else
 	return kIOPerfControlClientWorkUntracked;
+#endif
 }
 
 void
 IOPerfControlClient::workBegin(IOService *device, uint64_t token, WorkBeginArgs *args)
 {
+#if CONFIG_THREAD_GROUPS
+	WorkTableEntry *entry = getEntryForToken(token);
+	if (entry == nullptr) {
+		return;
+	}
+
+	assertf(!entry->started, "Work for token %llu was already started", token);
+
+	PerfControllerInterface::WorkState state{
+		.thread_group_id = thread_group_get_id(entry->thread_group),
+		.thread_group_data = thread_group_get_machine_data(entry->thread_group),
+		.work_data = &entry->perfcontrol_data,
+		.work_data_size = sizeof(entry->perfcontrol_data),
+		.started = true,
+	};
+	shared->interface.workBegin(device, tokenToGlobalUniqueToken(token), &state, args);
+	markEntryStarted(token, true);
+#endif
 }
 
 void
 IOPerfControlClient::workEnd(IOService *device, uint64_t token, WorkEndArgs *args, bool done)
 {
+#if CONFIG_THREAD_GROUPS
+	WorkTableEntry *entry = getEntryForToken(token);
+	if (entry == nullptr) {
+		return;
+	}
+
+	PerfControllerInterface::WorkState state{
+		.thread_group_id = thread_group_get_id(entry->thread_group),
+		.thread_group_data = thread_group_get_machine_data(entry->thread_group),
+		.work_data = &entry->perfcontrol_data,
+		.work_data_size = sizeof(entry->perfcontrol_data),
+		.started = entry->started,
+	};
+	shared->interface.workEnd(device, tokenToGlobalUniqueToken(token), &state, args, done);
+
+	if (done) {
+		deallocateToken(token);
+	} else {
+		markEntryStarted(token, false);
+	}
+#endif
 }
 
 IOReturn
