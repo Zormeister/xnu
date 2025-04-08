@@ -362,6 +362,8 @@ typedef struct cpu_data {
 	uint64_t                cpu_pcid_last_cr3;
 #endif
 	boolean_t               cpu_rendezvous_in_progress;
+	cluster_type_t          cpu_cluster_type;
+	uint32_t                cpu_cluster_id;
 } cpu_data_t;
 
 extern cpu_data_t       *cpu_data_ptr[];

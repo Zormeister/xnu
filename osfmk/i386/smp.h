@@ -29,7 +29,8 @@
 #ifndef _I386_SMP_H_
 #define _I386_SMP_H_
 
-/* x86_64 kernels are always built SMP, even if only 1 CPU is active */
+/* x86_64 kernels are always built SMP and AMP, even if only 1 CPU is active */
 #define __SMP__ 1
+#define __AMP__ 1 /* We should switch to the AMP scheduler when a HSA topology is found on the system */
 
 #endif  /* _I386_SMP_H_ */

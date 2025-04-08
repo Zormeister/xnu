@@ -105,6 +105,11 @@ typedef enum lcpu_state {
 	LCPU_RUN            = 5,
 } lcpu_state_t;
 
+typedef enum x86_core_type {
+	CORE_P,
+	CORE_E,
+} x86_core_type_t;
+
 /*
  * In each topology structure there are two numbers: a logical number and a
  * physical number.
@@ -164,6 +169,7 @@ typedef struct x86_core {
 	uint32_t            active_lcpus;/* Number of {running, idle} cpus */
 	void                *pmStats;   /* Power management stats for core */
 	void                *pmState;   /* Power management state for core */
+	x86_core_type_t		type;		/* Heterogeneous core type */
 } x86_core_t;
 
 #define X86DIE_FL_PRESENT       0x80000000      /* die is present */

@@ -507,6 +507,17 @@ typedef struct {
 	uint32_t        denominator;
 } cpuid_tsc_leaf_t;
 
+/* Native Model Identification Leaf: */
+typedef enum {
+	ATOM = 0x10,
+	CORE = 0x40,
+} cpuid_intel_core_type_t;
+
+typedef struct {
+	uint32_t 				model_id; /* Bits 0-23 */
+	cpuid_intel_core_type_t core_type; /* This can be used to tell how many E-cores and P-cores we have. */
+} cpuid_model_id_leaf_t;
+
 /* Physical CPU info - this is exported out of the kernel (kexts), so be wary of changes */
 typedef struct {
 	char            cpuid_vendor[16];
@@ -588,6 +599,8 @@ typedef struct {
 	uint32_t				cpu_vendor;
 	/* AMD specific? */
 	uint32_t				cpuid_package_type;
+
+	cpuid_model_id_leaf_t   cpuid_native_model_id_leaf[64]; /* The count is 64 to match the maximum CPU count in XNU. */
 } i386_cpu_info_t;
 
 #if defined(MACH_KERNEL_PRIVATE) && !defined(ASSEMBLER)

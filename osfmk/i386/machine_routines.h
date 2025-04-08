@@ -129,6 +129,14 @@ void ml_init_max_cpus(
 extern void     ml_cpu_up(void);
 extern void     ml_cpu_down(void);
 
+/* Machine topology info */
+typedef enum {
+	CLUSTER_TYPE_SMP = 0,
+	CLUSTER_TYPE_E   = 1,
+	CLUSTER_TYPE_P   = 2,
+	MAX_CPU_TYPES,
+} cluster_type_t;
+
 void bzero_phys_nc(
 	addr64_t phys_address,
 	uint32_t length);
