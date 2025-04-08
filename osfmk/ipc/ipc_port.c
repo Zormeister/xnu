@@ -1623,12 +1623,83 @@ ipc_port_link_special_reply_port(
 	imq_unlock(&special_reply_port->ip_messages);
 	ip_unlock(special_reply_port);
 
+	if (special_reply) {
+		/*
+		 * For special reply ports, if the destination port is
+		 * marked with the thread group blocked tracking flag,
+		 * callout to the performance controller.
+		 */
+		ipc_port_thread_group_blocked(dest_port);
+	}
+
 	if (drop_turnstile_ref) {
 		ipc_port_send_turnstile_complete(dest_port);
 	}
 
 	return;
 }
+
+/*
+ *	Routine:	ipc_port_thread_group_blocked
+ *	Purpose:
+ *		Call thread_group_blocked callout if the port
+ *	        has ip_tg_block_tracking bit set and the thread
+ *	        has not made this callout already.
+ *
+ *	Conditions:
+ *		Nothing is locked.
+ */
+ void
+ ipc_port_thread_group_blocked(ipc_port_t port __unused)
+ {
+ #if CONFIG_THREAD_GROUPS
+	 bool port_tg_block_tracking = false;
+	 thread_t self = current_thread();
+ 
+	 if (self->thread_group == NULL ||
+		 (self->options & TH_OPT_IPC_TG_BLOCKED)) {
+		 return;
+	 }
+ 
+	 port_tg_block_tracking = port->ip_tg_block_tracking;
+	 if (!port_tg_block_tracking) {
+		 return;
+	 }
+ 
+	 machine_thread_group_blocked(self->thread_group, NULL,
+		 PERFCONTROL_CALLOUT_BLOCKING_TG_RENDER_SERVER, self);
+ 
+	 self->options |= TH_OPT_IPC_TG_BLOCKED;
+ #endif
+ }
+ 
+ /*
+  *	Routine:	ipc_port_thread_group_unblocked
+  *	Purpose:
+  *		Call thread_group_unblocked callout if the
+  *		thread had previously made a thread_group_blocked
+  *		callout before (indicated by TH_OPT_IPC_TG_BLOCKED
+  *		flag on the thread).
+  *
+  *	Conditions:
+  *		Nothing is locked.
+  */
+ void
+ ipc_port_thread_group_unblocked(void)
+ {
+ #if CONFIG_THREAD_GROUPS
+	 thread_t self = current_thread();
+ 
+	 if (!(self->options & TH_OPT_IPC_TG_BLOCKED)) {
+		 return;
+	 }
+ 
+	 machine_thread_group_unblocked(self->thread_group, NULL,
+		 PERFCONTROL_CALLOUT_BLOCKING_TG_RENDER_SERVER, self);
+ 
+	 self->options &= ~TH_OPT_IPC_TG_BLOCKED;
+ #endif
+ }
 
 #if DEVELOPMENT || DEBUG
 inline void

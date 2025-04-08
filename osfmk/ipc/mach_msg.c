@@ -484,6 +484,7 @@ mach_msg_receive_continue(void)
 	mach_msg_return_t mr;
 	thread_t self = current_thread();
 
+	ipc_port_thread_group_unblocked();
 	if (self->ith_state == MACH_PEEK_READY) {
 		mr = MACH_PEEK_READY;
 	} else {
@@ -547,6 +548,7 @@ mach_msg_overwrite_trap(
 		if (mr != MACH_MSG_SUCCESS) {
 			ipc_kmsg_free(kmsg);
 			KDBG(MACHDBG_CODE(DBG_MACH_IPC, MACH_IPC_KMSG_INFO) | DBG_FUNC_END, mr);
+			ipc_port_thread_group_unblocked();
 			return mr;
 		}
 
@@ -556,6 +558,7 @@ mach_msg_overwrite_trap(
 			mr |= ipc_kmsg_copyout_pseudo(kmsg, space, map, MACH_MSG_BODY_NULL);
 			(void) ipc_kmsg_put(kmsg, option, msg_addr, send_size, 0, NULL);
 			KDBG(MACHDBG_CODE(DBG_MACH_IPC, MACH_IPC_KMSG_INFO) | DBG_FUNC_END, mr);
+			ipc_port_thread_group_unblocked();
 			return mr;
 		}
 	}
@@ -568,6 +571,7 @@ mach_msg_overwrite_trap(
 
 		mr = ipc_mqueue_copyin(space, rcv_name, &mqueue, &object);
 		if (mr != MACH_MSG_SUCCESS) {
+			ipc_port_thread_group_unblocked();
 			return mr;
 		}
 		/* hold ref for object */
@@ -580,6 +584,7 @@ mach_msg_overwrite_trap(
 			    (mach_port_name_t)override);
 			if (mr != MACH_MSG_SUCCESS) {
 				io_release(object);
+				ipc_port_thread_group_unblocked();
 				return mr;
 			}
 		}
@@ -601,9 +606,11 @@ mach_msg_overwrite_trap(
 		if ((option & MACH_RCV_TIMEOUT) && msg_timeout == 0) {
 			thread_poll_yield(self);
 		}
+		ipc_port_thread_group_unblocked();
 		return mach_msg_receive_results(NULL);
 	}
 
+	ipc_port_thread_group_unblocked();
 	return MACH_MSG_SUCCESS;
 }
 

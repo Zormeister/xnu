@@ -660,6 +660,11 @@ extern mach_port_name_t ipc_port_copyout_send(
 	ipc_port_t      sright,
 	ipc_space_t     space);
 
+extern void ipc_port_thread_group_blocked(
+	ipc_port_t      port);
+	
+extern void ipc_port_thread_group_unblocked(void);
+
 #endif /* MACH_KERNEL_PRIVATE */
 
 #if KERNEL_PRIVATE
