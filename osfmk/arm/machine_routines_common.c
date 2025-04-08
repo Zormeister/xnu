@@ -121,6 +121,20 @@ sched_perfcontrol_state_update_default(
 {
 }
 
+static void
+sched_perfcontrol_thread_group_blocked_default(
+	__unused thread_group_data_t blocked_tg, __unused thread_group_data_t blocking_tg,
+	__unused uint32_t flags, __unused perfcontrol_state_t blocked_thr_state)
+{
+}
+
+static void
+sched_perfcontrol_thread_group_unblocked_default(
+	__unused thread_group_data_t unblocked_tg, __unused thread_group_data_t unblocking_tg,
+	__unused uint32_t flags, __unused perfcontrol_state_t unblocked_thr_state)
+{
+}
+
 sched_perfcontrol_offcore_t                     sched_perfcontrol_offcore = sched_perfcontrol_offcore_default;
 sched_perfcontrol_context_switch_t              sched_perfcontrol_switch = sched_perfcontrol_switch_default;
 sched_perfcontrol_oncore_t                      sched_perfcontrol_oncore = sched_perfcontrol_oncore_default;
@@ -144,7 +158,44 @@ sched_perfcontrol_register_callbacks(sched_perfcontrol_callbacks_t callbacks, un
 	}
 
 	if (callbacks) {
+#if CONFIG_THREAD_GROUPS
+		if (callbacks->version >= SCHED_PERFCONTROL_CALLBACKS_VERSION_3) {
+			if (callbacks->thread_group_init != NULL) {
+				sched_perfcontrol_thread_group_init = callbacks->thread_group_init;
+			} else {
+				sched_perfcontrol_thread_group_init = sched_perfcontrol_thread_group_default;
+			}
+			if (callbacks->thread_group_deinit != NULL) {
+				sched_perfcontrol_thread_group_deinit = callbacks->thread_group_deinit;
+			} else {
+				sched_perfcontrol_thread_group_deinit = sched_perfcontrol_thread_group_default;
+			}
+			// tell CLPC about existing thread groups
+			thread_group_resync(TRUE);
+		}
 
+		if (callbacks->version >= SCHED_PERFCONTROL_CALLBACKS_VERSION_6) {
+			if (callbacks->thread_group_flags_update != NULL) {
+				sched_perfcontrol_thread_group_flags_update = callbacks->thread_group_flags_update;
+			} else {
+				sched_perfcontrol_thread_group_flags_update = sched_perfcontrol_thread_group_default;
+			}
+		}
+
+		if (callbacks->version >= SCHED_PERFCONTROL_CALLBACKS_VERSION_8) {
+			if (callbacks->thread_group_blocked != NULL) {
+				sched_perfcontrol_thread_group_blocked = callbacks->thread_group_blocked;
+			} else {
+				sched_perfcontrol_thread_group_blocked = sched_perfcontrol_thread_group_blocked_default;
+			}
+
+			if (callbacks->thread_group_unblocked != NULL) {
+				sched_perfcontrol_thread_group_unblocked = callbacks->thread_group_unblocked;
+			} else {
+				sched_perfcontrol_thread_group_unblocked = sched_perfcontrol_thread_group_unblocked_default;
+			}
+		}
+#endif
 		if (callbacks->version >= SCHED_PERFCONTROL_CALLBACKS_VERSION_7) {
 			if (callbacks->work_interval_ctl != NULL) {
 				sched_perfcontrol_work_interval_ctl = callbacks->work_interval_ctl;
@@ -206,6 +257,9 @@ sched_perfcontrol_register_callbacks(sched_perfcontrol_callbacks_t callbacks, un
 		}
 	} else {
 		/* reset to defaults */
+#if CONFIG_THREAD_GROUPS
+		thread_group_resync(FALSE);
+#endif
 		sched_perfcontrol_offcore = sched_perfcontrol_offcore_default;
 		sched_perfcontrol_switch = sched_perfcontrol_switch_default;
 		sched_perfcontrol_oncore = sched_perfcontrol_oncore_default;
@@ -217,6 +271,8 @@ sched_perfcontrol_register_callbacks(sched_perfcontrol_callbacks_t callbacks, un
 		sched_perfcontrol_work_interval_ctl = sched_perfcontrol_work_interval_ctl_default;
 		sched_perfcontrol_csw = sched_perfcontrol_csw_default;
 		sched_perfcontrol_state_update = sched_perfcontrol_state_update_default;
+		sched_perfcontrol_thread_group_blocked = sched_perfcontrol_thread_group_blocked_default;
+		sched_perfcontrol_thread_group_unblocked = sched_perfcontrol_thread_group_unblocked_default;
 	}
 }
 
@@ -230,6 +286,11 @@ machine_switch_populate_perfcontrol_thread_data(struct perfcontrol_thread_data *
 	data->perfctl_class = thread_get_perfcontrol_class(thread);
 	data->energy_estimate_nj = 0;
 	data->thread_id = thread->thread_id;
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *tg = thread_group_get(thread);
+	data->thread_group_id = thread_group_get_id(tg);
+	data->thread_group_data = thread_group_get_machine_data(tg);
+#endif
 	data->scheduling_latency_at_same_basepri = same_pri_latency;
 	data->perfctl_state = FIND_PERFCONTROL_STATE(thread);
 }
@@ -380,6 +441,11 @@ machine_thread_going_on_core(thread_t   new_thread,
 	on_core.urgency = urgency;
 	on_core.is_32_bit = thread_is_64bit_data(new_thread) ? FALSE : TRUE;
 	on_core.is_kernel_thread = new_thread->task == kernel_task;
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *tg = thread_group_get(new_thread);
+	on_core.thread_group_id = thread_group_get_id(tg);
+	on_core.thread_group_data = thread_group_get_machine_data(tg);
+#endif
 	on_core.scheduling_latency = sched_latency;
 	on_core.start_time = timestamp;
 	on_core.scheduling_latency_at_same_basepri = same_pri_latency;
@@ -413,6 +479,11 @@ machine_thread_going_off_core(thread_t old_thread, boolean_t thread_terminating,
 	off_core.thread_id = old_thread->thread_id;
 	off_core.energy_estimate_nj = 0;
 	off_core.end_time = last_dispatch;
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *tg = thread_group_get(old_thread);
+	off_core.thread_group_id = thread_group_get_id(tg);
+	off_core.thread_group_data = thread_group_get_machine_data(tg);
+#endif
 
 #if MONOTONIC
 	uint64_t counters[MT_CORE_NFIXED];
@@ -430,6 +501,132 @@ machine_thread_going_off_core(thread_t old_thread, boolean_t thread_terminating,
 #endif
 }
 
+#if CONFIG_THREAD_GROUPS
+void
+machine_thread_group_init(struct thread_group *tg)
+{
+	if (sched_perfcontrol_thread_group_init == sched_perfcontrol_thread_group_default) {
+		return;
+	}
+	struct thread_group_data data;
+	data.thread_group_id = thread_group_get_id(tg);
+	data.thread_group_data = thread_group_get_machine_data(tg);
+	data.thread_group_size = thread_group_machine_data_size();
+	sched_perfcontrol_thread_group_init(&data);
+}
+
+void
+machine_thread_group_deinit(struct thread_group *tg)
+{
+	if (sched_perfcontrol_thread_group_deinit == sched_perfcontrol_thread_group_default) {
+		return;
+	}
+	struct thread_group_data data;
+	data.thread_group_id = thread_group_get_id(tg);
+	data.thread_group_data = thread_group_get_machine_data(tg);
+	data.thread_group_size = thread_group_machine_data_size();
+	sched_perfcontrol_thread_group_deinit(&data);
+}
+
+void
+machine_thread_group_flags_update(struct thread_group *tg, uint32_t flags)
+{
+	if (sched_perfcontrol_thread_group_flags_update == sched_perfcontrol_thread_group_default) {
+		return;
+	}
+	struct thread_group_data data;
+	data.thread_group_id = thread_group_get_id(tg);
+	data.thread_group_data = thread_group_get_machine_data(tg);
+	data.thread_group_size = thread_group_machine_data_size();
+	data.thread_group_flags = flags;
+	sched_perfcontrol_thread_group_flags_update(&data);
+}
+
+void
+machine_thread_group_blocked(struct thread_group *blocked_tg,
+    struct thread_group *blocking_tg,
+    uint32_t flags,
+    thread_t blocked_thread)
+{
+	if (sched_perfcontrol_thread_group_blocked == sched_perfcontrol_thread_group_blocked_default) {
+		return;
+	}
+
+	spl_t s = splsched();
+
+	perfcontrol_state_t state = FIND_PERFCONTROL_STATE(blocked_thread);
+	struct thread_group_data blocked_data;
+	assert(blocked_tg != NULL);
+
+	blocked_data.thread_group_id = thread_group_get_id(blocked_tg);
+	blocked_data.thread_group_data = thread_group_get_machine_data(blocked_tg);
+	blocked_data.thread_group_size = thread_group_machine_data_size();
+
+	if (blocking_tg == NULL) {
+		/*
+		 * For special cases such as the render server, the blocking TG is a
+		 * well known TG. Only in that case, the blocking_tg should be NULL.
+		 */
+		assert(flags & PERFCONTROL_CALLOUT_BLOCKING_TG_RENDER_SERVER);
+		sched_perfcontrol_thread_group_blocked(&blocked_data, NULL, flags, state);
+	} else {
+		struct thread_group_data blocking_data;
+		blocking_data.thread_group_id = thread_group_get_id(blocking_tg);
+		blocking_data.thread_group_data = thread_group_get_machine_data(blocking_tg);
+		blocking_data.thread_group_size = thread_group_machine_data_size();
+		sched_perfcontrol_thread_group_blocked(&blocked_data, &blocking_data, flags, state);
+	}
+	KDBG(MACHDBG_CODE(DBG_MACH_THREAD_GROUP, MACH_THREAD_GROUP_BLOCK) | DBG_FUNC_START,
+	    thread_tid(blocked_thread), thread_group_get_id(blocked_tg),
+	    blocking_tg ? thread_group_get_id(blocking_tg) : THREAD_GROUP_INVALID,
+	    flags);
+
+	splx(s);
+}
+
+void
+machine_thread_group_unblocked(struct thread_group *unblocked_tg,
+    struct thread_group *unblocking_tg,
+    uint32_t flags,
+    thread_t unblocked_thread)
+{
+	if (sched_perfcontrol_thread_group_unblocked == sched_perfcontrol_thread_group_unblocked_default) {
+		return;
+	}
+
+	spl_t s = splsched();
+
+	perfcontrol_state_t state = FIND_PERFCONTROL_STATE(unblocked_thread);
+	struct thread_group_data unblocked_data;
+	assert(unblocked_tg != NULL);
+
+	unblocked_data.thread_group_id = thread_group_get_id(unblocked_tg);
+	unblocked_data.thread_group_data = thread_group_get_machine_data(unblocked_tg);
+	unblocked_data.thread_group_size = thread_group_machine_data_size();
+
+	if (unblocking_tg == NULL) {
+		/*
+		 * For special cases such as the render server, the unblocking TG is a
+		 * well known TG. Only in that case, the unblocking_tg should be NULL.
+		 */
+		assert(flags & PERFCONTROL_CALLOUT_BLOCKING_TG_RENDER_SERVER);
+		sched_perfcontrol_thread_group_unblocked(&unblocked_data, NULL, flags, state);
+	} else {
+		struct thread_group_data unblocking_data;
+		unblocking_data.thread_group_id = thread_group_get_id(unblocking_tg);
+		unblocking_data.thread_group_data = thread_group_get_machine_data(unblocking_tg);
+		unblocking_data.thread_group_size = thread_group_machine_data_size();
+		sched_perfcontrol_thread_group_unblocked(&unblocked_data, &unblocking_data, flags, state);
+	}
+	KDBG(MACHDBG_CODE(DBG_MACH_THREAD_GROUP, MACH_THREAD_GROUP_BLOCK) | DBG_FUNC_END,
+	    thread_tid(unblocked_thread), thread_group_get_id(unblocked_tg),
+	    unblocking_tg ? thread_group_get_id(unblocking_tg) : THREAD_GROUP_INVALID,
+	    flags);
+
+	splx(s);
+}
+
+#endif /* CONFIG_THREAD_GROUPS */
 
 void
 machine_max_runnable_latency(uint64_t bg_max_latency,
@@ -471,6 +668,12 @@ machine_work_interval_notify(thread_t thread,
 		.next_start     = kwi_args->next_start,
 		.create_flags   = kwi_args->create_flags,
 	};
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *tg;
+	tg = thread_group_get(thread);
+	work_interval.thread_group_id = thread_group_get_id(tg);
+	work_interval.thread_group_data = thread_group_get_machine_data(tg);
+#endif
 	sched_perfcontrol_work_interval_notify(state, &work_interval);
 }
 

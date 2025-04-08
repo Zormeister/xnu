@@ -877,6 +877,30 @@ typedef void (*sched_perfcontrol_state_update_t)(
 	struct perfcontrol_thread_data *thr_data, __unused void *unused);
 
 /*
+ * Thread Group Blocking Relationship Callout
+ *
+ * Parameters:
+ * blocked_tg           - Thread group blocking on progress of another thread group
+ * blocking_tg          - Thread group blocking progress of another thread group
+ * flags                - Flags for other relevant information
+ * blocked_thr_state    - Per-thread perfcontrol state for blocked thread
+ */
+ typedef void (*sched_perfcontrol_thread_group_blocked_t)(
+	thread_group_data_t blocked_tg, thread_group_data_t blocking_tg, uint32_t flags, perfcontrol_state_t blocked_thr_state);
+
+/*
+ * Thread Group Unblocking Callout
+ *
+ * Parameters:
+ * unblocked_tg         - Thread group being unblocked from making forward progress
+ * unblocking_tg        - Thread group unblocking progress of another thread group
+ * flags                - Flags for other relevant information
+ * unblocked_thr_state  - Per-thread perfcontrol state for unblocked thread
+ */
+typedef void (*sched_perfcontrol_thread_group_unblocked_t)(
+	thread_group_data_t unblocked_tg, thread_group_data_t unblocking_tg, uint32_t flags, perfcontrol_state_t unblocked_thr_state);
+
+/*
  * Callers should always use the CURRENT version so that the kernel can detect both older
  * and newer structure layouts. New callbacks should always be added at the end of the
  * structure, and xnu should expect existing source recompiled against newer headers
@@ -892,6 +916,7 @@ typedef void (*sched_perfcontrol_state_update_t)(
 #define SCHED_PERFCONTROL_CALLBACKS_VERSION_5 (5) /* up-to state_update */
 #define SCHED_PERFCONTROL_CALLBACKS_VERSION_6 (6) /* up-to thread_group_flags_update */
 #define SCHED_PERFCONTROL_CALLBACKS_VERSION_7 (7) /* up-to work_interval_ctl */
+#define SCHED_PERFCONTROL_CALLBACKS_VERSION_8 (8) /* up-to thread_group_unblocked */
 #define SCHED_PERFCONTROL_CALLBACKS_VERSION_CURRENT SCHED_PERFCONTROL_CALLBACKS_VERSION_6
 
 struct sched_perfcontrol_callbacks {
@@ -908,6 +933,8 @@ struct sched_perfcontrol_callbacks {
 	sched_perfcontrol_state_update_t              state_update;
 	sched_perfcontrol_thread_group_flags_update_t thread_group_flags_update;
 	sched_perfcontrol_work_interval_ctl_t         work_interval_ctl;
+	sched_perfcontrol_thread_group_blocked_t      thread_group_blocked;
+	sched_perfcontrol_thread_group_unblocked_t    thread_group_unblocked;
 };
 typedef struct sched_perfcontrol_callbacks *sched_perfcontrol_callbacks_t;
 
@@ -926,6 +953,47 @@ extern void sched_override_recommended_cores_for_sleep(void);
 extern void sched_restore_recommended_cores_after_sleep(void);
 
 extern void sched_usercontrol_update_recommended_cores(uint64_t recommended_cores);
+
+/*
+ * Edge Scheduler-CLPC Interface
+ *
+ * sched_perfcontrol_thread_group_preferred_clusters_set()
+ *
+ * The Edge scheduler expects thread group recommendations to be specific clusters rather
+ * than just E/P. In order to allow more fine grained control, CLPC can specify an override
+ * preferred cluster per QoS bucket. CLPC passes a common preferred cluster `tg_preferred_cluster`
+ * and an array of size [PERFCONTROL_CLASS_MAX] with overrides for specific perfctl classes.
+ * The scheduler translates these preferences into sched_bucket
+ * preferences and applies the changes.
+ *
+ */
+/* Token to indicate a particular perfctl class is not overriden */
+#define SCHED_PERFCONTROL_PREFERRED_CLUSTER_OVERRIDE_NONE         ((uint32_t)~0)
+
+/*
+ * CLPC can also indicate if there should be an immediate rebalancing of threads of this TG as
+ * part of this preferred cluster change. It does that by specifying the following options.
+ */
+#define SCHED_PERFCONTROL_PREFERRED_CLUSTER_MIGRATE_RUNNING       0x1
+#define SCHED_PERFCONTROL_PREFERRED_CLUSTER_MIGRATE_RUNNABLE      0x2
+typedef uint64_t sched_perfcontrol_preferred_cluster_options_t;
+
+extern void sched_perfcontrol_thread_group_preferred_clusters_set(void *machine_data, uint32_t tg_preferred_cluster,
+    uint32_t overrides[PERFCONTROL_CLASS_MAX], sched_perfcontrol_preferred_cluster_options_t options);
+
+/*
+ * Edge Scheduler-CLPC Interface
+ *
+ * sched_perfcontrol_edge_matrix_get()/sched_perfcontrol_edge_matrix_set()
+ *
+ * The Edge scheduler uses edges between clusters to define the likelihood of migrating threads
+ * across clusters. The edge config between any two clusters defines the edge weight and whether
+ * migation and steal operations are allowed across that edge. The getter and setter allow CLPC
+ * to query and configure edge properties between various clusters on the platform.
+ */
+
+extern void sched_perfcontrol_edge_matrix_get(sched_clutch_edge *edge_matrix, bool *edge_request_bitmap, uint64_t flags, uint64_t matrix_order);
+extern void sched_perfcontrol_edge_matrix_set(sched_clutch_edge *edge_matrix, bool *edge_changes_bitmap, uint64_t flags, uint64_t matrix_order);
 
 /*
  * Update the deadline after which sched_perfcontrol_deadline_passed will be called.
