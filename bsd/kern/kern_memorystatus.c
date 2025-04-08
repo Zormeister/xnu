@@ -3930,6 +3930,9 @@ memorystatus_thread(void *param __unused, wait_result_t wr __unused)
 		} else {
 			jetsam_thread->limit_to_low_bands = TRUE;
 		}
+#if CONFIG_THREAD_GROUPS
+		thread_group_vm_add();
+#endif
 		thread_set_thread_name(current_thread(), name);
 		jetsam_thread->inited = TRUE;
 		memorystatus_thread_block(0, memorystatus_thread);

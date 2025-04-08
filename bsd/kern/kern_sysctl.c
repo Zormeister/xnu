@@ -4398,7 +4398,35 @@ SYSCTL_INT(_kern, OID_AUTO, exc_resource_threads_enabled, CTLFLAG_RD | CTLFLAG_L
 
 #endif /* DEVELOPMENT || DEBUG */
 
+#if CONFIG_THREAD_GROUPS
+#if DEVELOPMENT || DEBUG
+
+static int
+sysctl_get_thread_group_id SYSCTL_HANDLER_ARGS
+{
+#pragma unused(arg1, arg2, oidp)
+	uint64_t thread_group_id = thread_group_get_id(thread_group_get(current_thread()));
+	return SYSCTL_OUT(req, &thread_group_id, sizeof(thread_group_id));
+}
+
+SYSCTL_PROC(_kern, OID_AUTO, thread_group_id, CTLFLAG_RD | CTLFLAG_LOCKED | CTLTYPE_QUAD,
+    0, 0, &sysctl_get_thread_group_id, "I", "thread group id of the thread");
+
+STATIC int
+sysctl_thread_group_count(__unused struct sysctl_oid *oidp, __unused void *arg1, __unused int arg2, struct sysctl_req *req)
+{
+	int value = thread_group_count();
+	return sysctl_io_number(req, value, sizeof(value), NULL, NULL);
+}
+
+SYSCTL_PROC(_kern, OID_AUTO, thread_group_count, CTLFLAG_RD | CTLFLAG_LOCKED | CTLFLAG_KERN,
+    0, 0, &sysctl_thread_group_count, "I", "count of thread groups");
+
+#endif /* DEVELOPMENT || DEBUG */
+const uint32_t thread_groups_supported = 1;
+#else /* CONFIG_THREAD_GROUPS */
 const uint32_t thread_groups_supported = 0;
+#endif /* CONFIG_THREAD_GROUPS */
 
 STATIC int
 sysctl_thread_groups_supported(__unused struct sysctl_oid *oidp, __unused void *arg1, __unused int arg2, struct sysctl_req *req)
