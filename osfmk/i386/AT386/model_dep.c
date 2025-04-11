@@ -1583,3 +1583,117 @@ print_launchd_info(void)
 		;
 	}
 }
+
+/*
+ * Compares 2 EFI GUIDs. Returns true if they match.
+ */
+static bool
+efi_compare_guids(EFI_GUID *guid1, EFI_GUID *guid2)
+{
+	return (bcmp(guid1, guid2, sizeof(EFI_GUID)) == 0) ? true : false;
+}
+ 
+/*
+ * Converts from an efiboot-originated virtual address to a physical
+ * address.
+ */
+static inline uint64_t
+efi_efiboot_virtual_to_physical(uint64_t addr)
+{
+	if (addr >= VM_MIN_KERNEL_ADDRESS) {
+		return addr & (0x40000000ULL - 1);
+	} else {
+		return addr;
+	}
+}
+ 
+/*
+ * Convers from a efiboot-originated virtual address to an accessible
+ * pointer to that physical address by translating it to a physmap-relative
+ * address.
+ */
+static void *
+efi_efiboot_virtual_to_physmap_virtual(uint64_t addr)
+{
+	return PHYSMAP_PTOV(efi_efiboot_virtual_to_physical(addr));
+}
+ 
+/*
+ * Returns the physical address of the firmware table identified
+ * by the passed-in GUID, or 0 if the table could not be located.
+ */
+static uint64_t
+efi_get_cfgtbl_by_guid(EFI_GUID *guidp)
+{
+	EFI_CONFIGURATION_TABLE_64 *cfg_table_entp, *cfgTable;
+	boot_args *args = (boot_args *)PE_state.bootArgs;
+	EFI_SYSTEM_TABLE_64 *estp;
+	uint32_t i, hdr_cksum, cksum;
+ 
+	estp = (EFI_SYSTEM_TABLE_64 *)efi_efiboot_virtual_to_physmap_virtual(args->efiSystemTable);
+ 
+	assert(estp != 0);
+ 
+	// Verify signature of the system table
+	hdr_cksum = estp->Hdr.CRC32;
+	estp->Hdr.CRC32 = 0;
+	cksum = crc32(0L, estp, estp->Hdr.HeaderSize);
+	estp->Hdr.CRC32 = hdr_cksum;
+ 
+	if (cksum != hdr_cksum) {
+		DPRINTF("efi_get_cfgtbl_by_guid: EST CRC32 = 0x%x, header = 0x%x\n", cksum, hdr_cksum);
+		DPRINTF("Bad EFI system table checksum\n");
+		return 0;
+	}
+ 
+	/*
+	 * efiboot can (and will) change the address of ConfigurationTable (and each table's VendorTable address)
+	 * to a kernel-virtual address.  Reverse that to get the physical address, which we then use to get a
+	 * physmap-based virtual address.
+	 */
+	cfgTable = (EFI_CONFIGURATION_TABLE_64 *)efi_efiboot_virtual_to_physmap_virtual(estp->ConfigurationTable);
+ 
+	for (i = 0; i < estp->NumberOfTableEntries; i++) {
+		cfg_table_entp = (EFI_CONFIGURATION_TABLE_64 *)&cfgTable[i];
+ 
+		DPRINTF("EST: Comparing GUIDs for entry %d\n", i);
+		if (cfg_table_entp == 0) {
+			continue;
+		}
+ 
+		if (efi_compare_guids(&cfg_table_entp->VendorGuid, guidp) == true) {
+			DPRINTF("GUID match: returning %p\n", (void *)(uintptr_t)cfg_table_entp->VendorTable);
+			return efi_efiboot_virtual_to_physical(cfg_table_entp->VendorTable);
+		}
+	}
+ 
+	/* Not found */
+	return 0;
+ }
+ 
+ /*
+  * Returns the physical address of the RSDP (either v1 or >=v2) or 0
+  * if the RSDP could not be located.
+  */
+uint64_t
+efi_get_rsdp_physaddr(void)
+{
+	uint64_t rsdp_addr;
+ #define ACPI_RSDP_GUID \
+	{ 0xeb9d2d30, 0x2d88, 0x11d3, {0x9a, 0x16, 0x0, 0x90, 0x27, 0x3f, 0xc1, 0x4d} }
+ #define ACPI_20_RSDP_GUID \
+	{ 0x8868e871, 0xe4f1, 0x11d3, {0xbc, 0x22, 0x0, 0x80, 0xc7, 0x3c, 0x88, 0x81} }
+ 
+	static EFI_GUID EFI_RSDP_GUID_ACPI20 = ACPI_20_RSDP_GUID;
+	static EFI_GUID EFI_RSDP_GUID_ACPI10 = ACPI_RSDP_GUID;
+ 
+	if ((rsdp_addr = efi_get_cfgtbl_by_guid(&EFI_RSDP_GUID_ACPI20)) == 0) {
+		DPRINTF("RSDP ACPI 2.0 lookup failed.  Trying RSDP ACPI 1.0...\n");
+		rsdp_addr = efi_get_cfgtbl_by_guid(&EFI_RSDP_GUID_ACPI10);
+		if (rsdp_addr == 0) {
+			DPRINTF("RSDP ACPI 1.0 lookup failed also.\n");
+		}
+	 }
+ 
+	return rsdp_addr;
+}
