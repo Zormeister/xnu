@@ -106,6 +106,7 @@ typedef enum lcpu_state {
 } lcpu_state_t;
 
 typedef enum x86_core_type {
+	CORE_SMP,
 	CORE_P,
 	CORE_E,
 } x86_core_type_t;
@@ -148,6 +149,7 @@ typedef struct x86_lcpu {
 	x86_cpu_cache_t     *caches[MAX_CACHE_DEPTH];
 	void                *pmStats;   /* Power management stats for lcpu */
 	void                *pmState;   /* Power management state for lcpu */
+	x86_core_type_t     type;		/* Heterogeneous core type */
 } x86_lcpu_t;
 
 #define X86CORE_FL_PRESENT      0x80000000      /* core is present */
@@ -169,7 +171,7 @@ typedef struct x86_core {
 	uint32_t            active_lcpus;/* Number of {running, idle} cpus */
 	void                *pmStats;   /* Power management stats for core */
 	void                *pmState;   /* Power management state for core */
-	x86_core_type_t		type;		/* Heterogeneous core type */
+	x86_core_type_t     type;		/* Heterogeneous core type */
 } x86_core_t;
 
 #define X86DIE_FL_PRESENT       0x80000000      /* die is present */
@@ -232,6 +234,7 @@ typedef struct x86_topology_parameters {
 	uint32_t            nPCoresPerPackage;
 	uint32_t            nPackages;
 	boolean_t           stable;
+	boolean_t           heterogeneous;
 } x86_topology_parameters_t;
 
 /* Called after cpu discovery */

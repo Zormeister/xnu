@@ -849,7 +849,7 @@ cpu_thread_alloc(int cpu)
 	/*
 	 * Assume that all cpus have the same features.
 	 */
-	if (cpu_is_hyperthreaded()) {
+	if (cpu_is_hyperthreaded() && cpup->cpu_cluster_type != CLUSTER_TYPE_E) {
 		cpup->cpu_threadtype = CPU_THREADTYPE_INTEL_HTT;
 	} else {
 		cpup->cpu_threadtype = CPU_THREADTYPE_NONE;
@@ -951,10 +951,13 @@ cpu_thread_alloc(int cpu)
 void
 cpu_thread_init(void)
 {
-	int         my_cpu          = get_cpu_number();
-	cpu_data_t  *cpup           = current_cpu_datap();
-	x86_core_t  *core;
-	static int  initialized     = 0;
+	int             my_cpu          = get_cpu_number();
+	cpu_data_t      *cpup           = current_cpu_datap();
+	x86_core_t      *core;
+	i386_cpu_info_t *cpuid_infop    = cpuid_info();
+	uint32_t        cpuid[4];
+	uint32_t        part_type;
+	static int      initialized     = 0;
 
 	/*
 	 * If we're the boot processor, we do all of the initialization of
@@ -975,6 +978,37 @@ cpu_thread_init(void)
 	 * Do the CPU accounting.
 	 */
 	core = cpup->lcpu.core;
+
+	/* get the part type here */
+	if (cpuid_infop->cpu_vendor == CPU_VENDOR_INTEL && cpuid_infop->cpuid_max_basic >= 0x1a) {
+		do_cpuid(0x1a, cpuid);
+		part_type = bitfield32(cpuid[eax], 31, 24);
+		if (part_type == PART_ATOM) {
+			cpup->core_cluster_type = CLUSTER_TYPE_E;
+			cpup->core_cluster_id = 1;
+			if (topoParms.heterogeneous == FALSE) {
+				topoParms.heterogeneous = TRUE;
+				/* TODO: Fix every bit of topology after this travesty has occurred */
+			}
+		} else if (part_type == PART_CORE) {
+			if (topoParms.heterogeneous) {
+				/* 
+				 * If the boot CPU isn't an E-core (which will most likely be the case)
+				 * it will absolutely trash the cluster types of any CPUs prior to  the
+				 * discovery of the first Efficiency core.
+				 */
+				cpup->core_cluster_type = CLUSTER_TYPE_SMP;
+			} else {
+				cpup->core_cluster_type = CLUSTER_TYPE_P;
+			}
+			cpup->core_cluster_id = 0;
+		} else {
+			panic("CPU%d has an invalid core type!", my_cpu);
+		}
+		cpuid_infop->cpuid_native_model_id_leaf[my_cpu].core_type = part_type;
+		cpuid_infop->cpuid_native_model_id_leaf[my_cpu].model_id = bitfield32(cpuid[eax], 23, 0);
+		kprintf("CPU%d is of core type %s\n", my_cpu, part_type == CORE ? "Performance" : "Effieciency");
+	}
 	mp_safe_spin_lock(&x86_topo_lock);
 	machine_info.logical_cpu += 1;
 	if (core->active_lcpus == 0) {

@@ -509,8 +509,8 @@ typedef struct {
 
 /* Native Model Identification Leaf: */
 typedef enum {
-	ATOM = 0x10,
-	CORE = 0x40,
+	PART_ATOM = 0x20,
+	PART_CORE = 0x40,
 } cpuid_intel_core_type_t;
 
 typedef struct {
