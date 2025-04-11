@@ -518,6 +518,23 @@ typedef struct {
 	cpuid_intel_core_type_t core_type; /* This can be used to tell how many E-cores and P-cores we have. */
 } cpuid_model_id_leaf_t;
 
+/* Extended Topology Leaf: */
+typedef enum {
+	DOMAIN_LOGICAL = 1,
+	DOMAIN_CORE,
+	DOMAIN_MODULE,
+	DOMAIN_TILE,
+	DOMAIN_DIE,
+	DOMAIN_DIE_GROUP,
+	DOMAIN_MAX = DOMAIN_DIE_GROUP
+} cpuid_ext_topology_domain_t; /* TODO: AMD-ify. */
+
+typedef struct {
+	boolean_t enabled;
+	uint32_t  apicid_shift;
+	uint32_t  logical_in_domain;
+} cpuid_ext_topology_leaf_t;
+
 /* Physical CPU info - this is exported out of the kernel (kexts), so be wary of changes */
 typedef struct {
 	char            cpuid_vendor[16];
@@ -600,7 +617,8 @@ typedef struct {
 	/* AMD specific? */
 	uint32_t				cpuid_package_type;
 
-	cpuid_model_id_leaf_t   cpuid_native_model_id_leaf[64]; /* The count is 64 to match the maximum CPU count in XNU. */
+	cpuid_ext_topology_leaf_t cpuid_ext_topology_domains[DOMAIN_MAX];
+	cpuid_model_id_leaf_t     cpuid_native_model_id_leaf[64]; /* The count is 64 to match the maximum CPU count in XNU. */
 } i386_cpu_info_t;
 
 #if defined(MACH_KERNEL_PRIVATE) && !defined(ASSEMBLER)

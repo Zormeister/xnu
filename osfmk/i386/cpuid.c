@@ -675,7 +675,9 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 	info_p->cpuid_features  = quad(reg[ecx], reg[edx]);
 
 	/* Get "processor flag"; necessary for microcode update matching */
-	info_p->cpuid_processor_flag = (rdmsr64(MSR_IA32_PLATFORM_ID) >> 50) & 0x7;
+	if (info_p->cpu_vendor == CPU_VENDOR_INTEL) {
+		info_p->cpuid_processor_flag = (rdmsr64(MSR_IA32_PLATFORM_ID) >> 50) & 0x7;
+	}
 
 	/* Fold extensions into family/model */
 	if (info_p->cpuid_family == 0x0f) {
@@ -854,6 +856,38 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 		DBG(" TSC/CCC Information Leaf:\n");
 		DBG("  numerator     : 0x%x\n", reg[ebx]);
 		DBG("  denominator   : 0x%x\n", reg[eax]);
+	}
+
+	/* 
+	 * Extract from the Intel SDM:
+	 * If sub-leaf index “N” returns an invalid domain type in ECX[15:08] (00H), then all sub-leaves with an
+	 * index greater than “N” shall also return an invalid domain type. A sub-leaf returning an invalid domain
+	 * always returns 0 in EAX and EBX.
+	 */
+	if (info_p->cpuid_max_basic >= 0x1f && info_p->cpu_vendor == CPU_VENDOR_INTEL) {
+		uint32_t ext_topo[4];
+		uint32_t domain;
+
+		for (int i = 0; true; i++) { /* please enumerate nicely and give me the E-core count */
+			ext_topo[eax] = 0x1f;
+			ext_topo[ecx] = i;
+			cpuid(ext_topo);
+			if (bitfield32(ext_topo[ecx], 15, 8) > 0) {
+				domain = bitfield32(ext_topo[ecx], 15, 8);
+				info_p->cpuid_ext_topology_domains[domain].enabled = true;
+				info_p->cpuid_ext_topology_domains[domain].apicid_shift = bitfield32(ext_topo[eax], 4, 0);
+				info_p->cpuid_ext_topology_domains[domain].logical_in_domain = bitfield32(ext_topo[ebx], 15, 0);
+			} else {
+				break;
+			}
+		}
+		DBG(" Extended Topology Leaf:\n");
+		for (int i = 0; i < DOMAIN_MAX; i++) {
+			DBG("  Domain %d:            \n", i);
+			DBG("    enabled            : %d\n", info_p->cpuid_ext_topology_domains[i].enabled);
+			DBG("    apicid_shift       : %d\n", info_p->cpuid_ext_topology_domains[i].apicid_shift);
+			DBG("    logical_in_domain  : %d\n", info_p->cpuid_ext_topology_domains[i].logical_in_domain);
+		}
 	}
 
 	return;
