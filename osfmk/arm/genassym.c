@@ -148,7 +148,6 @@ main(
 	DECLARE("ACT_DEBUGDATA", offsetof(struct thread, machine.DebugData));
 	DECLARE("TH_IOTIER_OVERRIDE", offsetof(struct thread, iotier_override));
 	DECLARE("TH_RWLOCK_CNT", offsetof(struct thread, rwlock_count));
-	DECLARE("TH_TMP_ALLOC_CNT", offsetof(struct thread, t_temp_alloc_count));
 	DECLARE("TH_SCHED_FLAGS", offsetof(struct thread, sched_flags));
 	DECLARE("TH_SFLAG_RW_PROMOTED", TH_SFLAG_RW_PROMOTED);
 
@@ -326,15 +325,15 @@ main(
 	DECLARE("TIMER_TSTAMP",
 	    offsetof(struct timer, tstamp));
 	DECLARE("THREAD_TIMER",
-	    offsetof(struct processor, thread_timer));
+	    offsetof(struct processor, processor_data.thread_timer));
 	DECLARE("KERNEL_TIMER",
-	    offsetof(struct processor, kernel_timer));
+	    offsetof(struct processor, processor_data.kernel_timer));
 	DECLARE("SYSTEM_STATE",
-	    offsetof(struct processor, system_state));
+	    offsetof(struct processor, processor_data.system_state));
 	DECLARE("USER_STATE",
-	    offsetof(struct processor, user_state));
+	    offsetof(struct processor, processor_data.user_state));
 	DECLARE("CURRENT_STATE",
-	    offsetof(struct processor, current_state));
+	    offsetof(struct processor, processor_data.current_state));
 
 	DECLARE("SYSTEM_TIMER",
 	    offsetof(struct thread, system_timer));
