@@ -717,6 +717,8 @@ finish:
 /*********************************************************************
 *********************************************************************/
 #define COM_APPLE  "com.apple."
+#define ORG_PUREDARWIN "org.puredarwin"
+#define COM_ZORMEISTER "com.zormeister"
 
 void
 KLDBootstrap::loadSecurityExtensions(void)
@@ -751,7 +753,9 @@ KLDBootstrap::loadSecurityExtensions(void)
 		/* Skip extensions whose bundle IDs don't start with "com.apple.".
 		 */
 		if (!bundle_id ||
-		    (strncmp(bundle_id, COM_APPLE, CONST_STRLEN(COM_APPLE)) != 0)) {
+		    (strncmp(bundle_id, COM_APPLE, CONST_STRLEN(COM_APPLE)) != 0) ||
+			(strncmp(bundle_id, ORG_PUREDARWIN, CONST_STRLEN(COM_APPLE)) != 0) ||
+			(strncmp(bundle_id, COM_ZORMEISTER, CONST_STRLEN(COM_APPLE)) != 0)) {
 			continue;
 		}
 
@@ -825,6 +829,8 @@ KLDBootstrap::loadKernelComponentKexts(void)
 *********************************************************************/
 
 #define COM_APPLE_KEC  "com.apple.kec."
+#define ORG_PUREDARWIN_KEC  "org.puredarwin.kec."
+#define COM_ZORMEITER_KEC  "com.zormeister.kec."
 
 void
 KLDBootstrap::loadKernelExternalComponents(void)
@@ -1027,4 +1033,3 @@ bootstrapLoadSecurityExtensions(void)
 	sBootstrapObject.loadSecurityExtensions();
 	return;
 }
-

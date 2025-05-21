@@ -8,6 +8,7 @@
         "-DMACH_KERNEL_PRIVATE=1",
         "-DPRIVATE=1",
         "-D__APPLE_API_PRIVATE=1",
-        "-nostdlib"
+        "-nostdlib",
+        "-isystem ${workspaceFolder}"
     ]
 }
