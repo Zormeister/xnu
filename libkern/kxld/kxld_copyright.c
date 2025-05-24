@@ -49,7 +49,7 @@
 
 #define kCopyrightToken "Copyright © "
 #define kRightsToken " Apple Inc. All rights reserved."
-#define kRightsTokenAlt " PureDarwin Project. All rights reserved."
+#define kRightsTokenAlt " The PureDarwin Project. All rights reserved."
 // me when
 #define kRightsTokenAltAlt " Zormeister. All rights reserved."
 
