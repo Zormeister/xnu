@@ -135,6 +135,20 @@ const struct _img4_environment _img4_environment_trust_cache;
 #endif
 
 /*!
+ * @const IMG4_ENVIRONMENT_PPL
+ * Page Protection Layer related. Don't even know what this does. Spotted in the iPhoneOS 12.2 SDK and neeeded to build T7000.
+ * Probably means that the IMG4 is located in a page protected by PPL.
+ */
+#if !XNU_KERNEL_PRIVATE
+IMG4_API_AVAILABLE_20181004
+OS_EXPORT
+const struct _img4_environment _img4_environment_ppl;
+#define IMG4_ENVIRONMENT_PPL (&_img4_environment_ppl)
+#else
+#define IMG4_ENVIRONMENT_PPL (img4if->i4if_environment_reserved)
+#endif
+
+/*!
  * @function img4_environment_init_identity
  * Initializes a caller-supplied environment with custom identity information.
  * This may be used for performing test evaluations or evaluations against
