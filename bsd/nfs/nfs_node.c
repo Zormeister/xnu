@@ -913,6 +913,7 @@ nfs_vnop_reclaim(
                                   *  } */*ap)
 {
 	vnode_t vp = ap->a_vp;
+	vfs_context_t ctx = ap->a_context;
 	nfsnode_t np = VTONFS(vp);
 	struct nfs_open_file *nofp, *nextnofp;
 	struct nfs_file_lock *nflp, *nextnflp;
