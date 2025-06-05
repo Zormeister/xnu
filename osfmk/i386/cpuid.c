@@ -803,7 +803,7 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 		DBG("  EDX           : 0x%x\n", xsp->extended_state[edx]);
 	}
 
-	if (info_p->cpuid_model >= CPUID_MODEL_IVYBRIDGE) {
+	if (info_p->cpuid_max_basic >= 0x7) {
 		/*
 		 * Leaf7 Features:
 		 */
@@ -828,6 +828,38 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 		DBG(" TSC/CCC Information Leaf:\n");
 		DBG("  numerator     : 0x%x\n", reg[ebx]);
 		DBG("  denominator   : 0x%x\n", reg[eax]);
+	}
+
+	/* 
+	 * Extract from the Intel SDM:
+	 * If sub-leaf index “N” returns an invalid domain type in ECX[15:08] (00H), then all sub-leaves with an
+	 * index greater than “N” shall also return an invalid domain type. A sub-leaf returning an invalid domain
+	 * always returns 0 in EAX and EBX.
+	 */
+	if (info_p->cpuid_max_basic >= 0x1f) {
+		uint32_t ext_topo[4] = {0,0,0,0};
+		uint32_t domain;
+
+		for (int i = 0; true; i++) { /* please enumerate nicely and give me the E-core count */
+			ext_topo[eax] = 0x1f;
+			ext_topo[ecx] = i;
+			cpuid(ext_topo);
+			if (bitfield32(ext_topo[ecx], 15, 8) > 0) {
+				domain = bitfield32(ext_topo[ecx], 15, 8);
+				info_p->cpuid_ext_topo_leaf.domains[domain].enabled = true;
+				info_p->cpuid_ext_topo_leaf.domains[domain].apicid_shift = bitfield32(ext_topo[eax], 4, 0);
+				info_p->cpuid_ext_topo_leaf.domains[domain].logical_in_domain = bitfield32(ext_topo[ebx], 15, 0);
+			} else {
+				break;
+			}
+		}
+		DBG(" Extended Topology Leaf:\n");
+		for (int i = 0; i < EXT_TOPO_DOMAIN_MAX; i++) {
+			DBG("  Domain %d:            \n", i);
+			DBG("    enabled            : %d\n", info_p->cpuid_ext_topo_leaf.domains[i].enabled);
+			DBG("    apicid_shift       : %d\n", info_p->cpuid_ext_topo_leaf.domains[i].apicid_shift);
+			DBG("    logical_in_domain  : %d\n", info_p->cpuid_ext_topo_leaf.domains[i].logical_in_domain);
+		}
 	}
 
 	return;

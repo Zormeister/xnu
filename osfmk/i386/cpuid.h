@@ -381,6 +381,27 @@ typedef struct {
 	uint32_t        denominator;
 } cpuid_tsc_leaf_t;
 
+/* Extended Topology Leaf: */
+typedef enum {
+	EXT_TOPO_DOMAIN_LOGICAL = 1,
+	EXT_TOPO_DOMAIN_CORE,
+	EXT_TOPO_DOMAIN_MODULE,
+	EXT_TOPO_DOMAIN_TILE,
+	EXT_TOPO_DOMAIN_DIE,
+	EXT_TOPO_DOMAIN_DIE_GROUP,
+	EXT_TOPO_DOMAIN_MAX = EXT_TOPO_DOMAIN_DIE_GROUP
+} cpuid_ext_topology_domain_t;
+
+typedef struct {
+	boolean_t enabled;
+	uint32_t  apicid_shift;
+	uint32_t  logical_in_domain;
+} cpuid_ext_topology_domain_t;
+
+typedef struct {
+	cpuid_ext_topology_domain_t domains[EXT_TOPO_DOMAIN_MAX];
+} cpuid_ext_topology_leaf_t;
+
 /* Physical CPU info - this is exported out of the kernel (kexts), so be wary of changes */
 typedef struct {
 	char            cpuid_vendor[16];
@@ -458,6 +479,7 @@ typedef struct {
 	uint64_t                cpuid_leaf7_extfeatures;
 	cpuid_tsc_leaf_t        cpuid_tsc_leaf;
 	cpuid_xsave_leaf_t      cpuid_xsave_leaf[2];
+	cpuid_ext_topology_leaf_t cpuid_ext_topo_leaf;
 } i386_cpu_info_t;
 
 #if defined(MACH_KERNEL_PRIVATE) && !defined(ASSEMBLER)
