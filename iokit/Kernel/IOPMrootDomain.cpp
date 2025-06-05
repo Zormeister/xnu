@@ -3616,7 +3616,7 @@ IOPMrootDomain::handleQueueSleepWakeUUID(OSObject *obj)
 	OSString    *str = NULL;
 
 	if (kOSBooleanFalse == obj) {
-		handlePublishSleepWakeUUID(NULL);
+		handlePublishSleepWakeUUID(false);
 	} else if ((str = OSDynamicCast(OSString, obj))) {
 		// This branch caches the UUID for an upcoming sleep/wake
 		if (queuedSleepWakeUUIDString) {
