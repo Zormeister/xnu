@@ -1,0 +1,13 @@
+{
+    "clangd.fallbackFlags": [
+        "-DKERNEL=1",
+        "-DKERNEL_PRIVATE=1",
+        "-DMACH_KERNEL_PRIVATE=1",
+        "-DPRIVATE=1",
+        "-D__APPLE_API_PRIVATE=1",
+        "-nostdlib",
+        "-nostdinc",
+        "-isystem ${workspaceFolder}/bsd",
+        "-isystem ${workspaceFolder}/osfmk"
+    ]
+}

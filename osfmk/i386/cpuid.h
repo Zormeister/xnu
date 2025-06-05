@@ -488,6 +488,10 @@ typedef enum {
 static inline int
 is_xeon_sp(uint8_t platid)
 {
+	i386_ioport_t cfgAdr = 0x3f8;
+	i386_ioport_t cfgDat = 0x3fc;
+	uint32_t XeonCapID5 = 0x80000000 | 1 << 16 | 30 << 11 | 3 <<  8 | 0x98; /* ZORMEISTER: I think? */
+
 	if (platid == PLATID_XEON_SP_1 || platid == PLATID_XEON_SP_2) {
 		return 1;
 	}
