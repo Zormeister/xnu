@@ -352,6 +352,8 @@ commpage_init_cpu_capabilities( void )
 	    CPUID_LEAF7_FEATURE_RDSEED);
 	setif(bits, kHasADX, cpuid_leaf7_features() &
 	    CPUID_LEAF7_FEATURE_ADX);
+	setif(bits, kHasSHA, cpuid_leaf7_features() &
+	    CPUID_LEAF7_FEATURE_SHA);
 
 #if 0   /* The kernel doesn't support MPX or SGX */
 	setif(bits, kHasMPX, cpuid_leaf7_features() &
