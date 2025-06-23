@@ -14,7 +14,6 @@ jobs:
             git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
             git clone --branch rel/libdispatch-1173 https://github.com/apple-oss-distributions/libdispatch.git ~/libdispatch
-            git clone https://github.com/Zormeister/EmbeddedDeviceMap ~/EmbeddedDeviceMap
         - name: Prepare AvailabilityVersions
           run: |
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec
@@ -23,11 +22,6 @@ jobs:
           run: |
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal
             cp ~/libplatform/private/os/internal/* $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal/
-        - name: Install Embedded Device Map
-          run: |
-            brew install jsoncpp
-            cd ~/EmbeddedDeviceMap
-            make DESTDIR=$(xcrun --sdk macosx -show-sdk-platform-path) install
         - name: Install DTrace tools
           run: |
             cd ~/dtrace
