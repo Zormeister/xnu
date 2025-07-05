@@ -1064,6 +1064,36 @@ cpuid_set_info(void)
 			cpuid_set_cache_info(info_p);
 			break;
 		}
+		case CPUFAMILY_AMD_PUMA: {
+			uint32_t cpuid[4];
+
+			cpuid_set_cache_info(info_p);
+
+			cpuid_fn(0x80000008, cpuid);
+			info_p->cpuid_cores_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
+			info_p->core_count = info_p->cpuid_cores_per_package;
+
+			/* Does AMD define the number of cores per compute unit? */
+			cpuid_fn(0x8000001e, cpuid);
+			info_p->cpuid_logical_per_package = info_p->cpuid_cores_per_package * (bitfield32(cpuid[ebx], 15, 8) + 1);
+			info_p->thread_count = info_p->cpuid_logical_per_package;
+			break;
+		}
+		case CPUFAMILY_AMD_ZENX:
+		case CPUFAMILY_AMD_ZEN3: {
+			uint32_t cpuid[4];
+
+			cpuid_set_cache_info(info_p);
+
+			cpuid_fn(0x80000008, cpuid);
+			info_p->cpuid_logical_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
+			info_p->thread_count = info_p->cpuid_logical_per_package;
+
+			cpuid_fn(0x8000001e, cpuid);
+			info_p->cpuid_cores_per_package = info_p->cpuid_logical_per_package / (bitfield32(cpuid[ebx], 15, 8) + 1);
+			info_p->core_count = info_p->cpuid_cores_per_package;
+			break;
+		}
 		default: {
 			uint64_t msr = rdmsr64(MSR_CORE_THREAD_COUNT);
 			if (0 == msr) {
