@@ -302,6 +302,19 @@ cpuid_do_was(void)
 	do_cwas(cpuid_info(), TRUE);
 }
 
+static uint32_t
+cpuid_get_deterministic_cache_leaf(i386_cpu_info_t *info_p)
+{
+	switch (info_p->cpuid_vendor_id) {
+	case CPUID_VENDOR_ID_INTEL:
+		return 0x4;
+	case CPUID_VENDOR_ID_AMD:
+		return 0x8000001d;
+	default:
+		panic("Unsupported CPU.");
+	}
+}
+
 /* this function is Intel-specific */
 static void
 cpuid_set_cache_info( i386_cpu_info_t * info_p )
@@ -353,6 +366,11 @@ cpuid_set_cache_info( i386_cpu_info_t * info_p )
 		cpuid_deterministic_supported = TRUE;
 	}
 
+	cpuid_fn(0x80000000, cpuid_result);
+	if (cpuid_result[eax] >= 0x8000001d) {
+		cpuid_deterministic_supported = TRUE;
+	}
+
 	for (index = 0; cpuid_deterministic_supported; index++) {
 		cache_type_t    type = Lnone;
 		uint32_t        cache_type;
@@ -365,8 +383,8 @@ cpuid_set_cache_info( i386_cpu_info_t * info_p )
 		uint32_t        cache_partitions;
 		uint32_t        colors;
 
-		reg[eax] = 4;           /* cpuid request 4 */
-		reg[ecx] = index;       /* index starting at 0 */
+		reg[eax] = cpuid_get_deterministic_cache_leaf(info_p);    /* cpuid cache leaf request */
+		reg[ecx] = index;       	                              /* index starting at 0 */
 		cpuid(reg);
 		DBG("cpuid(4) index=%d eax=0x%x\n", index, reg[eax]);
 		cache_type = bitfield32(reg[eax], 4, 0);
