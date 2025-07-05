@@ -875,7 +875,7 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 }
 
 static uint32_t
-cpuid_set_cpufamily(i386_cpu_info_t *info_p)
+cpuid_set_cpufamily_intel(i386_cpu_info_t *info_p)
 {
 	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
 
@@ -924,6 +924,63 @@ cpuid_set_cpufamily(i386_cpu_info_t *info_p)
 			cpufamily = CPUFAMILY_INTEL_KABYLAKE;
 			break;
 		}
+		break;
+	}
+
+	return cpufamily;
+}
+
+static uint32_t
+cpuid_set_cpufamily_amd(i386_cpu_info_t *info_p)
+{
+	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
+
+	switch (info_p->cpuid_family) {
+	case 0x16:
+		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_MULLINS:
+			cpufamily = CPUFAMILY_AMD_PUMA;
+			break;
+		}
+		break;
+	case 0x17:
+		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_PINNACLE_RIDGE:
+		case CPUID_MODEL_PICASSO:
+			cpufamily = CPUFAMILY_AMD_ZENX;
+			break;
+		}
+		break;
+	case 0x19:
+		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_MILAN:
+		case CPUID_MODEL_CHAGALL:
+		case CPUID_MODEL_STORMPEAK:
+		case CPUID_MODEL_VERMEER:
+		case CPUID_MODEL_BADAMI:
+		case CPUID_MODEL_CEZANNE:
+			cpufamily = CPUFAMILY_AMD_ZEN3;
+			break;
+		}
+		break;
+	}
+
+	return cpufamily;
+}
+
+static uint32_t
+cpuid_set_cpufamily(i386_cpu_info_t *info_p)
+{
+	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
+
+	switch (info_p->cpuid_vendor_id) {
+	case CPUID_VENDOR_ID_INTEL:
+		cpufamily = cpuid_set_cpufamily_intel(info_p);
+		break;
+	case CPUID_VENDOR_ID_AMD:
+		cpufamily = cpuid_set_cpufamily_amd(info_p);
+		break;
+	default:
 		break;
 	}
 

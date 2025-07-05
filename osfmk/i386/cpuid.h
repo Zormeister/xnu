@@ -272,6 +272,18 @@
 #define CPUID_MODEL_KABYLAKE_ULX        0x8E
 #define CPUID_MODEL_KABYLAKE_DT         0x9E
 
+#define CPUID_MODEL_MULLINS             0x30
+
+#define CPUID_MODEL_PINNACLE_RIDGE      0x08
+#define CPUID_MODEL_PICASSO             0x18
+
+#define CPUID_MODEL_MILAN               0x01
+#define CPUID_MODEL_CHAGALL             0x08
+#define CPUID_MODEL_STORMPEAK           0x10
+#define CPUID_MODEL_VERMEER             0x21
+#define CPUID_MODEL_BADAMI              0x30
+#define CPUID_MODEL_CEZANNE             0x50
+
 #define CPUID_VMM_FAMILY_UNKNOWN        0x0
 #define CPUID_VMM_FAMILY_VMWARE         0x1
 #define CPUID_VMM_FAMILY_PARALLELS      0x2
