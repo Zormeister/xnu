@@ -278,6 +278,7 @@
 
 #define CPUID_VENDOR_ID_UNKNOWN         0x0
 #define CPUID_VENDOR_ID_INTEL           0x1
+#define CPUID_VENDOR_ID_AMD             0x2
 
 #ifndef ASSEMBLER
 #include <stdint.h>

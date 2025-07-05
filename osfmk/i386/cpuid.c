@@ -568,6 +568,9 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 	if ((strncmp(CPUID_VID_INTEL, info_p->cpuid_vendor,
 		min(strlen(CPUID_STRING_UNKNOWN) + 1, sizeof(info_p->cpuid_vendor)))) == 0) {
 		info_p->cpuid_vendor_id = CPUID_VENDOR_ID_INTEL;
+	} else if ((strncmp(CPUID_VID_AMD, info_p->cpuid_vendor,
+		min(strlen(CPUID_STRING_UNKNOWN) + 1, sizeof(info_p->cpuid_vendor)))) == 0) {
+		info_p->cpuid_vendor_id = CPUID_VENDOR_ID_AMD;
 	}
 
 	/* get extended cpuid results */
