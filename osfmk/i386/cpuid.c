@@ -565,6 +565,11 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 	bcopy((char *)&reg[edx], &info_p->cpuid_vendor[4], 4);
 	info_p->cpuid_vendor[12] = 0;
 
+	if ((strncmp(CPUID_VID_INTEL, info_p->cpuid_vendor,
+		min(strlen(CPUID_STRING_UNKNOWN) + 1, sizeof(info_p->cpuid_vendor)))) == 0) {
+		info_p->cpuid_vendor_id = CPUID_VENDOR_ID_INTEL;
+	}
+
 	/* get extended cpuid results */
 	cpuid_fn(0x80000000, reg);
 	info_p->cpuid_max_ext = reg[eax];
@@ -688,6 +693,7 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 	DBG(" extfeatures         : 0x%016llx\n", info_p->cpuid_extfeatures);
 	DBG(" logical_per_package : %d\n", info_p->cpuid_logical_per_package);
 	DBG(" microcode_version   : 0x%08x\n", info_p->cpuid_microcode_version);
+	DBG(" vendor_id           : %d\n", info_p->cpuid_vendor_id);
 
 	/* Fold in the Invariant TSC feature bit, if present */
 	if (info_p->cpuid_max_ext >= 0x80000007) {
@@ -923,15 +929,11 @@ cpuid_set_cpufamily(i386_cpu_info_t *info_p)
 	return cpufamily;
 }
 
-boolean_t
+static boolean_t
 cpuid_is_unsupported_cpu(i386_cpu_info_t *info_p)
 {
-	if ((strncmp(CPUID_VID_INTEL, info_p->cpuid_vendor, 
-		min(strlen(CPUID_STRING_UNKNOWN) + 1, sizeof(info_p->cpuid_vendor)))) == 0) {
-		return cpuid_set_cpufamily(info_p) == CPUFAMILY_UNKNOWN;
-	}
-
-	return TRUE;
+	return (info_p->cpuid_vendor_id == CPUID_VENDOR_ID_UNKNOWN)
+			|| (cpuid_set_cpufamily(info_p) == CPUFAMILY_UNKNOWN);
 }
 
 /*

@@ -276,6 +276,9 @@
 #define CPUID_VMM_FAMILY_VMWARE         0x1
 #define CPUID_VMM_FAMILY_PARALLELS      0x2
 
+#define CPUID_VENDOR_ID_UNKNOWN         0x0
+#define CPUID_VENDOR_ID_INTEL           0x1
+
 #ifndef ASSEMBLER
 #include <stdint.h>
 #include <mach/mach_types.h>
@@ -480,6 +483,7 @@ typedef struct {
 	cpuid_tsc_leaf_t        cpuid_tsc_leaf;
 	cpuid_xsave_leaf_t      cpuid_xsave_leaf[2];
 	cpuid_ext_topology_leaf_t cpuid_ext_topo_leaf;
+	uint32_t                cpuid_vendor_id;
 } i386_cpu_info_t;
 
 #if defined(MACH_KERNEL_PRIVATE) && !defined(ASSEMBLER)
