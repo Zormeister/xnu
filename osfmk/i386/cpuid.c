@@ -922,6 +922,18 @@ cpuid_set_cpufamily(i386_cpu_info_t *info_p)
 	DBG("cpuid_set_cpufamily(%p) returning 0x%x\n", info_p, cpufamily);
 	return cpufamily;
 }
+
+boolean_t
+cpuid_is_unsupported_cpu(i386_cpu_info_t *info_p)
+{
+	if ((strncmp(CPUID_VID_INTEL, info_p->cpuid_vendor, 
+		min(strlen(CPUID_STRING_UNKNOWN) + 1, sizeof(info_p->cpuid_vendor)))) == 0) {
+		return cpuid_set_cpufamily(info_p) == CPUFAMILY_UNKNOWN;
+	}
+
+	return TRUE;
+}
+
 /*
  * Must be invoked either when executing single threaded, or with
  * independent synchronization.
@@ -938,10 +950,7 @@ cpuid_set_info(void)
 	cpuid_set_generic_info(info_p);
 
 	/* verify we are running on a supported CPU */
-	if ((strncmp(CPUID_VID_INTEL, info_p->cpuid_vendor,
-	    min(strlen(CPUID_STRING_UNKNOWN) + 1,
-	    sizeof(info_p->cpuid_vendor)))) ||
-	    (cpuid_set_cpufamily(info_p) == CPUFAMILY_UNKNOWN)) {
+	if (cpuid_is_unsupported_cpu(info_p)) {
 		panic("Unsupported CPU");
 	}
 
