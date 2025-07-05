@@ -269,9 +269,11 @@ commpage_init_cpu_capabilities( void )
 	uint64_t bits;
 	int cpus;
 	ml_cpu_info_t cpu_info;
+	i386_cpu_info_t *cpuid;
 
 	bits = 0;
 	ml_cpu_get_info(&cpu_info);
+	cpuid = cpuid_info();
 
 	switch (cpu_info.vector_unit) {
 	case 9:
@@ -389,7 +391,12 @@ commpage_init_cpu_capabilities( void )
 		    CPUID_LEAF7_FEATURE_AVX512VPCDQ);
 	}
 
-	uint64_t misc_enable = rdmsr64(MSR_IA32_MISC_ENABLE);
+	uint64_t misc_enable = 1ULL;
+
+	if (cpuid->cpuid_vendor_id == CPUID_VENDOR_ID_INTEL) {
+		misc_enable = rdmsr64(MSR_IA32_MISC_ENABLE);
+	}
+
 	setif(bits, kHasENFSTRG, (misc_enable & 1ULL) &&
 	    (cpuid_leaf7_features() &
 	    CPUID_LEAF7_FEATURE_ERMS));

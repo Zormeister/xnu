@@ -279,7 +279,6 @@
 
 #define CPUID_MODEL_MILAN               0x01
 #define CPUID_MODEL_CHAGALL             0x08
-#define CPUID_MODEL_STORMPEAK           0x10
 #define CPUID_MODEL_VERMEER             0x21
 #define CPUID_MODEL_BADAMI              0x30
 #define CPUID_MODEL_CEZANNE             0x50
