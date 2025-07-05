@@ -411,10 +411,10 @@ typedef struct {
 	boolean_t enabled;
 	uint32_t  apicid_shift;
 	uint32_t  logical_in_domain;
-} cpuid_ext_topology_domain_t;
+} cpuid_ext_topology_domain_leaf_t;
 
 typedef struct {
-	cpuid_ext_topology_domain_t domains[EXT_TOPO_DOMAIN_MAX];
+	cpuid_ext_topology_domain_leaf_t domains[EXT_TOPO_DOMAIN_MAX];
 } cpuid_ext_topology_leaf_t;
 
 /* Physical CPU info - this is exported out of the kernel (kexts), so be wary of changes */
