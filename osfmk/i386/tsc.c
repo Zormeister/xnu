@@ -54,6 +54,7 @@
 #include <i386/cpuid.h>
 #include <i386/mp.h>
 #include <i386/machine_routines.h>
+#include <i386/pio.h>
 #include <i386/proc_reg.h>
 #include <i386/tsc.h>
 #include <i386/misc_protos.h>
@@ -89,6 +90,24 @@ uint64_t        tsc_at_boot = 0;
 #define Peta (kilo * Tera)
 
 #define CPU_FAMILY_PENTIUM_M    (0x6)
+
+/* I have absolutely no idea if this works, or if CF8 is even usable here. */
+
+/* The CPB Capabilities are at Device 18H, Function 4H, register 0x15C */
+/* To be more specific: Dev 0x1584, Ven 0x1022 */
+static inline uint32_t
+puma_get_cpbcap(void)
+{
+	i386_ioport_t cfgAdr = 0x3f8;
+	i386_ioport_t cfgDat = 0x3fc;
+	uint32_t addr = 0x80000000 | 1 << 16 | 0x18 << 11 | 4 <<  8 | 0x15C; /* I think? */
+
+	boolean_t intrs = ml_set_interrupts_enabled(FALSE);
+	outl(cfgAdr, addr);
+	uint32_t cpbcap = inl(cfgDat);
+	ml_set_interrupts_enabled(intrs);
+	return cpbcap;
+}
 
 /*
  * This routine extracts a frequency property in Hz from the device tree.
@@ -210,6 +229,53 @@ tsc_init(void)
 		    (uint32_t)(refFreq % Mega),
 		    N, M);
 
+		break;
+	}
+	case CPUFAMILY_AMD_PUMA: {
+		/* The number of boosted states is located at Device 18H, Function 4H, register 0x15C */
+		uint32_t boost_states = bitfield32(puma_get_cpbcap(), 4, 2);
+		uint64_t msr = rdmsr64(MSR_AMD_PSTATE_BASE + states);
+
+		uint32_t divisor = bitfield32((uint32_t)msr, 8, 6);
+		uint32_t fid = bitfield32((uint32_t)msr, 5, 0);
+
+		/* CoreCOF = 100 * CoreFid + 10h / 2^CoreDid */
+		tscFreq = 100 * (fid + 0x10) / (1 << divisor);
+		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
+		tscFCvtn2t = 0xFFFFFFFFFFFFFFFFULL / tscFCvtt2n;
+
+		/* Get the FSB (Local APIC Timer) frequency from EFI */
+		busFreq = EFI_get_frequency("FSBFrequency");
+
+		/* If we need it, the TSC granularity is found here. */
+		tscGranularity = tscFreq / busFreq;
+		break;
+	}
+	case CPUFAMILY_AMD_ZENX:
+	case CPUFAMILY_AMD_ZEN3: {
+		uint64_t hwcr = rdmsr64(MSR_AMD_HWCR);
+		uint64_t pstate = rdmsr64(MSR_AMD_PSTATE_BASE);
+
+		/* Lock the TSC to the current P0 in the event that PM ever overrides it. */
+		if (!(msr & MSR_AMD_K17_HWCR_LOCKTSC)) {
+			msr |= MSR_AMD_K17_HWCR_LOCKTSC;
+			wrmsr64(MSR_AMD_HWCR, hwcr);
+		}
+
+		uint32_t divisor = bitfield32((uint32_t)pstate, 13, 8) / 8;
+		uint32_t fid = bitfield32((uint32_t)pstate, 7, 0) * 25;
+
+		/* The 17h OSRR doesn't define CoreCOF. For some reason. */
+		/* Anywho... CoreCOF = (CoreFid * 25) / (CoreDfsId / 8) */
+		tscFreq = fid / divisor;
+		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
+		tscFCvtn2t = 0xFFFFFFFFFFFFFFFFULL / tscFCvtt2n;
+
+		/* Get the FSB (Local APIC Timer) frequency from EFI */
+		busFreq = EFI_get_frequency("FSBFrequency");
+
+		/* If we need it, the TSC granularity is found here. */
+		tscGranularity = tscFreq / busFreq;
 		break;
 	}
 	default: {

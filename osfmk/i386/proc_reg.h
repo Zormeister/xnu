@@ -697,4 +697,12 @@ __END_DECLS
 #define HV_VMX_EPTP_WALK_LENGTH(wl)             (0ULL | ((((wl) - 1) & 0x7) << 3))
 #define HV_VMX_EPTP_ENABLE_AD_FLAGS             (1ULL << 6)
 
+#define MSR_AMD_HWCR                            0xC0010015
+#define     MSR_AMD_K17_HWCR_LOCKTSC                0x00200000
+
+#define MSR_AMD_NB_CFG1                         0xC001001F
+
+#define MSR_AMD_PSTATE_BASE                     0xC0010064
+
+
 #endif  /* _I386_PROC_REG_H_ */
