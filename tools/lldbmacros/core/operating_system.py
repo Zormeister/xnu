@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 
 #source of register info is from http://opensource.apple.com/source/gdb/gdb-962/src/gdb/arm-tdep.c
