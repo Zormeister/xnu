@@ -8,6 +8,9 @@
         "-nostdlib",
         "-nostdinc",
         "-isystem ${workspaceFolder}/bsd",
-        "-isystem ${workspaceFolder}/osfmk"
+        "-isystem ${workspaceFolder}/osfmk",
+        "-isystem ${workspaceFolder}/EXTERNAL_HEADERS",
+        "-isystem ${workspaceFolder}/iokit",
+        "-isystem ${workspaceFolder}/pexpert"
     ]
 }
