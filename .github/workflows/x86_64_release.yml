@@ -9,7 +9,7 @@ jobs:
       steps:
         - name: Clone Sources
           run: |
-            git clone --branch 6153/dev https://github.com/Zormeister/xnu ~/xnu-6153.141.1~1
+            git clone --branch 6153/dev https://github.com/Zormeister/xnu ~/xnu-6153.141.2~1
             git clone --branch rel/dtrace-338 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
             git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
@@ -30,6 +30,10 @@ jobs:
             xcodebuild install CODE_SIGNING_ALLOWED=NO DSTROOT=$(xcrun --sdk macosx -show-sdk-platform-path) INSTALL_PATH="/usr/local/bin" -target ctfconvert -target ctfdump -target ctfmerge -sdk macosx
         - name: Install Kernel Headers
           run: |
+            export VERBOSE="YES"
+            export RC_XBS="YES"
+            export RC_ProjectNameAndSourceVersion="xnu-6153.141.2"
+            export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=1"
             cd ~/xnu*/
             make USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="RELEASE" ARCH_CONFIGS="X86_64" installhdrs
@@ -42,11 +46,19 @@ jobs:
             xcodebuild install VALID_ARCHS="x86_64" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch x86_64
         - name: Build Kernel
           run: |
+            export VERBOSE="YES"
+            export RC_XBS="YES"
+            export RC_ProjectNameAndSourceVersion="xnu-6153.141.2"
+            export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=1"
             cd ~/xnu*/
             make USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
         - name: Package Kernel into tarball
           run: |
+            export VERBOSE="YES"
+            export RC_XBS="YES"
+            export RC_ProjectNameAndSourceVersion="xnu-6153.141.2"
+            export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=1"
             cd ~/xnu*/
             make DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_kernels
