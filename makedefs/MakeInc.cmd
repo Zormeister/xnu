@@ -135,7 +135,7 @@ ifeq ($(CTFCONVERT),)
 	export CTFCONVERT := $(shell $(XCRUN) -sdk $(SDKROOT) -find ctfconvert)
 endif
 ifeq ($(CTFMERGE),)
-	export CTFMERGE :=  $(shell $(XCRUN) -sdk $(SDKROOT) -find ctfmerge)
+	export CTFMERGE :=  CTFMERGE_DEBUG_LEVEL="4" $(shell $(XCRUN) -sdk $(SDKROOT) -find ctfmerge)
 endif
 ifeq ($(CTFINSERT),)
 	export CTFINSERT := $(shell $(XCRUN) -sdk $(SDKROOT) -find ctf_insert)
