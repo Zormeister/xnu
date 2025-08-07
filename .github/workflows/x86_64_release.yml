@@ -1,0 +1,57 @@
+name: x86-64 RELEASE Build (6153/dev)
+
+on: push
+  
+jobs:
+    build:
+      runs-on: macos-15
+  
+      steps:
+        - name: Clone Sources
+          run: |
+            git clone --branch 6153/dev https://github.com/Zormeister/xnu ~/xnu-6153.141.1~1
+            git clone --branch rel/dtrace-338 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
+            git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
+            git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
+            git clone --branch rel/libdispatch-1173 https://github.com/apple-oss-distributions/libdispatch.git ~/libdispatch
+        - name: Prepare AvailabilityVersions
+          run: |
+            mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec
+            cp ~/AvailabilityVersions/availability.pl $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec/availability.pl
+        - name: Prepare libplatform
+          run: |
+            mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal
+            cp ~/libplatform/private/os/internal/* $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal/
+        - name: Install DTrace tools
+          run: |
+            cd ~/dtrace
+            echo "#include <stdint.h>" > include/llvm-Support/DataTypes.h
+            sed -i -e 's,include "llvm/Support/DataTypes,include "llvm-Support/DataTypes,' include/llvm-Support/PointerLikeTypeTraits.h
+            xcodebuild install CODE_SIGNING_ALLOWED=NO DSTROOT=$(xcrun --sdk macosx -show-sdk-platform-path) INSTALL_PATH="/usr/local/bin" -target ctfconvert -target ctfdump -target ctfmerge -sdk macosx
+        - name: Install Kernel Headers
+          run: |
+            cd ~/xnu*/
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="RELEASE" ARCH_CONFIGS="X86_64" installhdrs
+        - name: Prepare libfirehose_kernel
+          run: |
+            cd ~/libdispatch
+            mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
+            cp ~/libdispatch/os/firehose_buffer_private.h $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
+            awk '/include "<DEVELOPER/ {next;} /SDKROOT =/ {print "SDKROOT = macosx"; next;} {print $0}' xcodeconfig/libdispatch.xcconfig > .__tmp__ && mv -f .__tmp__ xcodeconfig/libdispatch.xcconfig
+            xcodebuild install VALID_ARCHS="x86_64" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch x86_64
+        - name: Build Kernel
+          run: |
+            cd ~/xnu*/
+            make -j1 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+        - name: Package Kernel into tarball
+          run: |
+            cd ~/xnu*/
+            make -j1 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_kernels
+            cd $PWD/KernelRoot
+            tar -cvf kernel_release.tar.xz .
+        - name: Upload Kernel Root tarball
+          if: success()
+          uses: actions/upload-artifact@v4
+          with:
+            name: KernelRoot-x86-release.tar.xz
+            path: /Users/runner/src/xnu-6153.141.1~1/KernelRoot/kernel_release.tar.xz
