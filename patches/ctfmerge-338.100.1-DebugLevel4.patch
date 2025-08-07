@@ -1,0 +1,15 @@
+diff --git a/tools/ctfconvert/ctftools.h b/tools/ctfconvert/ctftools.h
+index 8c832c9..eca040e 100644
+--- a/tools/ctfconvert/ctftools.h
++++ b/tools/ctfconvert/ctftools.h
+@@ -48,9 +48,9 @@ extern "C" {
+ #include "hash.h"
+ #include "atom.h"
+ 
+ #ifndef DEBUG_LEVEL
+-#define	DEBUG_LEVEL 0
++#define	DEBUG_LEVEL 4
+ #endif
+ 
+ #ifndef DEBUG_STREAM
+ #define	DEBUG_STREAM stderr

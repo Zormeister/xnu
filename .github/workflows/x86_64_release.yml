@@ -27,6 +27,7 @@ jobs:
             cd ~/dtrace
             echo "#include <stdint.h>" > include/llvm-Support/DataTypes.h
             sed -i -e 's,include "llvm/Support/DataTypes,include "llvm-Support/DataTypes,' include/llvm-Support/PointerLikeTypeTraits.h
+            patch -Np1 -i ~/xnu*/patches/ctfmerge-*-DebugLevel4.patch
             xcodebuild install CODE_SIGNING_ALLOWED=NO DSTROOT=$(xcrun --sdk macosx -show-sdk-platform-path) INSTALL_PATH="/usr/local/bin" -target ctfconvert -target ctfdump -target ctfmerge -sdk macosx
         - name: Install Kernel Headers
           run: |
