@@ -4,7 +4,7 @@ on: push
   
 jobs:
     build:
-      runs-on: macos-15
+      runs-on: macos-latest
   
       steps:
         - name: Clone Sources
@@ -30,8 +30,9 @@ jobs:
             xcodebuild install CODE_SIGNING_ALLOWED=NO DSTROOT=$(xcrun --sdk macosx -show-sdk-platform-path) INSTALL_PATH="/usr/local/bin" -target ctfconvert -target ctfdump -target ctfmerge -sdk macosx
         - name: Install Kernel Headers
           run: |
+            export MAKEFLAGS="--jobs=1"
             cd ~/xnu*/
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="DEBUG" ARCH_CONFIGS="X86_64" installhdrs
+            make USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="DEBUG" ARCH_CONFIGS="X86_64" installhdrs
         - name: Prepare libfirehose_kernel
           run: |
             cd ~/libdispatch
@@ -41,12 +42,13 @@ jobs:
             xcodebuild install VALID_ARCHS="x86_64" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch x86_64
         - name: Build Kernel
           run: |
+            export MAKEFLAGS="--jobs=1"
             cd ~/xnu*/
-            make -j1 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+            make USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
         - name: Package Kernel into tarball
           run: |
             cd ~/xnu*/
-            make -j1 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_kernels
+            make DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_kernels
             cd $PWD/KernelRoot
             tar -cvf kernel_debug.tar.xz .
         - name: Upload Kernel Root tarball
