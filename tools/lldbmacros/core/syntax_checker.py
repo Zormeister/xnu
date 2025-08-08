@@ -37,14 +37,14 @@ if __name__ == "__main__":
                 print(f"Error: Found a TAB character at {fname}:{lineno}", file=sys.stderr)
                 tab_check_status = False
         if tab_check_status == False:
-            print("Error: Syntax check failed. Please fix the errors and try again.", file=sys.stderr)
+            print(f"Error: Syntax check failed for {fname}. Please fix the errors and try again.", file=sys.stderr)
             sys.exit(1)
         #now check for error in compilation
         try:
             compile_result = py_compile.compile(fname, cfile=None, doraise=True)
         except py_compile.PyCompileError as exc:
             print(str(exc), file=sys.stderr)
-            print("Error: Compilation failed. Please fix the errors and try again.", file=sys.stderr)
+            print(f"Error: Compilation failed for {fname}. Please fix the errors and try again.", file=sys.stderr)
             sys.exit(1)
         print(f"Success: Checked {fname}. No syntax errors found.")
     sys.exit(0)
