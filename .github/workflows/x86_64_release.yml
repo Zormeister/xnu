@@ -36,7 +36,7 @@ jobs:
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=1"
             cd ~/xnu*/
-            make DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="RELEASE" ARCH_CONFIGS="X86_64" installhdrs
+            make BUILD_DSYM=0 DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="RELEASE" ARCH_CONFIGS="X86_64" installhdrs
         - name: Prepare libfirehose_kernel
           run: |
             cd ~/libdispatch
@@ -51,7 +51,7 @@ jobs:
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=1"
             cd ~/xnu*/
-            make DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+            make BUILD_DSYM=0 DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
         - name: Package Kernel into tarball
           run: |
             export RC_XBS="YES"
@@ -59,7 +59,7 @@ jobs:
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=1"
             cd ~/xnu*/
-            make DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_kernels
+            make BUILD_DSYM=0 DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_kernels
             cd $PWD/KernelRoot
             tar -cvf kernel_release.tar.xz .
         - name: Upload Kernel Root tarball
