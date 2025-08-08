@@ -29,7 +29,7 @@ class GDBServer(object):
             while True:
                 try:
                     p_bytes = self.conn.read()
-                except Exception, e:
+                except Exception as e:
                     logging.warn("found exception in read %s" % (str(e)))
                     logging.debug("currentbytes: %s" % readBytes)
                     readBytes = ''
@@ -144,7 +144,7 @@ class GDBServer(object):
                 query = query.replace('qThreadStopInfo', '')
                 tid = int(query, 16)
                 bytes = self.process.getThreadStopInfo(tid)
-            except Exception, e:
+            except Exception as e:
                 logging.error("Failed to get register information query: %s error: %s" % (query, e.message))
         return rsprotocol.Message(bytes)
 
@@ -164,7 +164,7 @@ class GDBServer(object):
                     threadid = int(args[1].split(':')[-1], 16)
                     bytes = self.process.getRegisterDataForThread(threadid, regnum)
                     logging.debug('REGISTER INFO bytes = ' + bytes)
-        except Exception, e:
+        except Exception as e:
             logging.error("Failed to get register information query: %s error: %s" % (query, e.message))
         return rsprotocol.Message(bytes)
 
@@ -174,7 +174,7 @@ class GDBServer(object):
             query = query.replace('qRegisterInfo', '')
             regnum = int(query, 16)
             bytes = self.process.getRegisterInfo(regnum)
-        except Exception, e:
+        except Exception as e:
             logging.error("Failed to get register information error: %s" % e.message)
         return rsprotocol.Message(bytes)
 
@@ -186,7 +186,7 @@ class GDBServer(object):
         bytes = ''
         try:
             bytes = self.process.readMemory(mem_address, mem_size)
-        except Exception, e:
+        except Exception as e:
             logging.warn('Failed to read data %s' % str(e))
             return rsprotocol.Message('E03')
         return rsprotocol.Message(bytes)
@@ -202,7 +202,7 @@ class GDBServer(object):
         data = ''
         try:
             data = self.process.getProcessInfo()
-        except Exception, e:
+        except Exception as e:
             logging.error("Failed to get process information")
         return rsprotocol.Message(data)
 
@@ -211,7 +211,7 @@ class GDBServer(object):
         try:
             data = self.process.getSharedLibInfoAddress()
             data = self.process.encodeThreadID(data)
-        except Exception, e:
+        except Exception as e:
             logging.error("Failed to get Shared Library information")
         return rsprotocol.Message(data)
 
@@ -219,7 +219,7 @@ class GDBServer(object):
         tid = '0'
         try:
             tid = '%x' % (self.process.getCurrentThreadID())
-        except Exception, e:
+        except Exception as e:
             logging.error("Failed to get QC info")
 
         return rsprotocol.Message('QC'+tid)
