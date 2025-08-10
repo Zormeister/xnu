@@ -184,7 +184,7 @@ def populate_kobject_types(xnu_dir_path):
     """
     filename = os.path.join(xnu_dir_path, 'osfmk', 'kern', 'ipc_kobject.h')
     filedata = open(filename).read()
-    object_regex = re.compile("^#define\s+(IKOT_[A-Z_]*)\s+(\d+)\s*",re.MULTILINE|re.DOTALL)
+    object_regex = re.compile("^#define\\s+(IKOT_[A-Z_]*)\\s+(\\d+)\s*",re.MULTILINE|re.DOTALL)
     kobject_found_types =[]
     for v in object_regex.findall(filedata):
         kobject_found_types.append(v[0])

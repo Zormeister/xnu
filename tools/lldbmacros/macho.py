@@ -278,16 +278,16 @@ class VisualMachoMap(object):
         if prev_block.vmsize > VisualMachoMap.KB_16:
             mstr.append(self.get_space_line())
         mstr.append(self.get_header_line())
-        print outstr
-        print "\n".join(mstr)
-        print "\n\n=============== Other Load Commands ==============="
-        print other_cmds
+        print(outstr)
+        print("\n".join(mstr))
+        print("\n\n=============== Other Load Commands ===============")
+        print(other_cmds)
 
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) < 2:
-        print "Usage: {} /path/to/macho_binary".format(sys.argv[0])
+        print("Usage: {} /path/to/macho_binary".format(sys.argv[0]))
         sys.exit(1)
     with open(sys.argv[-1], 'rb') as fp:
         data = fp.read()

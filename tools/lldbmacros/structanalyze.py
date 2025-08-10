@@ -45,7 +45,7 @@ def _showStructPacking(O, symbol, begin_offset=0, symsize=0, typedef=None, outer
     else:
         outstr += ") {"
 
-    print outstr
+    print(outstr)
 
     with O.indent():
         _previous_size = 0
@@ -95,11 +95,11 @@ def _showStructPacking(O, symbol, begin_offset=0, symsize=0, typedef=None, outer
                 m_previous_offset = begin_offset + _packed_bit_offset / 8
                 m_hole_bits = m_offset_bits - _packed_bit_offset
                 if _packed_bit_offset % 8 == 0:
-                    print O.format("{:04d},[{:4d}] ({VT.DarkRed}*** padding ***{VT.Default})",
-                            m_previous_offset, m_hole_bits / 8)
+                    print(O.format("{:04d},[{:4d}] ({VT.DarkRed}*** padding ***{VT.Default})",
+                            m_previous_offset, m_hole_bits / 8))
                 else:
-                    print O.format("{:04d},[{:4d}] ({VT.Brown}*** padding : {:d} ***{VT.Default})",
-                            m_previous_offset, _previous_size, m_hole_bits)
+                    print(O.format("{:04d},[{:4d}] ({VT.Brown}*** padding : {:d} ***{VT.Default})",
+                            m_previous_offset, _previous_size, m_hole_bits))
 
             _previous_size = m_size
             _packed_bit_offset = m_offset_bits + m_size_bits
@@ -123,7 +123,7 @@ def _showStructPacking(O, symbol, begin_offset=0, symsize=0, typedef=None, outer
                 else:
                     outstr += O.format(" ({VT.DarkGreen}{:s}{VT.Default}) {:s}",
                             m_type.GetName(), m_name)
-                print outstr
+                print(outstr)
 
         referenceSize = min(outerSize, sym_size) or sym_size
         if not is_union and _packed_bit_offset < referenceSize * 8:
@@ -131,13 +131,13 @@ def _showStructPacking(O, symbol, begin_offset=0, symsize=0, typedef=None, outer
             m_hole_bits = referenceSize * 8 - _packed_bit_offset
             offset = _packed_bit_offset / 8 + begin_offset
             if _packed_bit_offset % 8 == 0:
-                print O.format("{:04d},[{:4d}] ({VT.DarkRed}*** padding ***{VT.Default})",
-                        m_previous_offset, m_hole_bits / 8)
+                print(O.format("{:04d},[{:4d}] ({VT.DarkRed}*** padding ***{VT.Default})",
+                        m_previous_offset, m_hole_bits / 8))
             else:
-                print O.format("{:04d},[{:4d}] ({VT.Brown}padding : {:d}{VT.Default})\n",
-                        m_previous_offset, _previous_size, m_hole_bits)
+                print(O.format("{:04d},[{:4d}] ({VT.Brown}padding : {:d}{VT.Default})\n",
+                        m_previous_offset, _previous_size, m_hole_bits))
 
-    print "}"
+    print("}")
 
 @lldb_command('showstructpacking', fancy=True)
 def showStructInfo(cmd_args=None, cmd_options={}, O=None):

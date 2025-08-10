@@ -12,7 +12,7 @@ import lldb
 import re
 from lazytarget import *
 
-_cstring_rex = re.compile("((?:\s*|const\s+)\s*char(?:\s+\*|\s+[A-Za-z_0-9]*\s*\[|)\s*)",re.MULTILINE|re.DOTALL)
+_cstring_rex = re.compile("((?:\\s*|const\\s+)\\s*char(?:\\s+\*|\\s+[A-Za-z_0-9]*\\s*\[|)\\s*)",re.MULTILINE|re.DOTALL)
 
 class value(object):
     '''A class designed to wrap lldb.SBValue() objects so the resulting object
@@ -299,7 +299,7 @@ class value(object):
 
     def _GetValueAsSigned(self):
         if self._sbval19k84obscure747_is_ptr:
-            print "ERROR: You cannot get 'int' from pointer type %s, please use unsigned(obj) for such purposes." % str(self._sbval19k84obscure747_type)
+            print("ERROR: You cannot get 'int' from pointer type %s, please use unsigned(obj) for such purposes." % str(self._sbval19k84obscure747_type))
             raise ValueError("Cannot get signed int for pointer data.")
         serr = lldb.SBError()
         retval = self._sbval19k84obscure747.GetValueAsSigned(serr)
@@ -430,7 +430,7 @@ def cast(obj, target_type):
     if type(obj) is value:
         return obj._GetValueAsCast(dest_type)
     elif type(obj) is int:
-        print "ERROR: You cannot cast an 'int' to %s, please use kern.GetValueFromAddress() for such purposes." % str(target_type) 
+        print("ERROR: You cannot cast an 'int' to %s, please use kern.GetValueFromAddress() for such purposes." % str(target_type))
     raise TypeError("object of type %s cannot be casted to %s" % (str(type(obj)), str(target_type)))
 
 def containerof(obj, target_type, field_name):

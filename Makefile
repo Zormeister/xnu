@@ -165,7 +165,7 @@ TOP_TARGETS =								\
 	install install_desktop install_embedded			\
 	install_release_embedded install_development_embedded		\
 	installopensource						\
-	cscope tags TAGS checkstyle restyle check_uncrustify uncrustify				\
+	cscope tags TAGS 				\
 	help
 
 DEFAULT_TARGET = all

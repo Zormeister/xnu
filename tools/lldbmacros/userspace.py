@@ -50,7 +50,7 @@ def ShowX86UserStack(thread, user_lib_info = None):
         user_abi_type = "uint32_t"
 
     if user_ip == 0:
-        print "This activation does not appear to have a valid user context."
+        print("This activation does not appear to have a valid user context.")
         return False
 
     cur_ip = user_ip
@@ -60,9 +60,9 @@ def ShowX86UserStack(thread, user_lib_info = None):
     frameformat = "{0:d} FP: 0x{1:x} PC: 0x{2:x}"
     if user_lib_info is not None:
         frameformat = "{0:d} {3: <30s} 0x{2:x}"
-    print frameformat.format(0, cur_frame, cur_ip, GetBinaryNameForPC(cur_ip, user_lib_info))
+    print(frameformat.format(0, cur_frame, cur_ip, GetBinaryNameForPC(cur_ip, user_lib_info)))
 
-    print kern.Symbolicate(cur_ip)
+    print(kern.Symbolicate(cur_ip))
 
     frameno = 0
     while True:
@@ -72,8 +72,8 @@ def ShowX86UserStack(thread, user_lib_info = None):
         cur_frame = _ExtractDataFromString(frame, 0, user_abi_type)
         if not cur_frame or cur_frame == 0x0000000800000008:
             break
-        print frameformat.format(frameno, cur_frame, cur_ip, GetBinaryNameForPC(cur_ip, user_lib_info))
-        print kern.Symbolicate(cur_ip)
+        print(frameformat.format(frameno, cur_frame, cur_ip, GetBinaryNameForPC(cur_ip, user_lib_info)))
+        print(kern.Symbolicate(cur_ip))
     return
 
 def _PrintARMUserStack(task, cur_pc, cur_fp, framesize, frametype, frameformat, user_lib_info=None):
@@ -82,7 +82,7 @@ def _PrintARMUserStack(task, cur_pc, cur_fp, framesize, frametype, frameformat, 
         "No valid user context for this activation."
         return
     frameno = 0
-    print frameformat.format(frameno, cur_fp, cur_pc, GetBinaryNameForPC(cur_pc, user_lib_info))
+    print(frameformat.format(frameno, cur_fp, cur_pc, GetBinaryNameForPC(cur_pc, user_lib_info)))
     while True:
         frameno = frameno + 1
         frame = GetUserDataAsString(task, cur_fp, framesize)
@@ -91,7 +91,7 @@ def _PrintARMUserStack(task, cur_pc, cur_fp, framesize, frametype, frameformat, 
         cur_pc = kern.StripUserPAC(cur_pc)
         if not cur_fp:
             break
-        print frameformat.format(frameno, cur_fp, cur_pc, GetBinaryNameForPC(cur_pc, user_lib_info))
+        print(frameformat.format(frameno, cur_fp, cur_pc, GetBinaryNameForPC(cur_pc, user_lib_info)))
 
 def ShowARMUserStack(thread, user_lib_info = None):
     cur_pc = unsigned(thread.machine.PcbData.pc)
@@ -169,31 +169,31 @@ def PrintUserspaceData(cmd_args=None, cmd_options={}):
     format_specifier_str = cmd_args[2]
     user_data_len = 0
     if format_specifier_str == "s":
-        print "0x%x: " % uspace_addr + GetUserspaceString(task, uspace_addr)
+        print("0x%x: " % uspace_addr + GetUserspaceString(task, uspace_addr))
         return True
 
     try:
         user_data_len = struct.calcsize(format_specifier_str)
-    except Exception, e:
+    except Exception as e:
         raise ArgumentError("Invalid format specifier provided.")
 
     user_data_string = GetUserDataAsString(task, uspace_addr, user_data_len)
     if not user_data_string:
-        print "Could not read any data from userspace address."
+        print("Could not read any data from userspace address.")
         return False
     if "-O" in cmd_options:
         fh = open(cmd_options["-O"],"w")
         fh.write(user_data_string)
         fh.close()
-        print "Written %d bytes to %s." % (user_data_len, cmd_options['-O'])
+        print("Written %d bytes to %s." % (user_data_len, cmd_options['-O']))
         return True
     upacked_data = struct.unpack(format_specifier_str, user_data_string)
     element_size = user_data_len / len(upacked_data)
     for i in range(len(upacked_data)):
         if "-X" in cmd_options:
-            print "0x%x: " % (uspace_addr + i*element_size) + hex(upacked_data[i])
+            print("0x%x: " % (uspace_addr + i*element_size) + hex(upacked_data[i]))
         else:
-            print "0x%x: " % (uspace_addr + i*element_size) + str(upacked_data[i])
+            print("0x%x: " % (uspace_addr + i*element_size) + str(upacked_data[i]))
 
     return True
 
@@ -218,7 +218,7 @@ def ShowTaskUserArgs(cmd_args=None, cmd_options={}):
 
     string_area = GetUserDataAsString(task, string_area_addr, string_area_size)
     if not string_area:
-        print "Could not read any data from userspace address."
+        print("Could not read any data from userspace address.")
         return False
 
     i = 0
@@ -245,7 +245,7 @@ def ShowTaskUserArgs(cmd_args=None, cmd_options={}):
             else:
                 string = GetUserspaceString(task, ptr)
 
-            print name + "[]: " + string
+            print(name + "[]: " + string)
 
     return True
 
@@ -305,7 +305,7 @@ Synthetic crash log generated from Kernel userstacks
         path = "unknown"
         ppid = 0
 
-    print crash_report_format_string.format(pid = pid,
+    print(crash_report_format_string.format(pid = pid,
             pname = pname,
             path = path,
             ppid = ppid,
@@ -313,8 +313,8 @@ Synthetic crash log generated from Kernel userstacks
             timest = date_string,
             parch = parch_s,
             osversion = osversion
-        )
-    print "Binary Images:"
+        ))
+    print("Binary Images:")
     ShowTaskUserLibraries([hex(task)])
     usertask_lib_info = [] # will host [startaddr, endaddr, lib_name] entries
     for entry in ShowTaskUserLibraries.found_images:
@@ -333,16 +333,16 @@ Synthetic crash log generated from Kernel userstacks
 
     counter = 0
     for thval in IterateQueue(task.threads, 'thread *', 'task_threads'):
-        print "\nThread {0:d} name:0x{1:x}\nThread {0:d}:".format(counter, thval)
+        print("\nThread {0:d} name:0x{1:x}\nThread {0:d}:".format(counter, thval))
         counter += 1
         try:
             printthread_user_stack_ptr(thval, usertask_lib_info)
         except Exception as exc_err:
-            print "Failed to show user stack for thread 0x{0:x}".format(thval)
+            print("Failed to show user stack for thread 0x{0:x}".format(thval))
             if config['debug']:
                 raise exc_err
             else:
-                print "Enable debugging ('(lldb) xnudebug debug') to see detailed trace."
+                print("Enable debugging ('(lldb) xnudebug debug') to see detailed trace.")
     return
 
 @lldb_command('showtaskuserstacks', "P:F:")
@@ -593,7 +593,7 @@ def ShowTaskUserLibraries(cmd_args=None):
 
     cur_data_offset = 0
     if dyld_all_image_infos_address == 0:
-        print "No dyld shared library information available for task"
+        print("No dyld shared library information available for task")
         return False
     
     debuglog("Extracting version information.")
@@ -601,7 +601,7 @@ def ShowTaskUserLibraries(cmd_args=None):
     version = _ExtractDataFromString(vers_info_data, cur_data_offset, "uint32_t")
     cur_data_offset += 4
     if version > 14:
-        print "Unknown dyld all_image_infos version number %d" % version
+        print("Unknown dyld all_image_infos version number %d" % version)
     image_info_count = _ExtractDataFromString(vers_info_data, cur_data_offset, "uint32_t")
     debuglog("version = %d count = %d is_task_64 = %s" % (version, image_info_count, repr(is_task_64)))
 
@@ -628,7 +628,7 @@ def ShowTaskUserLibraries(cmd_args=None):
         img_data = ""
         try:
             img_data = GetUserDataAsString(task, image_info_address, image_info_size)
-        except Exception, e:
+        except Exception as e:
             debuglog("Failed to read user data for task 0x{:x} addr 0x{:x}, exception {:s}".format(task, image_info_address, str(e)))
             pass
 
@@ -657,11 +657,11 @@ def ShowTaskUserLibraries(cmd_args=None):
         try:
             image_print_s = GetImageInfo(task, image_info_addr, image_info_path, approx_end_address=n_im_info_addr)
             if len(image_print_s) > 0:
-                print image_print_s
+                print(image_print_s)
                 ShowTaskUserLibraries.found_images.append((image_info_addr, n_im_info_addr, image_info_path, image_print_s))
             else:
                 debuglog("Failed to print image info for task 0x{:x} image_info 0x{:x}".format(task, image_info_addr))
-        except Exception,e:
+        except Exception as e:
             if config['debug']:
                 raise e
 
@@ -670,14 +670,14 @@ def ShowTaskUserLibraries(cmd_args=None):
         debuglog("main executable load_path is set.")
         image_print_s = GetImageInfo(task, dyld_load_address, ShowTaskUserLibraries.exec_load_path)
         if len(image_print_s) > 0:
-            print image_print_s
+            print(image_print_s)
             ShowTaskUserLibraries.found_images.append((dyld_load_address, dyld_load_address + 0xffffffff,
                     ShowTaskUserLibraries.exec_load_path, image_print_s))
         else:
             debuglog("Failed to print image for main executable for task 0x{:x} dyld_load_addr 0x{:x}".format(task, dyld_load_address))
     else:
         debuglog("Falling back to vm entry method for finding executable load address")
-        print "# NOTE: Failed to find executable using all_image_infos. Using fuzzy match to find best possible load address for executable."
+        print("# NOTE: Failed to find executable using all_image_infos. Using fuzzy match to find best possible load address for executable.")
         ShowTaskLoadInfo([cmd_args[0]])
     return
 
@@ -687,8 +687,8 @@ def ShowTaskUserDyldInfo(cmd_args=None):
         Syntax: (lldb)showtaskuserdyldinfo <task_t>
     """
     if cmd_args == None or len(cmd_args) < 1:
-        print "No arguments passed"
-        print ShowTaskUserDyldInfo.__doc__.strip()
+        print("No arguments passed")
+        print(ShowTaskUserDyldInfo.__doc__.strip())
         return
 
     out_str = ""
@@ -696,7 +696,7 @@ def ShowTaskUserDyldInfo(cmd_args=None):
     is_task_64 = int(task.t_flags) & 0x1
     dyld_all_image_infos_address = unsigned(task.all_image_info_addr)
     if dyld_all_image_infos_address == 0:
-        print "No dyld shared library information available for task"
+        print("No dyld shared library information available for task")
         return False
     vers_info_data = GetUserDataAsString(task, dyld_all_image_infos_address, 112)
     dyld_all_image_infos_version = _ExtractDataFromString(vers_info_data, 0, "uint32_t")
@@ -830,7 +830,7 @@ def ShowTaskUserDyldInfo(cmd_args=None):
             out_str += "sharedCacheUUID \t\t\t: {:s}\n".format(dyld_all_image_infos_sharedCacheUUID)
     else:
         out_str += "No dyld information available for task\n"
-    print out_str
+    print(out_str)
 
 # Macro: showosmalloc
 @lldb_type_summary(['OSMallocTag'])
@@ -862,7 +862,7 @@ def ShowOSMalloc(cmd_args=None):
         summary_str += GetOSMallocTagSummary(tagp)
         tagp = Cast(tagp.OSMT_link.next, 'struct _OSMallocTag_ *')
 
-    print summary_str
+    print(summary_str)
 
 # EndMacro: showosmalloc
 
@@ -879,23 +879,23 @@ def SaveDataToFile(start_addr, length, outputfile, task=None,):
     else:
         data_ptr = kern.GetValueFromAddress(start_addr, 'uint8_t *')
         if data_ptr == 0:
-            print "invalid kernel start address specified"
+            print("invalid kernel start address specified")
             return False
         memory_data = []
         for i in range(length):
             memory_data.append(chr(data_ptr[i]))
             if i % 50000 == 0:
-                print "%d of %d            \r" % (i, length),
+                print("%d of %d            \r" % (i, length)),
         memory_data = ''.join(memory_data)
 
     if len(memory_data) != length:
-        print "Failed to read {:d} bytes from address {: <#020x}".format(length, start_addr)
+        print("Failed to read {:d} bytes from address {: <#020x}".format(length, start_addr))
         return False
 
     fh = open(outputfile, 'w')
     fh.write(memory_data)
     fh.close()
-    print "Saved {:d} bytes to file {:s}".format(length, outputfile)
+    print("Saved {:d} bytes to file {:s}".format(length, outputfile))
     return True
 
 

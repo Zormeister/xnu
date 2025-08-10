@@ -49,6 +49,11 @@
 
 #define kCopyrightToken "Copyright © "
 #define kRightsToken " Apple Inc. All rights reserved."
+#define kRightsTokenPureDarwin " PureDarwin Project. All rights reserved."
+#define kRightsTokenPureDarwin2 " The PureDarwin Project. All rights reserved."
+
+// funsies in the event i go off the rails and need Private KPI access on my own projects.
+#define kRightsTokenZormeister " Zormeister. All rights reserved."
 
 /******************************************************************************
 * Globals
@@ -248,6 +253,17 @@ finish:
 	return result;
 }
 
+static const char *
+kxld_copyright_rights_tokens[] = {
+	kRightsToken,
+	kRightsTokenPureDarwin,
+	kRightsTokenPureDarwin2,
+	kRightsTokenZormeister,
+};
+
+static uint32_t
+kxld_copyright_rights_token_count = sizeof(kxld_copyright_rights_tokens) / sizeof(const char *);
+
 /******************************************************************************
 * The copyright string is composed of three parts:
 *   1) A copyright notice, "Copyright ©"
@@ -268,7 +284,13 @@ kxld_validate_copyright_string(const char *str)
 	u_long len = 0;
 
 	copyright = kxld_strstr(str, kCopyrightToken);
-	rights = kxld_strstr(str, kRightsToken);
+
+	for (int i = 0; i < kxld_copyright_rights_token_count; i++) {
+		rights = kxld_strstr(str, kxld_copyright_rights_tokens[i]);
+		if (rights) {
+			break;
+		}
+	}
 
 	if (!copyright || !rights || copyright > rights) {
 		goto finish;

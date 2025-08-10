@@ -70,19 +70,19 @@ def PrintTurnstile(turnstile):
         params:
             turnstile - turnstile to print
     """
-    print GetTurnstileSummary(turnstile)
+    print(GetTurnstileSummary(turnstile))
 
     """ print turnstile freelist if its not on a thread or freelist """
     if turnstile.ts_state & 0x3 == 0:
       needsHeader = True
       for free_turnstile in IterateListEntry(turnstile.ts_free_turnstiles, 'struct turnstile *', 'ts_free_elm', 's'):
         if needsHeader:
-          print "    Turnstile free List"
+          print("    Turnstile free List")
           header_str = "    " + GetTurnstileSummary.header
-          print header_str
+          print(header_str)
           needsHeader = False
-        print "    " + GetTurnstileSummary(free_turnstile)
-        print ""
+        print("    " + GetTurnstileSummary(free_turnstile))
+        print("")
     return
 
 # Macro: showturnstile
@@ -95,7 +95,7 @@ def ShowTurnstile(cmd_args=None, cmd_options={}):
       raise ArgumentError("Please provide arguments")
 
     turnstile = kern.GetValueFromAddress(cmd_args[0], 'struct turnstile *')
-    print GetTurnstileSummary.header
+    print(GetTurnstileSummary.header)
     PrintTurnstile(turnstile)
     return
 # EndMacro: showturnstile
@@ -105,7 +105,7 @@ def ShowTurnstileHashTable(cmd_args=None, cmd_options={}):
     """ show the global hash table for turnstiles.
         Usage: (lldb)showturnstilehashtable
     """
-    print GetTurnstileSummary.header
+    print(GetTurnstileSummary.header)
     turnstile_htable_buckets = kern.globals.ts_htable_buckets
     for index in range(0, turnstile_htable_buckets):
         turnstile_bucket = GetObjectAtIndexFromArray(kern.globals.turnstile_htable, index)
@@ -122,9 +122,9 @@ def ShowAllTurnstiles(cmd_args=None, cmd_options={}):
         usage: (lldb) showallturnstiles
     """
     if not hasattr(kern.globals, 'turnstiles_list'):
-      print "It seems you are running a build of kernel that does not have the list of all turnstiles."
+      print("It seems you are running a build of kernel that does not have the list of all turnstiles.")
       return False
-    print GetTurnstileSummary.header
+    print(GetTurnstileSummary.header)
     for turnstile in IterateQueue(kern.globals.turnstiles_list, 'struct turnstile *', 'ts_global_elm'):
         PrintTurnstile(turnstile)
     return True
@@ -138,9 +138,9 @@ def ShowAllTurnstiles(cmd_args=None, cmd_options={}):
         usage: (lldb) showallbusyturnstiles
     """
     if not hasattr(kern.globals, 'turnstiles_list'):
-      print "It seems you are running a build of kernel that does not have the list of all turnstiles."
+      print("It seems you are running a build of kernel that does not have the list of all turnstiles.")
       return False
-    print GetTurnstileSummary.header
+    print(GetTurnstileSummary.header)
     for turnstile in IterateQueue(kern.globals.turnstiles_list, 'struct turnstile *', 'ts_global_elm'):
       if turnstile.ts_state & 0x3 == 0:
         PrintTurnstile(turnstile)

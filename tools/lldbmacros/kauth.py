@@ -21,12 +21,12 @@ def PrintKauthCache(cmd_args=None):
     anchor = unsigned(kern.globals.kauth_cred_table_anchor)
     table_entries = 128 # KAUTH_CRED_TABLE_SIZE
     anchor = kern.globals.kauth_cred_table_anchor
-    print "Cred cache has: " + str(table_entries) + " buckets\n"
-    print "Number of items in each bucket ... \n"
+    print("Cred cache has: " + str(table_entries) + " buckets\n")
+    print("Number of items in each bucket ... \n")
     for i in range(0, table_entries):
         numinbucket = 0
         for kauth_cred in IterateListEntry(anchor[i], 'kauth_cred_t', "cr_link"):
             numinbucket += 1
             #print str(kauth_cred.cr_posix)
             #print str(kauth_cred.cr_ref)
-        print str(numinbucket) + "\n"
+        print(str(numinbucket) + "\n")

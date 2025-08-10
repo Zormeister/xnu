@@ -21,9 +21,9 @@ def GetUlockSummary(ull):
 
     s = "{ull: <#20x} {ull_type: <20s}".format(ull=ull, ull_type=ull_type)
     ulk=ull.ull_key
-    if int(ulk.ulk_key_type) is 1:
+    if int(ulk.ulk_key_type) == 1:
         s += " {ulk.ulk_addr: <#20x} {ulk.ulk_pid: <10d}".format(ulk=ulk)
-    elif int(ulk.ulk_key_type) is 2:
+    elif int(ulk.ulk_key_type) == 2:
         s += " {ulk.ulk_object: <#20x} {ulk.ulk_offset: <10d}".format(ulk=ulk)
     else:
         s += " {:<20s} {:<10s}".format("", "")
@@ -42,4 +42,4 @@ def ShowAllUlocks(cmd_args=None, cmd_options={}, O=None):
         buckets = kern.globals.ull_bucket
         for i in xrange(0, count):
             for ull in IterateLinkageChain(addressof(buckets[i].ulb_head), 'ull_t *', 'ull_hash_link'):
-                print GetUlockSummary(ull)
+                print(GetUlockSummary(ull))

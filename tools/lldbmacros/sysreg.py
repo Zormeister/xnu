@@ -70,27 +70,27 @@ def PrintEsrEl1Explanation(regval):
     ec = (regval >> 26) & ((1 << 6) - 1)
     ecstring = '0b{:06b}'.format(ec)
 
-    print _Colorify(VT.Green, 'EC == ' + ecstring)
+    print(_Colorify(VT.Green, 'EC == ' + ecstring))
 
     ecxpath = './registers/register/reg_fieldsets/fields/field[@id="EC_31_26"]/field_values/field_value_instance[field_value="{}"]/field_value_description//para'.format(ecstring)
     ec_desc_paras = root.findall(ecxpath)
 
     if ec_desc_paras is None or len(ec_desc_paras) == 0:
-        print 'EC not defined.'
-        print '\r\n'
+        print('EC not defined.')
+        print('\r\n')
 
     for para in ec_desc_paras:
         sys.stdout.write(para.text)
         for child in para:
             sys.stdout.write(_GetParaChildrenStr(child))
             sys.stdout.write(child.tail)
-        print '\r\n'
-        print '\r\n'
+        print('\r\n')
+        print('\r\n')
 
     iss = regval & ((1 << 25) - 1);
     issstring = '0x{:07x}'.format(iss)
-    print _Colorify(VT.Green, 'ISS == ' + issstring)
-    print '\r\n'
+    print(_Colorify(VT.Green, 'ISS == ' + issstring))
+    print('\r\n')
 
     iss_condition_xpath = './registers/register/reg_fieldsets/fields/field[@id="EC_31_26"]/field_values/field_value_instance[field_value="{}"]/field_value_links_to'.format(ecstring)
     iss_condition = root.find(iss_condition_xpath)
@@ -133,7 +133,7 @@ def _PrintEsrIssField(elem, regval):
     field_value = (regval >> field_lsb) & ((1 << field_bits) - 1)
     field_value_string = ('0b{:0' + '{}'.format(field_bits) + 'b}').format(field_value)
 
-    print _Colorify(VT.Green, _GetIndentedString(2, field_name_str) + ' == ' + field_value_string)
+    print(_Colorify(VT.Green, _GetIndentedString(2, field_name_str) + ' == ' + field_value_string))
 
     fv_desc_paras = elem.findall('./field_values/field_value_instance[field_value="{}"]/field_value_description//para'.format(field_value_string))
 
@@ -144,24 +144,24 @@ def _PrintEsrIssField(elem, regval):
             for child in para:
                 sys.stdout.write(_GetParaChildrenStr(child))
                 sys.stdout.write((child.tail))
-        print '\r\n'
-        print '\r\n'
+        print('\r\n')
+        print('\r\n')
     else:
-        print _Colorify(VT.Red, _GetIndentedString(2, '(No matching value, dumping out full description)')) 
+        print(_Colorify(VT.Red, _GetIndentedString(2, '(No matching value, dumping out full description)'))) 
         for para in fd_before_paras:
             sys.stdout.write(_GetIndentedString(2, ''))
             sys.stdout.write(para.text)
             for child in para:
                 sys.stdout.write(_GetParaChildrenStr(child))
                 sys.stdout.write(child.tail)
-            print '\r\n'
-            print '\r\n'
+            print('\r\n')
+            print('\r\n')
 
         ## Dump all possible values
         all_field_values = elem.findall('./field_values/field_value_instance//field_value')
         all_field_values_str = [fv.text for fv in all_field_values]
         if all_field_values_str != []:
-            print _GetIndentedString(2, ', '.join(all_field_values_str))
+            print(_GetIndentedString(2, ', '.join(all_field_values_str)))
 
         for para in fd_after_paras:
             sys.stdout.write(_GetIndentedString(2, ''))
@@ -169,8 +169,8 @@ def _PrintEsrIssField(elem, regval):
             for child in para:
                 sys.stdout.write(_GetParaChildrenStr(child))
                 sys.stdout.write(child.tail)
-            print '\r\n'
-            print '\r\n'
+            print('\r\n')
+            print('\r\n')
 
 
 def _GetIndentedString(indentation, msg):

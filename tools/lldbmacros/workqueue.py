@@ -133,7 +133,7 @@ def ShowWQThread(cmd_args=None, cmd_options={}, O=None):
         raise ArgumentError('not a workqueue thread')
 
     with O.table(GetWQThreadSummary.header):
-        print GetWQThreadSummary(th, Cast(th.uthread, 'struct uthread *'))
+        print(GetWQThreadSummary(th, Cast(th.uthread, 'struct uthread *')))
 
 
 @lldb_command('showprocworkqueue', fancy=True)
@@ -152,28 +152,28 @@ def ShowProcWorkqueue(cmd_args=None, cmd_options={}, O=None):
         return O.error("{:#x} doesn't have a workqueue", proc)
 
     with O.table(GetWorkqueueSummary.header):
-        print GetWorkqueueSummary(proc, wq)
+        print(GetWorkqueueSummary(proc, wq))
 
         with O.table(GetWorkqueueThreadRequestSummary.header, indent=True):
             if wq.wq_reqcount:
-                print ""
+                print("")
             if wq.wq_event_manager_threadreq:
-                print GetWorkqueueThreadRequestSummary(proc, wq.wq_event_manager_threadreq)
+                print(GetWorkqueueThreadRequestSummary(proc, wq.wq_event_manager_threadreq))
             for req in IteratePriorityQueue(wq.wq_overcommit_queue, 'struct workq_threadreq_s', 'tr_entry'):
-                print GetWorkqueueThreadRequestSummary(proc, req)
+                print(GetWorkqueueThreadRequestSummary(proc, req))
             for req in IteratePriorityQueue(wq.wq_constrained_queue, 'struct workq_threadreq_s', 'tr_entry'):
-                print GetWorkqueueThreadRequestSummary(proc, req)
+                print(GetWorkqueueThreadRequestSummary(proc, req))
             for req in IteratePriorityQueue(wq.wq_special_queue, 'struct workq_threadreq_s', 'tr_entry'):
-                print GetWorkqueueThreadRequestSummary(proc, req)
+                print(GetWorkqueueThreadRequestSummary(proc, req))
 
         with O.table(GetWQThreadSummary.header, indent=True):
-            print ""
+            print("")
             for uth in IterateTAILQ_HEAD(wq.wq_thrunlist, "uu_workq_entry"):
-                print GetWQThreadSummary(Cast(uth.uu_thread, 'struct thread *'), uth)
+                print(GetWQThreadSummary(Cast(uth.uu_thread, 'struct thread *'), uth))
             for uth in IterateTAILQ_HEAD(wq.wq_thidlelist, "uu_workq_entry"):
-                print GetWQThreadSummary(Cast(uth.uu_thread, 'struct thread *'), uth)
+                print(GetWQThreadSummary(Cast(uth.uu_thread, 'struct thread *'), uth))
             for uth in IterateTAILQ_HEAD(wq.wq_thnewlist, "uu_workq_entry"):
-                print GetWQThreadSummary(Cast(uth.uu_thread, 'struct thread *'), uth)
+                print(GetWQThreadSummary(Cast(uth.uu_thread, 'struct thread *'), uth))
 
 @lldb_command('showallworkqueues', fancy=True)
 def ShowAllWorkqueues(cmd_args=None, cmd_options={}, O=None):
@@ -187,4 +187,4 @@ def ShowAllWorkqueues(cmd_args=None, cmd_options={}, O=None):
             proc = Cast(t.bsd_info, 'proc *')
             wq = Cast(proc.p_wqptr, "struct workqueue *");
             if wq:
-                print GetWorkqueueSummary(proc, wq)
+                print(GetWorkqueueSummary(proc, wq))
