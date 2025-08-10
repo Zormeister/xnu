@@ -410,7 +410,9 @@ __END_DECLS
 #define CPUFAMILY_INTEL_SKYLAKE         0x37fc219f
 #define CPUFAMILY_INTEL_KABYLAKE        0x0f817246
 #define CPUFAMILY_AMD_PUMA              0x248fda86
+#define CPUFAMILY_AMD_ZEN               0xa0462bf0
 #define CPUFAMILY_AMD_ZENX              0x26af45f6
+#define CPUFAMILY_AMD_ZEN2              0x7352772b
 #define CPUFAMILY_AMD_ZEN3              0x67f5ea5f
 #define CPUFAMILY_ARM_9                 0xe73283ae
 #define CPUFAMILY_ARM_11                0x8ff620d8
