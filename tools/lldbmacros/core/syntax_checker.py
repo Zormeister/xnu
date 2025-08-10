@@ -13,7 +13,7 @@ import sys
 import os
 import re
 
-tabs_search_rex = re.compile("[^\s]*\t+",re.MULTILINE|re.DOTALL)
+tabs_search_rex = re.compile("^\\s*\\t+",re.MULTILINE|re.DOTALL)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
