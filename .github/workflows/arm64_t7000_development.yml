@@ -1,4 +1,4 @@
-name: x86-64 RELEASE Build (6153/dev)
+name: ARM64 T7000 DEVELOPMENT Build (6153/arm-dev)
 
 on: push
   
@@ -14,6 +14,7 @@ jobs:
             git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
             git clone --branch rel/libdispatch-1173 https://github.com/apple-oss-distributions/libdispatch.git ~/libdispatch
+            git clone  https://github.com/Zormeister/EmbeddedDeviceMap.git ~/EmbeddedDeviceMap
         - name: Prepare AvailabilityVersions
           run: |
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec
@@ -22,6 +23,10 @@ jobs:
           run: |
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal
             cp ~/libplatform/private/os/internal/* $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os/internal/
+        - name: Install Embedded Device Map
+          run: |
+            cd ~/EmbeddedDeviceMap
+            make DESTDIR=$(xcrun --sdk macosx -show-sdk-platform-path) install
         - name: Install DTrace tools
           run: |
             cd ~/dtrace
@@ -36,14 +41,14 @@ jobs:
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
-            make DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="RELEASE" ARCH_CONFIGS="X86_64" installhdrs
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="DEVELOPMENT" ARCH_CONFIGS="ARM64" MACHINE_CONFIGS="T7000" installhdrs
         - name: Prepare libfirehose_kernel
           run: |
             cd ~/libdispatch
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             cp ~/libdispatch/os/firehose_buffer_private.h $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             awk '/include "<DEVELOPER/ {next;} /SDKROOT =/ {print "SDKROOT = macosx"; next;} {print $0}' xcodeconfig/libdispatch.xcconfig > .__tmp__ && mv -f .__tmp__ xcodeconfig/libdispatch.xcconfig
-            xcodebuild install VALID_ARCHS="x86_64" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch x86_64
+            xcodebuild install VALID_ARCHS="arm64" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch arm64
         - name: Build Kernel
           run: |
             export RC_XBS=YES
@@ -51,7 +56,7 @@ jobs:
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
-            make DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD ARCH_CONFIGS="ARM64" MACHINE_CONFIGS="T7000"  RC_DARWIN_KERNEL_VERSION="19.6.0"
         - name: Package Kernel into tarball
           run: |
             export RC_XBS=YES
@@ -59,13 +64,13 @@ jobs:
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
-            make DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install
-            make DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD ARCH_CONFIGS="ARM64" MACHINE_CONFIGS="T7000" RC_DARWIN_KERNEL_VERSION="19.6.0" install
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD ARCH_CONFIGS="ARM64" MACHINE_CONFIGS="T7000" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
             cd $PWD/KernelRoot
-            tar -cvf kernel_release.tar.xz .
+            tar -cvf kernel_development.tar.xz .
         - name: Upload Kernel Root tarball
           if: success()
           uses: actions/upload-artifact@v4
           with:
-            name: KernelRoot-x86-release.tar.xz
-            path: /Users/runner/xnu-6153.143.1~1/KernelRoot/kernel_release.tar.xz
+            name: KernelRoot-ARM64-T7000-development.tar.xz
+            path: /Users/runner/xnu-6153.143.1~1/KernelRoot/kernel_development.tar.xz
