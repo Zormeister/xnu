@@ -34,7 +34,7 @@ jobs:
             export RC_XBS=YES
             export RC_ProjectNameAndSourceVersion="xnu-6153.143.1"
             export RC_ProjectBuildVersion="1"
-            export MAKEFLAGS="--jobs=1"
+            export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="RELEASE" ARCH_CONFIGS="X86_64" installhdrs
         - name: Prepare libfirehose_kernel
@@ -49,7 +49,7 @@ jobs:
             export RC_XBS=YES
             export RC_ProjectNameAndSourceVersion="xnu-6153.143.1"
             export RC_ProjectBuildVersion="1"
-            export MAKEFLAGS="--jobs=1"
+            export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
         - name: Package Kernel into tarball
@@ -57,7 +57,7 @@ jobs:
             export RC_XBS=YES
             export RC_ProjectNameAndSourceVersion="xnu-6153.143.1"
             export RC_ProjectBuildVersion="1"
-            export MAKEFLAGS="--jobs=1"
+            export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install
             make DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
