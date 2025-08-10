@@ -251,7 +251,9 @@ tsc_init(void)
 		tscGranularity = tscFreq / busFreq;
 		break;
 	}
+	case CPUFAMILY_AMD_ZEN:
 	case CPUFAMILY_AMD_ZENX:
+	case CPUFAMILY_AMD_ZEN2:
 	case CPUFAMILY_AMD_ZEN3: {
 		uint64_t hwcr = rdmsr64(MSR_AMD_HWCR);
 		uint64_t pstate = rdmsr64(MSR_AMD_PSTATE_BASE);

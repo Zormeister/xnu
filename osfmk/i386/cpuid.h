@@ -272,10 +272,22 @@
 #define CPUID_MODEL_KABYLAKE_ULX        0x8E
 #define CPUID_MODEL_KABYLAKE_DT         0x9E
 
-#define CPUID_MODEL_MULLINS             0x30
+#define CPUID_MODEL_KABINI              0x01    /* Temash, Kyoto */
+#define CPUID_MODEL_MULLINS             0x30    /* Beema, Steppe Eagle, Crowned Eagle */
 
-#define CPUID_MODEL_PINNACLE_RIDGE      0x08
-#define CPUID_MODEL_PICASSO             0x18
+#define CPUID_MODEL_SUMMIT_RIDGE        0x01    /* Whitehaven, Naples */
+#define CPUID_MODEL_RAVEN_RIDGE         0x11 
+#define CPUID_MODEL_DALI                0x20
+
+#define CPUID_MODEL_PINNACLE_RIDGE      0x08    /* Colfax */
+#define CPUID_MODEL_PICASSO             0x18    /* Banded Kestrel */
+
+#define CPUID_MODEL_ROME                0x31    /* Castle Peak */
+#define CPUID_MODEL_RENOIR              0x60    /* Grey Hawk */
+#define CPUID_MODEL_LUCIENNE            0x68
+#define CPUID_MODEL_MATISSE             0x71
+#define CPUID_MODEL_VAN_GOGH            0x90
+#define CPUID_MODEL_MENDOCINO           0xA0
 
 #define CPUID_MODEL_MILAN               0x01
 #define CPUID_MODEL_CHAGALL             0x08

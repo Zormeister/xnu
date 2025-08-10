@@ -958,6 +958,7 @@ cpuid_set_cpufamily_amd(i386_cpu_info_t *info_p)
 	switch (info_p->cpuid_family) {
 	case 0x16:
 		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_KABINI:
 		case CPUID_MODEL_MULLINS:
 			cpufamily = CPUFAMILY_AMD_PUMA;
 			break;
@@ -965,9 +966,22 @@ cpuid_set_cpufamily_amd(i386_cpu_info_t *info_p)
 		break;
 	case 0x17:
 		switch (info_p->cpuid_model) {
+		case CPUID_MODEL_SUMMIT_RIDGE:
+		case CPUID_MODEL_RAVEN_RIDGE:
+		case CPUID_MODEL_DALI:
+			cpufamily = CPUFAMILY_AMD_ZEN;
+			break;
 		case CPUID_MODEL_PINNACLE_RIDGE:
 		case CPUID_MODEL_PICASSO:
 			cpufamily = CPUFAMILY_AMD_ZENX;
+			break;
+		case CPUID_MODEL_ROME:
+		case CPUID_MODEL_RENOIR:
+		case CPUID_MODEL_LUCIENNE:
+		case CPUID_MODEL_MATISSE:
+		case CPUID_MODEL_VAN_GOGH:
+		case CPUID_MODEL_MENDOCINO:
+			cpufamily = CPUFAMILY_AMD_ZEN2;
 			break;
 		}
 		break;
@@ -1098,7 +1112,9 @@ cpuid_set_info(void)
 			info_p->thread_count = info_p->cpuid_logical_per_package;
 			break;
 		}
+		case CPUFAMILY_AMD_ZEN:
 		case CPUFAMILY_AMD_ZENX:
+		case CPUFAMILY_AMD_ZEN2:
 		case CPUFAMILY_AMD_ZEN3: {
 			uint32_t cpuid[4];
 
