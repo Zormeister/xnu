@@ -257,7 +257,7 @@ DSYMDWARFDIR	= Contents/Resources/DWARF
 #
 SYSCTL_KERN_OSRELEASE := $(shell /usr/sbin/sysctl -n kern.osrelease)
 
-ifeq($(SYSCTL_KERN_OSRELEASE),19.6.0)
+ifeq ($(SYSCTL_KERN_OSRELEASE),19.6.0)
 
 #
 # We must not use -fno-keep-inline-functions, or it will remove the dtrace
