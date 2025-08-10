@@ -64,4 +64,4 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: KernelRoot-x86-debug.tar.xz
-            path: /Users/runner/src/xnu-6153.141.2~1/KernelRoot/kernel_debug.tar.xz
+            path: /Users/runner/xnu-6153.141.2~1/KernelRoot/kernel_debug.tar.xz
