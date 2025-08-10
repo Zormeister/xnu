@@ -252,8 +252,12 @@ DSYMKGMACROSDIR	= Contents/Resources
 DSYMLLDBMACROSDIR = Contents/Resources/Python
 DSYMDWARFDIR	= Contents/Resources/DWARF
 
-DEBUG_CFLAGS := -g
-BUILD_DSYM := 1
+#
+# This is a disaster.
+#
+SYSCTL_KERN_OSRELEASE := $(shell /usr/sbin/sysctl -n kern.osrelease)
+
+ifeq($(SYSCTL_KERN_OSRELEASE),19.6.0)
 
 #
 # We must not use -fno-keep-inline-functions, or it will remove the dtrace
@@ -264,11 +268,37 @@ CFLAGS_GEN = $(DEBUG_CFLAGS) -nostdinc \
 	-fno-builtin \
 	-fno-common \
 	-ftrivial-auto-var-init=zero \
-#	-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang \
+	-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang \
 	-fsigned-bitfields \
 	-fmerge-all-constants \
 	-fno-c++-static-destructors \
 	$(OTHER_CFLAGS)
+
+else
+
+#
+# Remove -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang from Darwin 23 (or something like that)+
+#
+
+#
+# We must not use -fno-keep-inline-functions, or it will remove the dtrace
+# probes from the kernel.
+#
+CFLAGS_GEN = $(DEBUG_CFLAGS) -nostdinc \
+	-ferror-limit=10000 \
+	-fno-builtin \
+	-fno-common \
+	-ftrivial-auto-var-init=zero \
+	-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang \
+	-fsigned-bitfields \
+	-fmerge-all-constants \
+	-fno-c++-static-destructors \
+	$(OTHER_CFLAGS)
+
+endif
+
+DEBUG_CFLAGS := -g
+BUILD_DSYM := 1
 
 CFLAGS_RELEASE	=
 CFLAGS_DEVELOPMENT	=
