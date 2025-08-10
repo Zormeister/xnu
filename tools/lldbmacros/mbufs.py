@@ -15,9 +15,9 @@ def MBufStat(cmd_args=None):
     """ Print extended mbuf allocator statistics.
     """
     hdr_format = "{0: <16s} {1: >8s} {2: >8s} {3: ^16s} {4: >8s} {5: >12s} {6: >8s} {7: >8s} {8: >8s}"
-    print hdr_format.format('class', 'total', 'cached', 'uncached', 'inuse', 'failed', 'waiter', 'notified', 'purge')
-    print hdr_format.format('name', 'objs', 'objs', 'objs/slabs', 'objs', 'alloc count', 'count', 'count', 'count')
-    print hdr_format.format('-'*16, '-'*8, '-'*8, '-'*16, '-'*8, '-'*12, '-'*8, '-'*8, '-'*8)
+    print(hdr_format.format('class', 'total', 'cached', 'uncached', 'inuse', 'failed', 'waiter', 'notified', 'purge'))
+    print(hdr_format.format('name', 'objs', 'objs', 'objs/slabs', 'objs', 'alloc count', 'count', 'count', 'count'))
+    print(hdr_format.format('-'*16, '-'*8, '-'*8, '-'*16, '-'*8, '-'*12, '-'*8, '-'*8, '-'*8))
     entry_format = "{0: <16s} {1: >8d} {2: >8d} {3:>7d} / {4:<6d} {5: >8d} {6: >12d} {7: >8d} {8: >8d} {9: >8d}"
     num_items = sizeof(kern.globals.mbuf_table) / sizeof(kern.globals.mbuf_table[0])
     ncpus = int(kern.globals.ncpu)
@@ -34,12 +34,12 @@ def MBufStat(cmd_args=None):
                 total += int(ccp.cc_objs)
             if int(ccp.cc_pobjs) > 0:
                 total += int(ccp.cc_pobjs)
-        print entry_format.format(mcs.mbcl_cname, mcs.mbcl_total,  total,
+        print(entry_format.format(mcs.mbcl_cname, mcs.mbcl_total,  total,
                                   mcs.mbcl_infree, mcs.mbcl_slab_cnt,
                                   (mcs.mbcl_total - total - mcs.mbcl_infree),
                                   mcs.mbcl_fail_cnt, mbuf.mtbl_cache.mc_waiter_cnt,
                                   mcs.mbcl_notified, mcs.mbcl_purge_cnt
-                                  )
+                                  ))
 # EndMacro: mbuf_stat
 
 # Macro: mbuf_walkpkt
@@ -61,7 +61,7 @@ def MbufWalkPacket(cmd_args=None):
             out_string += GetMbufBuf2Mca(mp) + ", "
         tot = tot + mp.m_hdr.mh_len
         out_string += "total " + str(tot) + "]"
-        print out_string
+        print(out_string)
         mp = mp.m_hdr.mh_nextpkt
         cnt += 1
 # EndMacro: mbuf_walkpkt
@@ -82,7 +82,7 @@ def MbufWalk(cmd_args=None):
             out_string += GetMbufBuf2Mca(mp) + ", "
         tot = tot + mp.m_hdr.mh_len
         out_string += "total " + str(tot) + "]"
-        print out_string
+        print(out_string)
         mp = mp.m_hdr.mh_next
         cnt += 1
 # EndMacro: mbuf_walk
@@ -99,10 +99,10 @@ def MbufBuf2Slab(cmd_args=None):
     slab = GetMbufSlab(m)
     if (kern.ptrsize == 8):
         mbuf_slab_format = "0x{0:<16x}"
-        print mbuf_slab_format.format(slab)
+        print(mbuf_slab_format.format(slab))
     else:
         mbuf_slab_format = "0x{0:<8x}"
-        print mbuf_slab_format.format(slab)
+        print(mbuf_slab_format.format(slab))
 # EndMacro: mbuf_buf2slab
 
 # Macro: mbuf_buf2mca
@@ -111,7 +111,7 @@ def MbufBuf2Mca(cmd_args=None):
     """ Find the mcache audit structure of the corresponding mbuf
     """
     m = kern.GetValueFromAddress(cmd_args[0], 'mbuf *')
-    print GetMbufBuf2Mca(m)
+    print(GetMbufBuf2Mca(m))
     return
 # EndMacro: mbuf_buf2mca
 
@@ -184,7 +184,7 @@ def MbufSlabs(cmd_args=None):
 
                 z += 1
         x += 1
-    print out_string
+    print(out_string)
 # EndMacro: mbuf_slabs
 
 # Macro: mbuf_slabstbl
@@ -218,7 +218,7 @@ def MbufSlabsTbl(cmd_args=None):
                 out_string += slabs_table_string_format.format(x+1, slg, addressof(slg.slg_slab[0]), addressof(slg.slg_slab[nslabspmb-1]))
 
         x += 1
-    print out_string
+    print(out_string)
 # EndMacro: mbuf_slabstbl
 
 def GetMbufMcaPtr(m, cl):
@@ -340,7 +340,7 @@ def GetMbufWalkAllSlabs(show_a, show_f, show_tr):
                             out_string += GetPc(kgm_pc)
                             cnt += 1
 
-                    print out_string
+                    print(out_string)
                     out_string = ""
                 mca = mca.mca_next
 
@@ -475,9 +475,9 @@ def MbufShowActive(cmd_args=None):
     """ Print all active/in-use mbuf objects
     """
     if cmd_args:
-        print GetMbufWalkAllSlabs(1, 0, cmd_args[0])
+        print(GetMbufWalkAllSlabs(1, 0, cmd_args[0]))
     else:
-        print GetMbufWalkAllSlabs(1, 0, 0)
+        print(GetMbufWalkAllSlabs(1, 0, 0))
 # EndMacro: mbuf_showactive
 
 
@@ -486,7 +486,7 @@ def MbufShowActive(cmd_args=None):
 def MbufShowInactive(cmd_args=None):
     """ Print all freed/in-cache mbuf objects
     """
-    print GetMbufWalkAllSlabs(0, 1, 0)
+    print(GetMbufWalkAllSlabs(0, 1, 0))
 # EndMacro: mbuf_showinactive
 
 
@@ -554,7 +554,7 @@ def MbufShowMca(cmd_args=None):
     else:
         out_string += "Missing argument 0 in user function."
 
-    print out_string
+    print(out_string)
 # EndMacro: mbuf_showmca
 
 
@@ -563,7 +563,7 @@ def MbufShowMca(cmd_args=None):
 def MbufShowAll(cmd_args=None):
     """ Print all mbuf objects
     """
-    print GetMbufWalkAllSlabs(1, 1, 1)
+    print(GetMbufWalkAllSlabs(1, 1, 1))
 # EndMacro: mbuf_showall
 
 # Macro: mbuf_countchain
@@ -589,9 +589,9 @@ def MbufCountChain(cmd_args=None):
         mp = mp.m_hdr.mh_nextpkt
 
         if (((pkt + nxt) % 50) == 0):
-            print " ..." + str(pkt_nxt)
+            print(" ..." + str(pkt_nxt))
 
-    print "Total: " + str(pkt + nxt) + " (via m_next: " + str(nxt) + ")"
+    print("Total: " + str(pkt + nxt) + " (via m_next: " + str(nxt) + ")")
 # EndMacro: mbuf_countchain
 
 
@@ -607,7 +607,7 @@ def MbufTopLeak(cmd_args=None):
     else:
         maxcnt = 5
     while (topcnt < maxcnt):
-        print GetMbufTraceLeak(kern.globals.mleak_top_trace[topcnt])
+        print(GetMbufTraceLeak(kern.globals.mleak_top_trace[topcnt]))
         topcnt += 1
 
 # EndMacro: mbuf_topleak
@@ -640,11 +640,11 @@ def MbufLargeFailures(cmd_args=None):
         if (trace.size == 0):
             topcnt += 1
             continue
-        print str(trace.size)
+        print(str(trace.size))
         if (trace.depth != 0):
             cnt = 0
             while (cnt < trace.depth):
-                print str(cnt + 1) + ": " + GetPc(trace.addr[cnt])
+                print(str(cnt + 1) + ": " + GetPc(trace.addr[cnt]))
                 cnt += 1
         topcnt += 1
 
@@ -661,7 +661,7 @@ def MbufTraceLeak(cmd_args=None):
         raise ArgumentError("Missing argument 0 in user function.")
 
     trace = kern.GetValueFromAddress(cmd_args[0], 'mtrace *')
-    print GetMbufTraceLeak(trace)
+    print(GetMbufTraceLeak(trace))
 # EndMacro: mbuf_traceleak
 
 
@@ -682,7 +682,7 @@ def McacheWalkObject(cmd_args=None):
         out_string += mcache_object_format.format(cnt, p) + "\n"
         p = p.obj_next
         cnt += 1
-    print out_string
+    print(out_string)
 # EndMacro: mcache_walkobj
 
 # Macro: mcache_stat
@@ -740,7 +740,7 @@ def McacheStat(cmd_args=None):
         out_string += mcache_stat_data_format_string.format(mc.mc_name, cache_state, hex(mc), str(int(mc.mc_bufsize)), str(int(mc.mc_align)), hex(mc.mc_slab_zone), int(mc.mc_wretry_cnt), int(mc.mc_nwretry_cnt), int(mc.mc_nwfail_cnt), total)
         out_string += "\n"
         mc = cast(mc.mc_list.le_next, 'mcache *')
-    print out_string
+    print(out_string)
 # EndMacro: mcache_stat
 
 # Macro: mcache_showcache
@@ -778,7 +778,7 @@ def McacheShowCache(cmd_args=None):
 
     out_string += "Total # of full buckets (" + str(int(bktsize)) + " objs/bkt):\t" + str(int(cp.mc_full.bl_total)) + "\n"
     out_string += "Total # of objects cached:\t\t" + str(total) + "\n"
-    print out_string
+    print(out_string)
 # EndMacro: mcache_showcache
 
 # Macro: mbuf_wdlog

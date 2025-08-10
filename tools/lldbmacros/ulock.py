@@ -42,4 +42,4 @@ def ShowAllUlocks(cmd_args=None, cmd_options={}, O=None):
         buckets = kern.globals.ull_bucket
         for i in xrange(0, count):
             for ull in IterateLinkageChain(addressof(buckets[i].ulb_head), 'ull_t *', 'ull_hash_link'):
-                print GetUlockSummary(ull)
+                print(GetUlockSummary(ull))

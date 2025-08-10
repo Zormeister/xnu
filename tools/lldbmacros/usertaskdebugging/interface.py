@@ -41,7 +41,7 @@ class Interface(object):
         r_bytes = ''
         try:
             r_bytes = self.connection.recv(self.pkt_size)
-        except Exception, e:
+        except Exception as e:
             #logging.debug("Found exception in recv. %s " % (str(e)))
             pass
 

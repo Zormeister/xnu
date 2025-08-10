@@ -511,7 +511,7 @@ def ShowIOServicePM(cmd_args=None):
             unsigned(iopmpriv.DesiredPowerState),
             unsigned(iopmpriv.PreviousRequestPowerFlags))
     
-    print out_string
+    print(out_string)
 
 
 @lldb_command("showinterruptvectors")
@@ -638,10 +638,10 @@ def ShowRegistryEntryRecurse(entry, prefix, printProps):
     propertyTable = entry.fPropertyTable
     
     # Print entry details
-    print "{0:s}{1:s}".format(prefix, GetRegistryEntrySummary(entry))
+    print("{0:s}{1:s}".format(prefix, GetRegistryEntrySummary(entry)))
     # Printing large property tables make it look like lldb is 'stuck'
     if printProps:
-        print GetRegDictionary(propertyTable, prefix + "  | ")
+        print(GetRegDictionary(propertyTable, prefix + "  | "))
     
     # Recurse
     if plane is None:
@@ -680,13 +680,13 @@ def FindRegistryEntryRecurse(entry, search_name, stopAfterFirst):
     
     if name is not None:
         if str(CastIOKitClass(name, 'OSString *').string) == search_name:
-            print GetRegistryEntrySummary(entry)
+            print(GetRegistryEntrySummary(entry))
             if stopAfterFirst is True:
                 return True
     elif CastIOKitClass(entry, 'IOService *').pwrMgt and CastIOKitClass(entry, 'IOService *').pwrMgt.Name:
         name = CastIOKitClass(entry, 'IOService *').pwrMgt.Name
         if str(name) == search_name:
-            print GetRegistryEntrySummary(entry)
+            print(GetRegistryEntrySummary(entry))
             if stopAfterFirst is True:
                 return True
     
@@ -1338,7 +1338,7 @@ def ReadIOPortInt(addr, numbytes, lcpu):
     result = 0xBAD10AD
     
     if "kdp" != GetConnectionProtocol():
-        print "Target is not connected over kdp. Nothing to do here."
+        print("Target is not connected over kdp. Nothing to do here.")
         return
     
     # Set up the manual KDP packet
@@ -1346,12 +1346,12 @@ def ReadIOPortInt(addr, numbytes, lcpu):
     len_address = unsigned(addressof(kern.globals.manual_pkt.len))
     data_address = unsigned(addressof(kern.globals.manual_pkt.data))
     if not WriteInt32ToMemoryAddress(0, input_address):
-        print "0x{0: <4x}: 0x{1: <1x}".format(addr, result)
+        print("0x{0: <4x}: 0x{1: <1x}".format(addr, result))
         return
     
     kdp_pkt_size = GetType('kdp_readioport_req_t').GetByteSize()
     if not WriteInt32ToMemoryAddress(kdp_pkt_size, len_address):
-        print "0x{0: <4x}: 0x{1: <1x}".format(addr, result)
+        print("0x{0: <4x}: 0x{1: <1x}".format(addr, result))
         return
     
     kgm_pkt = kern.GetValueFromAddress(data_address, 'kdp_readioport_req_t *')
@@ -1375,13 +1375,13 @@ def ReadIOPortInt(addr, numbytes, lcpu):
             elif numbytes == 4:
                 result = dereference(Cast(addressof(result_pkt.data), 'uint32_t *'))
 
-    print "{0: <#6x}: {1:#0{2}x}".format(addr, result, (numbytes*2)+2)
+    print("{0: <#6x}: {1:#0{2}x}".format(addr, result, (numbytes*2)+2))
 
 def WriteIOPortInt(addr, numbytes, value, lcpu):
     """ Writes 'value' into ioport specified by 'addr'. Prints errors if it encounters any
     """
     if "kdp" != GetConnectionProtocol():
-        print "Target is not connected over kdp. Nothing to do here."
+        print("Target is not connected over kdp. Nothing to do here.")
         return
     
     # Set up the manual KDP packet
@@ -1389,12 +1389,12 @@ def WriteIOPortInt(addr, numbytes, value, lcpu):
     len_address = unsigned(addressof(kern.globals.manual_pkt.len))
     data_address = unsigned(addressof(kern.globals.manual_pkt.data))
     if not WriteInt32ToMemoryAddress(0, input_address):
-        print "error writing {0: #x} to port {1: <#6x}: failed to write 0 to input_address".format(value, addr)
+        print("error writing {0: #x} to port {1: <#6x}: failed to write 0 to input_address".format(value, addr))
         return
     
     kdp_pkt_size = GetType('kdp_writeioport_req_t').GetByteSize()
     if not WriteInt32ToMemoryAddress(kdp_pkt_size, len_address):
-        print "error writing {0: #x} to port {1: <#6x}: failed to write kdp_pkt_size".format(value, addr)
+        print("error writing {0: #x} to port {1: <#6x}: failed to write kdp_pkt_size".format(value, addr))
         return
     
     kgm_pkt = kern.GetValueFromAddress(data_address, 'kdp_writeioport_req_t *')
@@ -1408,27 +1408,27 @@ def WriteIOPortInt(addr, numbytes, value, lcpu):
         ):
         if numbytes == 1:
             if not WriteInt8ToMemoryAddress(value, int(addressof(kgm_pkt.data))):
-                print "error writing {0: #x} to port {1: <#6x}: failed to write 8 bit data".format(value, addr)
+                print("error writing {0: #x} to port {1: <#6x}: failed to write 8 bit data".format(value, addr))
                 return
         elif numbytes == 2:
             if not WriteInt16ToMemoryAddress(value, int(addressof(kgm_pkt.data))):
-                print "error writing {0: #x} to port {1: <#6x}: failed to write 16 bit data".format(value, addr)
+                print("error writing {0: #x} to port {1: <#6x}: failed to write 16 bit data".format(value, addr))
                 return
         elif numbytes == 4:
             if not WriteInt32ToMemoryAddress(value, int(addressof(kgm_pkt.data))):
-                print "error writing {0: #x} to port {1: <#6x}: failed to write 32 bit data".format(value, addr)
+                print("error writing {0: #x} to port {1: <#6x}: failed to write 32 bit data".format(value, addr))
                 return
         if not WriteInt32ToMemoryAddress(1, input_address):
-            print "error writing {0: #x} to port {1: <#6x}: failed to write to input_address".format(value, addr)
+            print("error writing {0: #x} to port {1: <#6x}: failed to write to input_address".format(value, addr))
             return
 
         result_pkt = Cast(addressof(kern.globals.manual_pkt.data), 'kdp_writeioport_reply_t *')
         
         # Done with the write
         if(result_pkt.error == 0):
-            print "Writing {0: #x} to port {1: <#6x} was successful".format(value, addr)
+            print("Writing {0: #x} to port {1: <#6x} was successful".format(value, addr))
     else:
-        print "error writing {0: #x} to port {1: <#6x}".format(value, addr)
+        print("error writing {0: #x} to port {1: <#6x}".format(value, addr))
 
 @lldb_command('showinterruptcounts')
 def showinterruptcounts(cmd_args=None):
@@ -1440,7 +1440,7 @@ def showinterruptcounts(cmd_args=None):
     header_format = "{0: <20s} {1: >5s} {2: >20s}"
     content_format = "{0: <20s} {1: >5d} {2: >20d}"
 
-    print header_format.format("Name", "Index", "Count")
+    print(header_format.format("Name", "Index", "Count"))
     
     for i in kern.interrupt_stats:
         owner = CastIOKitClass(i.owner, 'IOInterruptEventSource *')
@@ -1469,7 +1469,7 @@ def showinterruptcounts(cmd_args=None):
         interrupt_index = i.interruptIndex
         first_level_count = i.interruptStatistics[0]
 
-        print content_format.format(nub_name, interrupt_index, first_level_count)
+        print(content_format.format(nub_name, interrupt_index, first_level_count))
     
     return True
 
@@ -1490,7 +1490,7 @@ def showinterruptstats(cmd_args=None):
     header_format = "{0: <20s} {1: >5s} {2: >20s} {3: >20s} {4: >20s} {5: >20s} {6: >20s} {7: >20s} {8: >20s} {9: >20s}"
     content_format = "{0: <20s} {1: >5d} {2: >20d} {3: >20d} {4: >20d} {5: >20d} {6: >20d} {7: >20d} {8: >20d} {9: >#20x}"
 
-    print header_format.format("Name", "Index", "Interrupt Count", "Interrupt Time", "Avg Interrupt Time", "Workloop Count", "Workloop CPU Time", "Workloop Time", "Avg Workloop Time", "Owner")
+    print(header_format.format("Name", "Index", "Interrupt Count", "Interrupt Time", "Avg Interrupt Time", "Workloop Count", "Workloop CPU Time", "Workloop Time", "Avg Workloop Time", "Owner"))
     
     for i in kern.interrupt_stats:
         owner = CastIOKitClass(i.owner, 'IOInterruptEventSource *')
@@ -1531,8 +1531,8 @@ def showinterruptstats(cmd_args=None):
         if second_level_count != 0:
             avg_second_level_time = second_level_system_time / second_level_count
 
-        print content_format.format(nub_name, interrupt_index, first_level_count, first_level_time, avg_first_level_time,
-            second_level_count, second_level_cpu_time, second_level_system_time, avg_second_level_time, owner)
+        print(content_format.format(nub_name, interrupt_index, first_level_count, first_level_time, avg_first_level_time,
+            second_level_count, second_level_cpu_time, second_level_system_time, avg_second_level_time, owner))
     
     return True
 

@@ -71,13 +71,13 @@ def __lldb_init_module(debugger, internal_dict):
     if "DEBUG_XNU_LLDBMACROS" in os.environ and len(os.environ['DEBUG_XNU_LLDBMACROS']) > 0:
         debug_session_enabled = True
     prev_os_plugin = "".join(GetSettingsValues(debugger, 'target.process.python-os-plugin-path'))
-    if PY3:
-        print("#" * 30)
-        print("WARNING! Python version 3 is not supported for xnu lldbmacros.")
-        print("Please restart your debugging session with the following workaround")
-        print("\ndefaults write com.apple.dt.lldb DefaultPythonVersion 2\n")
-        print("#" * 30)
-        print("\n")
+    # if PY3:
+    #    print("#" * 30)
+    #    print("WARNING! Python version 3 is not supported for xnu lldbmacros.")
+    #    print("Please restart your debugging session with the following workaround")
+    #    print("\ndefaults write com.apple.dt.lldb DefaultPythonVersion 2\n")
+    #    print("#" * 30)
+    #    print("\n")
     print("Loading kernel debugging from %s" % __file__)
     print("LLDB version %s" % debugger.GetVersionString())
     self_path = "{}".format(__file__)

@@ -97,19 +97,19 @@ def ShowKdebugTypefilter(cmd_args=None):
         if unsigned(typefilter) == 0:
             raise ArgumentError('argument provided is NULL')
 
-        print GetKdebugTypefilter.header
-        print '-' * len(GetKdebugTypefilter.header)
+        print(GetKdebugTypefilter.header)
+        print('-' * len(GetKdebugTypefilter.header))
 
-        print GetKdebugTypefilter(typefilter)
+        print(GetKdebugTypefilter(typefilter))
         return
 
     typefilter = kern.globals.kdbg_typefilter
     if unsigned(typefilter) == 0:
         raise ArgumentError('no argument provided and active typefilter is not set')
 
-    print GetKdebugTypefilter.header
-    print '-' * len(GetKdebugTypefilter.header)
-    print GetKdebugTypefilter(typefilter)
+    print(GetKdebugTypefilter.header)
+    print('-' * len(GetKdebugTypefilter.header))
+    print(GetKdebugTypefilter(typefilter))
 
 def GetKdebugStatus():
     """ Get a string summary of the kdebug subsystem.
@@ -139,7 +139,7 @@ def ShowKdebug(cmd_args=None):
         usage: showkdebug
     """
 
-    print GetKdebugStatus()
+    print(GetKdebugStatus())
 
 @lldb_type_summary(['kperf_timer'])
 @header('{:<10s} {:<7s} {:<20s}'.format('period-ns', 'action', 'pending'))
@@ -242,10 +242,10 @@ def ShowKtrace(cmd_args=None):
         usage: showktrace
     """
 
-    print GetKtraceStatus()
-    print ' '
-    print 'kdebug:'
-    print GetKdebugStatus()
-    print ' '
-    print 'kperf:'
-    print GetKperfStatus()
+    print(GetKtraceStatus())
+    print(' ')
+    print('kdebug:')
+    print(GetKdebugStatus())
+    print(' ')
+    print('kperf:')
+    print(GetKperfStatus())

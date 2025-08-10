@@ -44,17 +44,17 @@ def ShowATMValueListeners(cmd_args=None, cmd_options={}):
         raise ArgumentError("Please provide arguments")
 
     atm_val = kern.GetValueFromAddress(cmd_args[0], 'atm_value_t')
-    print GetATMValueSummary.header
-    print GetATMValueSummary(atm_val)
+    print(GetATMValueSummary.header)
+    print(GetATMValueSummary(atm_val))
     header_str = "{0: <20s} ".format("#guard") + GetATMTaskDescriptorSummary.header
     #if DEVELOPMENT
     header_str += "  " +  GetTaskSummary.header + " procname"
     #endif
-    print header_str
+    print(header_str)
     for listener in IterateQueue(atm_val.listeners, 'atm_link_object_t', 'listeners_element'):
         listener_summary = "{0: <#020x}".format(listener.guard)
         listener_summary += " " + GetATMTaskDescriptorSummary(listener.descriptor)
-        print listener_summary
+        print(listener_summary)
     return 
 # EndMacro: showatmvaluelisteners
 
@@ -69,11 +69,11 @@ def ShowAllATMAllocatedValuesList(cmd_args=None, cmd_options={}):
         usage: (lldb) showallatmallocatedvalueslist
     """
     if not hasattr(kern.globals, 'atm_values_list'):
-        print "It seems you are running a build of kernel that does not have the list of all atm_values_list."
+        print("It seems you are running a build of kernel that does not have the list of all atm_values_list.")
         return False
-    print GetATMValueSummary.header
+    print(GetATMValueSummary.header)
     for v in IterateQueue(kern.globals.atm_values_list, 'atm_value_t', 'value_elt'):
-        print GetATMValueSummary(v)
+        print(GetATMValueSummary(v))
     return True
 # EndMacro: showallatmallocatedvalueslist
 
@@ -85,12 +85,12 @@ def ShowAllATMDescriptors(cmd_args=None, cmd_options={}):
         usage: (lldb) showallatmdescriptors
     """
     if not hasattr(kern.globals, 'atm_descriptors_list'):
-        print "It seems you are running a build of kernel that does not have the list of all atm_descriptors_list."
+        print("It seems you are running a build of kernel that does not have the list of all atm_descriptors_list.")
         return False
 
-    print GetATMTaskDescriptorSummary.header
+    print(GetATMTaskDescriptorSummary.header)
     for d in IterateQueue(kern.globals.atm_descriptors_list, 'atm_task_descriptor_t', 'descriptor_elt'):
-        print GetATMTaskDescriptorSummary(d)
+        print(GetATMTaskDescriptorSummary(d))
     return True 
 # EndMacro
 #endif

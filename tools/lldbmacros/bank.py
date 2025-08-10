@@ -99,7 +99,7 @@ def ShowBankAccountsToCharge(cmd_args=None, cmd_options={}):
     bank_task = kern.GetValueFromAddress(cmd_args[0], 'bank_task_t')
     print(GetBankTaskSummary.header)
     print(GetBankTaskSummary(bank_task))
-    print "List of Accounts to Charge."
+    print("List of Accounts to Charge.")
     header_str = GetBankAccountSummary.header
     print(header_str)
 
@@ -136,7 +136,7 @@ def ShowAllBankAccountList(cmd_args=None, cmd_options={}):
         usage: (lldb) showallbankaccountlist
     """
     if not hasattr(kern.globals, 'bank_accounts_list'):
-      print "It seems you are running a build of kernel that does not have the list of all bank_accounts_list."
+      print("It seems you are running a build of kernel that does not have the list of all bank_accounts_list.")
       return False
     print(GetBankAccountSummary.header)
     for bank_account in IterateQueue(kern.globals.bank_accounts_list, 'bank_account_t', 'ba_global_elt'):

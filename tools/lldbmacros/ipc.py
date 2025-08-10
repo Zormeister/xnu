@@ -87,15 +87,15 @@ def PrintPortSummary(port, show_kmsg_summary=True, prefix=""):
                                 unsigned(portp.ip_messages.data.port.receiver_name),
                                 "DPort", portp.ip_object.io_references, unsigned(portp),
                                 "inactive-port")
-    print out_string
+    print(out_string)
     if show_kmsg_summary:
         kmsgp = Cast(portp.ip_messages.data.port.messages.ikmq_base, 'ipc_kmsg_t')
         if unsigned(kmsgp):
-            print prefix + GetKMsgSummary.header + prefix + GetKMsgSummary(kmsgp, prefix)
+            print(prefix + GetKMsgSummary.header + prefix + GetKMsgSummary(kmsgp, prefix))
             kmsgheadp = kmsgp
             kmsgp = kmsgp.ikm_next
             while (kmsgp) != (kmsgheadp):
-                print prefix + GetKMsgSummary(kmsgp, prefix)
+                print(prefix + GetKMsgSummary(kmsgp, prefix))
                 kmsgp = kmsgp.ikm_next
     return
 
@@ -351,7 +351,7 @@ def PrintPortSetMembers(space, setid, show_kmsg_summary):
                 if ps == setid_str:
                     if once:
                         once = False
-                        print "{:s}\n{:s}{:s}".format(GetPortDestProc(portval), prefix_str, PrintPortSummary.header)
+                        print("{:s}\n{:s}{:s}".format(GetPortDestProc(portval), prefix_str, PrintPortSummary.header))
                     PrintPortSummary(portval, show_kmsg_summary, prefix_str)
             if verbose:
                 sys.stderr.write('{:d}/{:d}...          \r'.format(idx, num_entries))
@@ -411,7 +411,7 @@ def PrintPortSetSummary(pset, space = 0):
                     local_name, "DSet",
                     pset.ips_object.io_references,
                     local_name)
-    print out_str
+    print(out_str)
 
     if setid != 0 and space != 0:
         PrintPortSetMembers(space, setid, show_kmsg_summary)
@@ -426,14 +426,14 @@ def ShowIPC(cmd_args=None):
          Usage: showipc <address of ipc space>
     """
     if not cmd_args:
-        print "No arguments passed"
-        print ShowIPC.__doc__
+        print("No arguments passed")
+        print(ShowIPC.__doc__)
         return False
     ipc = kern.GetValueFromAddress(cmd_args[0], 'ipc_space *')
     if not ipc:
-        print "unknown arguments:", str(cmd_args)
+        print("unknown arguments:", str(cmd_args))
         return False
-    print PrintIPCInformation.header
+    print(PrintIPCInformation.header)
     PrintIPCInformation(ipc, False, False)
 
 # EndMacro: showipc
@@ -446,19 +446,19 @@ def ShowTaskIPC(cmd_args=None):
          Usage: showtaskipc <address of task>
     """
     if not cmd_args:
-        print "No arguments passed"
-        print ShowTaskIPC.__doc__
+        print("No arguments passed")
+        print(ShowTaskIPC.__doc__)
         return False
     tval = kern.GetValueFromAddress(cmd_args[0], 'task *')
     if not tval:
-        print "unknown arguments:", str(cmd_args)
+        print("unknown arguments:", str(cmd_args))
         return False
-    print GetTaskSummary.header + " " + GetProcSummary.header
+    print(GetTaskSummary.header + " " + GetProcSummary.header)
     pval = Cast(tval.bsd_info, 'proc *')
-    print GetTaskSummary(tval) + " " + GetProcSummary(pval)
-    print GetTaskBusyIPCSummary.header
+    print(GetTaskSummary(tval) + " " + GetProcSummary(pval))
+    print(GetTaskBusyIPCSummary.header)
     (summary, table_size, nbusy, nmsgs) = GetTaskBusyIPCSummary(tval)
-    print summary
+    print(summary)
 
 # EndMacro: showtaskipc
 
@@ -470,10 +470,10 @@ def ShowAllIPC(cmd_args=None):
          Usage: showallipc
     """
     for t in kern.tasks:
-        print GetTaskSummary.header + " " + GetProcSummary.header
+        print(GetTaskSummary.header + " " + GetProcSummary.header)
         pval = Cast(t.bsd_info, 'proc *')
-        print GetTaskSummary(t) + " " + GetProcSummary(pval)
-        print PrintIPCInformation.header
+        print(GetTaskSummary(t) + " " + GetProcSummary(pval))
+        print(PrintIPCInformation.header)
         PrintIPCInformation(t.itk_space, False, False) + "\n\n"
 
 # EndMacro: showallipc
@@ -489,11 +489,11 @@ def ShowIPCSummary(cmd_args=None, cmd_options={}, O=None):
         for t in kern.tasks:
             (summary, table_size) = GetTaskIPCSummary(t)
             ipc_table_size += table_size
-            print summary
+            print(summary)
         for t in kern.terminated_tasks:
             (summary, table_size) = GetTaskIPCSummary(t)
             ipc_table_size += table_size
-        print "Total Table size: {:d}".format(ipc_table_size)
+        print("Total Table size: {:d}".format(ipc_table_size))
 
 def GetKObjectFromPort(portval):
     """ Get Kobject description from the port.
@@ -721,11 +721,11 @@ def PrintIPCInformation(space, show_entries=False, show_userstack=False, rights_
     if (is_bits & 0x40000000) == 0: flags +='A'
     else: flags += ' '
     if (is_bits & 0x20000000) != 0: flags +='G'
-    print format_string.format(space, space.is_task, space.is_table, flags, space.is_table_size, space.is_table_next, space.is_low_mod, space.is_high_mod)
+    print(format_string.format(space, space.is_task, space.is_table, flags, space.is_table_size, space.is_table_next, space.is_low_mod, space.is_high_mod))
     
     #should show the each individual entries if asked.
     if show_entries == True:
-        print "\t" + GetIPCEntrySummary.header
+        print("\t" + GetIPCEntrySummary.header)
         num_entries = ports
         index = 0
         while index < num_entries:
@@ -735,11 +735,11 @@ def PrintIPCInformation(space, show_entries=False, show_userstack=False, rights_
                 entry_name = "{0: <#020x}".format( (index <<8 | entry_ie_bits >> 24) )
                 entry_str = GetIPCEntrySummary(entryval, entry_name, rights_filter)
                 if len(entry_str) > 0:
-                    print "                  \r\t" + entry_str
+                    print("                  \r\t" + entry_str)
                     if show_userstack == True:
                         entryport = Cast(entryval.ie_object, 'ipc_port *')
                         if entryval.ie_object and (int(entry_ie_bits) & 0x00070000) and entryport.ip_callstack[0]:
-                            print GetPortUserStack.header + GetPortUserStack(entryport, space.is_task)
+                            print(GetPortUserStack.header + GetPortUserStack(entryport, space.is_task))
                 else:
                     # give some progress indication (this is especially
                     # helpful for tasks with large sets of rights)
@@ -770,17 +770,17 @@ def ShowRights(cmd_args=None, cmd_options={}):
                     'x'     : Port-destroy notification requested
     """
     if not cmd_args:
-        print "No arguments passed"
-        print ShowRights.__doc__
+        print("No arguments passed")
+        print(ShowRights.__doc__)
         return False
     ipc = kern.GetValueFromAddress(cmd_args[0], 'ipc_space *')
     if not ipc:
-        print "unknown arguments:", str(cmd_args)
+        print("unknown arguments:", str(cmd_args))
         return False
     rights_type = 0
     if "-R" in cmd_options:
         rights_type = cmd_options["-R"]
-    print PrintIPCInformation.header
+    print(PrintIPCInformation.header)
     PrintIPCInformation(ipc, True, False, rights_type)
 
 # EndMacro: showrights
@@ -808,20 +808,20 @@ def ShowTaskRights(cmd_args=None, cmd_options={}):
                    'x'     : Port-destroy notification requested
     """
     if cmd_args == None:
-        print "No arguments passed"
-        print ShowTaskStacksCmdHelper.__doc__
+        print("No arguments passed")
+        print(ShowTaskStacksCmdHelper.__doc__)
         return False
     tval = kern.GetValueFromAddress(cmd_args[0], 'task *')
     if not tval:
-        print "unknown arguments:", str(cmd_args)
+        print("unknown arguments:", str(cmd_args))
         return False
     rights_type = 0
     if "-R" in cmd_options:
         rights_type = cmd_options["-R"]
-    print GetTaskSummary.header + " " + GetProcSummary.header
+    print(GetTaskSummary.header + " " + GetProcSummary.header)
     pval = Cast(tval.bsd_info, 'proc *')
-    print GetTaskSummary(tval) + " " + GetProcSummary(pval)
-    print PrintIPCInformation.header
+    print(GetTaskSummary(tval) + " " + GetProcSummary(pval))
+    print(PrintIPCInformation.header)
     PrintIPCInformation(tval.itk_space, True, False, rights_type)
 
 # Macro: showataskrightsbt
@@ -849,20 +849,20 @@ def ShowTaskRightsBt(cmd_args=None, cmd_options={}):
                    'x'     : Port-destroy notification requested
     """
     if cmd_args == None:
-        print "No arguments passed"
-        print ShowTaskRightsBt.__doc__
+        print("No arguments passed")
+        print(ShowTaskRightsBt.__doc__)
         return False
     tval = kern.GetValueFromAddress(cmd_args[0], 'task *')
     if not tval:
-        print "unknown arguments:", str(cmd_args)
+        print("unknown arguments:", str(cmd_args))
         return False
     rights_type = 0
     if "-R" in cmd_options:
         rights_type = cmd_options["-R"]
-    print GetTaskSummary.header + " " + GetProcSummary.header
+    print(GetTaskSummary.header + " " + GetProcSummary.header)
     pval = Cast(tval.bsd_info, 'proc *')
-    print GetTaskSummary(tval) + " " + GetProcSummary(pval)
-    print PrintIPCInformation.header
+    print(GetTaskSummary(tval) + " " + GetProcSummary(pval))
+    print(PrintIPCInformation.header)
     PrintIPCInformation(tval.itk_space, True, True, rights_type)
 
 # EndMacro: showtaskrightsbt
@@ -895,16 +895,16 @@ def ShowAllRights(cmd_args=None, cmd_options={}):
     if "-R" in cmd_options:
         rights_type = cmd_options["-R"]
     for t in kern.tasks:
-        print GetTaskSummary.header + " " + GetProcSummary.header
+        print(GetTaskSummary.header + " " + GetProcSummary.header)
         pval = Cast(t.bsd_info, 'proc *')
-        print GetTaskSummary(t) + " " + GetProcSummary(pval)
+        print(GetTaskSummary(t) + " " + GetProcSummary(pval))
         try:
-            print PrintIPCInformation.header
+            print(PrintIPCInformation.header)
             PrintIPCInformation(t.itk_space, True, False, rights_type) + "\n\n"
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            print "Failed to get IPC information. Do individual showtaskrights <task> to find the error. \n\n"
+            print("Failed to get IPC information. Do individual showtaskrights <task> to find the error. \n\n")
 
 # EndMacro: showallrights
 
@@ -1233,7 +1233,7 @@ def IterateAllPorts(tasklist, func, ctx, include_psets, follow_busyports, should
             if unsigned(tport) > 0:
                 try:
                     func(t, space, ctx, registeredport_idx, 0, tport, 17)
-                except Exception, e:
+                except Exception as e:
                     print("\texception looking through registered port {:d}/{:d} in {:s}".format(tr_idx,tr_max,t))
                     pass
             tr_idx += 1
@@ -1246,7 +1246,7 @@ def IterateAllPorts(tasklist, func, ctx, include_psets, follow_busyports, should
             if unsigned(export) > 0:
                 try:
                     func(t, space, ctx, excports_idx, 0, export, 17)
-                except Exception, e:
+                except Exception as e:
                     print("\texception looking through exception port {:d}/{:d} in {:s}".format(exidx,exmax,t))
                     pass
             exidx += 1
@@ -1278,7 +1278,7 @@ def IterateAllPorts(tasklist, func, ctx, include_psets, follow_busyports, should
                     if unsigned(export) > 0:
                         try:
                             func(t, space, ctx, excports_idx, 0, export, 17)
-                        except Exception, e:
+                        except Exception as e:
                             print("\texception looking through exception port {:d}/{:d} in {:s}".format(exidx,exmax,t))
                             pass
                     exidx += 1
@@ -1320,10 +1320,10 @@ def FindPortRightsCallback(task, space, ctx, entry_idx, ipc_entry, ipc_port, por
     if len(entry_str) > 0:
         sys.stderr.write("{:80s}\r".format(''))
         if port_iteration_do_print_taskname:
-            print "Task: {0: <#x} {1: <s}".format(task, procname)
-            print '\t' + GetIPCEntrySummary.header
+            print("Task: {0: <#x} {1: <s}".format(task, procname))
+            print('\t' + GetIPCEntrySummary.header)
             port_iteration_do_print_taskname = False
-        print entry_str
+        print(entry_str)
 
 @lldb_command('findportrights', 'R:S:')
 def FindPortRights(cmd_args=None, cmd_options={}):
@@ -1364,7 +1364,7 @@ def FindPortRights(cmd_args=None, cmd_options={}):
     IterateAllPorts(tasklist, FindPortRightsCallback, (port, rights_type), False, False, True)
     sys.stderr.write("{:120s}\r".format(' '))
 
-    print "Done."
+    print("Done.")
     return
 # EndMacro: findportrights
 
@@ -1418,12 +1418,12 @@ def CountAllPorts(cmd_args=None, cmd_options={}):
     IterateAllPorts(None, CountPortsCallback, (p_set, p_intransit, p_bytask), find_psets, True, True)
     sys.stderr.write("{:120s}\r".format(' '))
 
-    print "Total ports found: {:d}".format(len(p_set))
-    print "In Transit: {:d}".format(len(p_intransit))
-    print "By Task:"
+    print("Total ports found: {:d}".format(len(p_set)))
+    print("In Transit: {:d}".format(len(p_intransit)))
+    print("By Task:")
     for pname in sorted(p_bytask.keys()):
         count = p_bytask[pname]
-        print "\t{: <20s}: table={: <5d}, transit={: <5d}, other={: <5d}".format(pname, count['table'], count['transit'], count['other'])
+        print("\t{: <20s}: table={: <5d}, transit={: <5d}, other={: <5d}".format(pname, count['table'], count['transit'], count['other']))
     return
 # EndMacro: countallports
 
@@ -1432,9 +1432,9 @@ def CountAllPorts(cmd_args=None, cmd_options={}):
 def ShowPipeStats(cmd_args=None):
     """ Display pipes usage information in the kernel
     """
-    print "Number of pipes: {: d}".format(kern.globals.amountpipes)
-    print "Memory used by pipes: {:s}".format(sizeof_fmt(int(kern.globals.amountpipekva)))
-    print "Max memory allowed for pipes: {:s}".format(sizeof_fmt(int(kern.globals.maxpipekva)))
+    print("Number of pipes: {: d}".format(kern.globals.amountpipes))
+    print("Memory used by pipes: {:s}".format(sizeof_fmt(int(kern.globals.amountpipekva))))
+    print("Max memory allowed for pipes: {:s}".format(sizeof_fmt(int(kern.globals.maxpipekva))))
 # EndMacro: showpipestats
 
 # Macro: showtaskbusyports
@@ -1445,8 +1445,8 @@ def ShowTaskBusyPorts(cmd_args=None):
         Usage: showtaskbusyports <task address>
     """
     if not cmd_args:
-        print "No arguments passed. Please pass in the address of a task"
-        print ShowTaskBusyPorts.__doc__
+        print("No arguments passed. Please pass in the address of a task")
+        print(ShowTaskBusyPorts.__doc__)
         return
     task = kern.GetValueFromAddress(cmd_args[0], 'task_t')
     PrintTaskBusyPorts(task)
@@ -1467,7 +1467,7 @@ def PrintTaskBusyPorts(task):
         if iep.ie_bits & 0x00020000:
             port = Cast(iep.ie_object, 'ipc_port_t')
             if port.ip_messages.data.port.msgcount > 0:
-                print PrintPortSummary.header
+                print(PrintPortSummary.header)
                 PrintPortSummary(port)
         i = i + 1
     return
@@ -1498,20 +1498,20 @@ def ShowBusyPortSummary(cmd_args=None):
     ipc_busy_ports = 0
     ipc_msgs = 0
 
-    print GetTaskBusyIPCSummary.header
+    print(GetTaskBusyIPCSummary.header)
     for tsk in kern.tasks:
         (summary, table_size, nbusy, nmsgs) = GetTaskBusyIPCSummary(tsk)
         ipc_table_size += table_size
         ipc_busy_ports += nbusy
         ipc_msgs += nmsgs
-        print summary
+        print(summary)
     for t in kern.terminated_tasks:
         (summary, table_size, nbusy, nmsgs) = GetTaskBusyIPCSummary(tsk)
         ipc_table_size += table_size
         ipc_busy_ports += nbusy
         ipc_msgs += nmsgs
-        print summary
-    print "Total Table Size: {:d}, Busy Ports: {:d}, Messages in-flight: {:d}".format(ipc_table_size, ipc_busy_ports, ipc_msgs)
+        print(summary)
+    print("Total Table Size: {:d}, Busy Ports: {:d}, Messages in-flight: {:d}".format(ipc_table_size, ipc_busy_ports, ipc_msgs))
     return
 # EndMacro: showbusyportsummary
 
@@ -1525,11 +1525,11 @@ def ShowPort(cmd_args=None, cmd_options={}):
     if "-K" in cmd_options:
         show_kmsgs = False
     if not cmd_args:
-        print "Please specify the address of the port whose details you want to print"
-        print ShowPort.__doc__
+        print("Please specify the address of the port whose details you want to print")
+        print(ShowPort.__doc__)
         return
     port = kern.GetValueFromAddress(cmd_args[0], 'struct ipc_port *')
-    print PrintPortSummary.header
+    print(PrintPortSummary.header)
     PrintPortSummary(port, show_kmsgs)
 # EndMacro: showport
 
@@ -1540,8 +1540,8 @@ def ShowMQueue(cmd_args=None, cmd_options={}):
         Syntax: (lldb) showmqueue 0xaddr [-S ipc_space]
     """
     if not cmd_args:
-        print "Please specify the address of the ipc_mqueue whose details you want to print"
-        print ShowMQueue.__doc__
+        print("Please specify the address of the ipc_mqueue whose details you want to print")
+        print(ShowMQueue.__doc__)
         return
     space = 0
     if "-S" in cmd_options:
@@ -1551,15 +1551,15 @@ def ShowMQueue(cmd_args=None, cmd_options={}):
     if int(wq_type) == 3:
         psetoff = getfieldoffset('struct ipc_pset', 'ips_messages')
         pset = unsigned(ArgumentStringToInt(cmd_args[0])) - unsigned(psetoff)
-        print PrintPortSetSummary.header
+        print(PrintPortSetSummary.header)
         PrintPortSetSummary(kern.GetValueFromAddress(pset, 'struct ipc_pset *'), space)
     elif int(wq_type) in [2, 1]:
         portoff = getfieldoffset('struct ipc_port', 'ip_messages')
         port = unsigned(ArgumentStringToInt(cmd_args[0])) - unsigned(portoff)
-        print PrintPortSummary.header
+        print(PrintPortSummary.header)
         PrintPortSummary(kern.GetValueFromAddress(port, 'struct ipc_port *'))
     else:
-        print "Invalid mqueue? (waitq type {:d} is invalid)".format(int(wq_type))
+        print("Invalid mqueue? (waitq type {:d} is invalid)".format(int(wq_type)))
 # EndMacro: showmqueue
 
 # Macro: showkmsg:
@@ -1571,8 +1571,8 @@ def ShowKMSG(cmd_args=[]):
     if not cmd_args:
         raise ArgumentError('Invalid arguments')
     kmsg = kern.GetValueFromAddress(cmd_args[0], 'ipc_kmsg_t')
-    print GetKMsgSummary.header
-    print GetKMsgSummary(kmsg)
+    print(GetKMsgSummary.header)
+    print(GetKMsgSummary(kmsg))
 
 # EndMacro: showkmsg
 
@@ -1583,14 +1583,14 @@ def ShowPSet(cmd_args=None, cmd_options={}):
         Syntax: (lldb) showpset 0xaddr [-S ipc_space]
     """
     if not cmd_args:
-        print "Please specify the address of the pset whose details you want to print"
-        print ShowPSet.__doc__
+        print("Please specify the address of the pset whose details you want to print")
+        print(ShowPSet.__doc__)
         return
     space = 0
     if "-S" in cmd_options:
         space = kern.GetValueFromAddress(cmd_options["-S"], 'struct ipc_space *')
 
-    print PrintPortSetSummary.header
+    print(PrintPortSetSummary.header)
     PrintPortSetSummary(kern.GetValueFromAddress(cmd_args[0], 'ipc_pset *'), space)
 # EndMacro: showpset
 
@@ -1602,12 +1602,12 @@ def ShowAllIITs(cmd_args=[], cmd_options={}):
     try:
         iit_queue = kern.globals.global_iit_alloc_queue 
     except ValueError:
-        print "This debug macro is only available in development or debug kernels"
+        print("This debug macro is only available in development or debug kernels")
         return
     
-    print GetIPCImportantTaskSummary.header
+    print(GetIPCImportantTaskSummary.header)
     for iit in IterateQueue(iit_queue, 'struct ipc_importance_task *', 'iit_allocation'):
-        print GetIPCImportantTaskSummary(iit)
+        print(GetIPCImportantTaskSummary(iit))
     return
 
 @header("{: <18s} {: <3s} {: <18s} {: <20s} {: <18s} {: <8s}".format("ipc_imp_inherit", "don", "to_task", "proc_name", "from_elem", "depth"))
@@ -1685,13 +1685,13 @@ def ShowIPCImportanceTasks(cmd_args=[], cmd_options={}):
         Usage: (lldb) showallimportancetasks
         Tip: add "-v" to see detailed information on each kmsg or inherit elems 
     """
-    print ' ' + GetIPCImportantTaskSummary.header + ' ' + GetIPCImportanceElemSummary.header
+    print(' ' + GetIPCImportantTaskSummary.header + ' ' + GetIPCImportanceElemSummary.header)
     for t in kern.tasks:
         s = ""
         if unsigned(t.task_imp_base):
             s += ' ' + GetIPCImportantTaskSummary(t.task_imp_base)
             s += ' ' + GetIPCImportanceElemSummary(addressof(t.task_imp_base.iit_elem))
-            print s
+            print(s)
 
 @lldb_command('showipcimportance', '')
 def ShowIPCImportance(cmd_args=[], cmd_options={}):
@@ -1702,8 +1702,8 @@ def ShowIPCImportance(cmd_args=[], cmd_options={}):
         raise ArgumentError("Please provide valid argument")
 
     elem = kern.GetValueFromAddress(cmd_args[0], 'ipc_importance_elem_t')
-    print GetIPCImportanceElemSummary.header
-    print GetIPCImportanceElemSummary(elem)
+    print(GetIPCImportanceElemSummary.header)
+    print(GetIPCImportanceElemSummary(elem))
 
 @header("{: <18s} {: <10s} {: <18s} {: <18s} {: <8s} {: <5s} {: <5s} {: <5s}".format("ivac", "refs", "port", "tbl", "tblsize", "index", "Grow", "freelist"))
 @lldb_type_summary(['ipc_voucher_attr_control *', 'ipc_voucher_attr_control_t'])
@@ -1729,14 +1729,14 @@ def ShowIPCVoucherAttributeControl(cmd_args=[], cmd_options={}):
     if not cmd_args:
         raise ArgumentError("Please provide correct arguments.")
     ivac = kern.GetValueFromAddress(cmd_args[0], 'ipc_voucher_attr_control_t')
-    print GetIPCVoucherAttrControlSummary.header
-    print GetIPCVoucherAttrControlSummary(ivac)
+    print(GetIPCVoucherAttrControlSummary.header)
+    print(GetIPCVoucherAttrControlSummary(ivac))
     if config['verbosity'] > vHUMAN:
         cur_entry_index = 0
         last_entry_index = unsigned(ivac.ivac_table_size)
-        print "index " + GetIPCVoucherAttributeEntrySummary.header
+        print("index " + GetIPCVoucherAttributeEntrySummary.header)
         while cur_entry_index < last_entry_index:
-            print "{: <5d} ".format(cur_entry_index) + GetIPCVoucherAttributeEntrySummary(addressof(ivac.ivac_table[cur_entry_index]))
+            print("{: <5d} ".format(cur_entry_index) + GetIPCVoucherAttributeEntrySummary(addressof(ivac.ivac_table[cur_entry_index])))
             cur_entry_index += 1
 
     
@@ -1778,10 +1778,10 @@ def ShowGlobalVoucherTable(cmd_args=[], cmd_options={}):
     """
     entry_size = sizeof(kern.globals.iv_global_table[0])
     elems = sizeof(kern.globals.iv_global_table) / entry_size
-    print GetIPCVoucherGlobalTableElementSummary.header
+    print(GetIPCVoucherGlobalTableElementSummary.header)
     for i in range(elems):
         elt = addressof(kern.globals.iv_global_table[i])
-        print GetIPCVoucherGlobalTableElementSummary(elt)
+        print(GetIPCVoucherGlobalTableElementSummary(elt))
 
 # Type summaries for Bag of Bits.
 
@@ -1894,15 +1894,15 @@ def ShowIVACFreeList(cmd_args=[], cmd_options={}):
     if not cmd_args:
         raise ArgumentError('Please provide <ipc_voucher_attr_control_t>')
     ivac = kern.GetValueFromAddress(cmd_args[0], 'ipc_voucher_attr_control_t')
-    print GetIPCVoucherAttrControlSummary.header
-    print GetIPCVoucherAttrControlSummary(ivac)
+    print(GetIPCVoucherAttrControlSummary.header)
+    print(GetIPCVoucherAttrControlSummary(ivac))
     if unsigned(ivac.ivac_freelist) == 0:
-        print "ivac table is full"
+        print("ivac table is full")
         return
-    print "index " + GetIPCVoucherAttributeEntrySummary.header
+    print("index " + GetIPCVoucherAttributeEntrySummary.header)
     next_free = unsigned(ivac.ivac_freelist)
     while next_free != 0:
-        print "{: <5d} ".format(next_free) + GetIPCVoucherAttributeEntrySummary(addressof(ivac.ivac_table[next_free]))
+        print("{: <5d} ".format(next_free) + GetIPCVoucherAttributeEntrySummary(addressof(ivac.ivac_table[next_free])))
         next_free = unsigned(ivac.ivac_table[next_free].ivace_next)
 
 
@@ -2009,7 +2009,7 @@ def GetVoucherValueHandleFromVoucherForIndex(voucher, idx):
     ivac = kern.GetValueFromAddress(unsigned(ivac), 'ipc_voucher_attr_control_t')  # ??? No idea why lldb does not addressof directly
     ivace_table = ivac.ivac_table
     if voucher_entry_value >= unsigned(ivac.ivac_table_size):
-        print "Failed to get ivace for value %d in table of size %d" % (voucher_entry_value, unsigned(ivac.ivac_table_size))
+        print("Failed to get ivace for value %d in table of size %d" % (voucher_entry_value, unsigned(ivac.ivac_table_size)))
         return None
     return ivace_table[voucher_entry_value]
 
@@ -2022,10 +2022,10 @@ def ShowAllVouchers(cmd_args=[], cmd_options={}):
     """
     iv_hash_table = kern.globals.ivht_bucket
     num_buckets =  sizeof(kern.globals.ivht_bucket) / sizeof(kern.globals.ivht_bucket[0])
-    print GetIPCVoucherSummary.header
+    print(GetIPCVoucherSummary.header)
     for i in range(num_buckets):
         for v in IterateQueue(iv_hash_table[i], 'ipc_voucher_t', 'iv_hash_link'):
-            print GetIPCVoucherSummary(v)
+            print(GetIPCVoucherSummary(v))
 
 @lldb_command('showvoucher', '')
 def ShowVoucher(cmd_args=[], cmd_options={}):
@@ -2036,8 +2036,8 @@ def ShowVoucher(cmd_args=[], cmd_options={}):
         raise ArgumentError("Please provide valid argument")
 
     voucher = kern.GetValueFromAddress(cmd_args[0], 'ipc_voucher_t')
-    print GetIPCVoucherSummary.header
-    print GetIPCVoucherSummary(voucher, show_entries=True)
+    print(GetIPCVoucherSummary.header)
+    print(GetIPCVoucherSummary(voucher, show_entries=True))
 
 def GetSpaceSendRightEntries(space, port):
     """ Get entry summaries for all send rights to port address in an IPC space.
@@ -2084,7 +2084,7 @@ def ShowTaskSuspenders(cmd_args=[], cmd_options={}):
     task = kern.GetValueFromAddress(cmd_args[0], 'task_t')
 
     if task.suspend_count == 0:
-        print "task {:#x} ({:s}) is not suspended".format(unsigned(task), Cast(task.bsd_info, 'proc_t').p_name)
+        print("task {:#x} ({:s}) is not suspended".format(unsigned(task), Cast(task.bsd_info, 'proc_t').p_name))
         return
 
     # If the task has been suspended by the kernel (potentially by
@@ -2094,7 +2094,7 @@ def ShowTaskSuspenders(cmd_args=[], cmd_options={}):
     # which task did the suspension.
     port = task.itk_resume
     if not port:
-        print "task {:#x} ({:s}) is suspended but no resume port exists".format(unsigned(task), Cast(task.bsd_info, 'proc_t').p_name)
+        print("task {:#x} ({:s}) is suspended but no resume port exists".format(unsigned(task), Cast(task.bsd_info, 'proc_t').p_name))
         return
 
     return FindPortRights(cmd_args=[unsigned(port)], cmd_options={'-R':'S'})

@@ -39,12 +39,12 @@ def ReadPhys(cmd_args = None):
         address: 1234 or 0x1234
     """
     if cmd_args == None or len(cmd_args) < 2:
-        print "Insufficient arguments.", ReadPhys.__doc__
+        print("Insufficient arguments.", ReadPhys.__doc__)
         return False
     else:
         nbits = ArgumentStringToInt(cmd_args[0])
         phys_addr = ArgumentStringToInt(cmd_args[1])
-        print "{0: <#x}".format(ReadPhysInt(phys_addr, nbits))
+        print("{0: <#x}".format(ReadPhysInt(phys_addr, nbits)))
     return True
 
 lldb_alias('readphys8', 'readphys 8 ')
@@ -63,7 +63,7 @@ def KDPReadPhysMEM(address, bits):
     """
     retval = 0xBAD10AD
     if "kdp" != GetConnectionProtocol():
-        print "Target is not connected over kdp. Nothing to do here."
+        print("Target is not connected over kdp. Nothing to do here.")
         return retval
 
     if "hwprobe" == KDPMode():
@@ -142,7 +142,7 @@ def KDPWritePhysMEM(address, intval, bits):
             boolean: True if the write succeeded.
     """
     if "kdp" != GetConnectionProtocol():
-        print "Target is not connected over kdp. Nothing to do here."
+        print("Target is not connected over kdp. Nothing to do here.")
         return False
     
     if "hwprobe" == KDPMode():
@@ -226,11 +226,11 @@ def WritePhysInt(phys_addr, int_val, bitsize = 64):
     """
     if "kdp" == GetConnectionProtocol():
         if not KDPWritePhysMEM(phys_addr, int_val, bitsize):
-            print "Failed to write via KDP."
+            print("Failed to write via KDP.")
             return False
         return True
     #We are not connected via KDP. So do manual math and savings.
-    print "Failed: Write to physical memory is not supported for %s connection." % GetConnectionProtocol()
+    print("Failed: Write to physical memory is not supported for %s connection." % GetConnectionProtocol())
     return False
 
 @lldb_command('writephys')
@@ -245,12 +245,12 @@ def WritePhys(cmd_args=None):
         ex. (lldb)writephys 16 0x12345abcd 0x25
     """
     if cmd_args == None or len(cmd_args) < 3:
-        print "Invalid arguments.", WritePhys.__doc__
+        print("Invalid arguments.", WritePhys.__doc__)
     else:
         nbits = ArgumentStringToInt(cmd_args[0])
         phys_addr = ArgumentStringToInt(cmd_args[1])
         int_value = ArgumentStringToInt(cmd_args[2])
-        print WritePhysInt(phys_addr, int_value, nbits)
+        print(WritePhysInt(phys_addr, int_value, nbits))
 
 
 lldb_alias('writephys8', 'writephys 8 ')
@@ -345,7 +345,7 @@ def _PT_Step(paddr, index, verbose_level = vSCRIPT):
 
         if entry & (0x1 << 63):
             out_string += " noexec"
-    print out_string
+    print(out_string)
     return (pt_paddr, pt_valid, pt_large)
 
 def _PT_StepEPT(paddr, index, verbose_level = vSCRIPT):
@@ -438,7 +438,7 @@ def _PT_StepEPT(paddr, index, verbose_level = vSCRIPT):
             pt_large = True
         else:
             pt_large = False
-    print out_string
+    print(out_string)
     return (pt_paddr, pt_valid, pt_large)
 
 def _PmapL4Walk(pmap_addr_val,vaddr, ept_pmap, verbose_level = vSCRIPT):
@@ -455,7 +455,7 @@ def _PmapL4Walk(pmap_addr_val,vaddr, ept_pmap, verbose_level = vSCRIPT):
         pt_index = (vaddr >> 39) & 0x1ff
         pframe_offset = vaddr & 0x7fffffffff
         if verbose_level > vHUMAN :
-            print "pml4 (index {0:d}):".format(pt_index)
+            print("pml4 (index {0:d}):".format(pt_index))
         if not(ept_pmap):
             (pt_paddr, pt_valid, pt_large) = _PT_Step(pt_paddr, pt_index, verbose_level)
         else:
@@ -465,7 +465,7 @@ def _PmapL4Walk(pmap_addr_val,vaddr, ept_pmap, verbose_level = vSCRIPT):
         pt_index = (vaddr >> 30) & 0x1ff
         pframe_offset = vaddr & 0x3fffffff
         if verbose_level > vHUMAN:
-            print "pdpt (index {0:d}):".format(pt_index)
+            print("pdpt (index {0:d}):".format(pt_index))
         if not(ept_pmap):
             (pt_paddr, pt_valid, pt_large) = _PT_Step(pt_paddr, pt_index, verbose_level)
         else:
@@ -475,7 +475,7 @@ def _PmapL4Walk(pmap_addr_val,vaddr, ept_pmap, verbose_level = vSCRIPT):
         pt_index = (vaddr >> 21) & 0x1ff
         pframe_offset = vaddr & 0x1fffff
         if verbose_level > vHUMAN:
-            print "pdt (index {0:d}):".format(pt_index)
+            print("pdt (index {0:d}):".format(pt_index))
         if not(ept_pmap):
             (pt_paddr, pt_valid, pt_large) = _PT_Step(pt_paddr, pt_index, verbose_level)
         else:
@@ -485,7 +485,7 @@ def _PmapL4Walk(pmap_addr_val,vaddr, ept_pmap, verbose_level = vSCRIPT):
         pt_index = (vaddr >> 12) & 0x1ff
         pframe_offset = vaddr & 0xfff
         if verbose_level > vHUMAN:
-            print "pt (index {0:d}):".format(pt_index)
+            print("pt (index {0:d}):".format(pt_index))
         if not(ept_pmap):
             (pt_paddr, pt_valid, pt_large) = _PT_Step(pt_paddr, pt_index, verbose_level)
         else:
@@ -499,9 +499,9 @@ def _PmapL4Walk(pmap_addr_val,vaddr, ept_pmap, verbose_level = vSCRIPT):
     if verbose_level > vHUMAN:
         if paddr_isvalid:
             pvalue = ReadPhysInt(paddr, 32, xnudefines.lcpu_self)
-            print "phys {0: <#020x}: {1: <#020x}".format(paddr, pvalue)
+            print("phys {0: <#020x}: {1: <#020x}".format(paddr, pvalue))
         else:
-            print "no translation"
+            print("no translation")
 
     return paddr
 
@@ -634,7 +634,7 @@ def PmapDecodeTTEARM(tte, level, verbose_level):
                 else:
                     out_string += " global"
     
-    print out_string
+    print(out_string)
 
 
 def _PmapWalkARMLevel1Section(tte, vaddr, verbose_level = vSCRIPT):
@@ -646,7 +646,7 @@ def _PmapWalkARMLevel1Section(tte, vaddr, verbose_level = vSCRIPT):
         paddr = ( (tte & 0xFFF00000) | (vaddr & 0x000FFFFF) )
 
     if verbose_level >= vSCRIPT:
-        print "{0: <#020x}\n\t{1: <#020x}\n\t".format(addressof(tte), tte),
+        print("{0: <#020x}\n\t{1: <#020x}\n\t".format(addressof(tte), tte)),
 
     PmapDecodeTTEARM(tte, 1, verbose_level)
 
@@ -671,18 +671,18 @@ def _PmapWalkARMLevel2(tte, vaddr, verbose_level = vSCRIPT):
         paddr = (unsigned(pte) & 0xFFFFF000) | (vaddr & 0xFFF)
 
     if verbose_level >= vSCRIPT:
-        print "{0: <#020x}\n\t{1: <#020x}\n\t".format(addressof(tte), tte),
+        print("{0: <#020x}\n\t{1: <#020x}\n\t".format(addressof(tte), tte)),
 
     PmapDecodeTTEARM(tte, 1, verbose_level)
     if verbose_level >= vSCRIPT:
-        print "second-level table (index {:d}):".format(pte_index)
+        print("second-level table (index {:d}):".format(pte_index))
     if verbose_level >= vDETAIL:
         for i in range(256):
             tmp = pte_base_val[i]
-            print "{0: <#020x}:\t{1: <#020x}".format(addressof(tmp), unsigned(tmp))
+            print("{0: <#020x}:\t{1: <#020x}".format(addressof(tmp), unsigned(tmp)))
 
     if verbose_level >= vSCRIPT:
-        print " {0: <#020x}\n\t{1: <#020x}\n\t".format(addressof(pte), unsigned(pte)),
+        print(" {0: <#020x}\n\t{1: <#020x}\n\t".format(addressof(pte), unsigned(pte))),
 
     PmapDecodeTTEARM(pte, 2, verbose_level)
 
@@ -704,12 +704,12 @@ def PmapWalkARM(pmap, vaddr, verbose_level = vHUMAN):
     tte_index = vaddr >> 20
     tte = pmap.tte[tte_index]
     if verbose_level >= vSCRIPT:
-        print "First-level table (index {:d}):".format(tte_index)
+        print("First-level table (index {:d}):".format(tte_index))
     if verbose_level >= vDETAIL:
         for i in range(0, pmap.tte_index_max):
             ptr = unsigned(addressof(pmap.tte[i]))
             val = unsigned(pmap.tte[i])
-            print "{0: <#020x}:\t {1: <#020x}".format(ptr, val)
+            print("{0: <#020x}:\t {1: <#020x}".format(ptr, val))
     if (tte & 0x3) == 0x1:
         paddr = _PmapWalkARMLevel2(tte, vaddr, verbose_level)
     elif (tte & 0x3) == 0x2 :
@@ -717,13 +717,13 @@ def PmapWalkARM(pmap, vaddr, verbose_level = vHUMAN):
     else:
         paddr = 0
         if verbose_level >= vSCRIPT:
-            print "Invalid First-Level Translation Table Entry: {0: #020x}".format(tte)
+            print("Invalid First-Level Translation Table Entry: {0: #020x}".format(tte))
 
     if verbose_level >= vHUMAN:
         if paddr:
-            print "Translation of {:#x} is {:#x}.".format(vaddr, paddr)
+            print("Translation of {:#x} is {:#x}.".format(vaddr, paddr))
         else:
-            print "(no translation)"
+            print("(no translation)")
 
     return paddr
 
@@ -734,11 +734,11 @@ def PmapWalkX86_64(pmapval, vaddr, verbose_level = vSCRIPT):
     """
     if pmapval.pm_cr3 != 0:
         if verbose_level > vHUMAN:
-            print "Using normal Intel PMAP from pm_cr3\n"
+            print("Using normal Intel PMAP from pm_cr3\n")
         return _PmapL4Walk(pmapval.pm_cr3, vaddr, 0, config['verbosity'])
     else:
         if verbose_level > vHUMAN:
-            print "Using EPT pmap from pm_eptp\n"
+            print("Using EPT pmap from pm_eptp\n")
         return _PmapL4Walk(pmapval.pm_eptp, vaddr, 1, config['verbosity'])
 
 def assert_64bit(val):
@@ -789,26 +789,26 @@ def PmapDecodeTTEARM64(tte, level):
 
     if tte & 0x1 == 0x1:
         if (tte & 0x2 == 0x2) and (level != 0x3):
-            print "Type       = Table pointer."
-            print "Table addr = {:#x}.".format(tte & 0xfffffffff000)
-            print "PXN        = {:#x}.".format((tte >> 59) & 0x1)
-            print "XN         = {:#x}.".format((tte >> 60) & 0x1)
-            print "AP         = {:#x}.".format((tte >> 61) & 0x3)
-            print "NS         = {:#x}".format(tte >> 63)
+            print("Type       = Table pointer.")
+            print("Table addr = {:#x}.".format(tte & 0xfffffffff000))
+            print("PXN        = {:#x}.".format((tte >> 59) & 0x1))
+            print("XN         = {:#x}.".format((tte >> 60) & 0x1))
+            print("AP         = {:#x}.".format((tte >> 61) & 0x3))
+            print("NS         = {:#x}".format(tte >> 63))
         else:
-            print "Type       = Block."
-            print "AttrIdx    = {:#x}.".format((tte >> 2) & 0x7)
-            print "NS         = {:#x}.".format((tte >> 5) & 0x1)
-            print "AP         = {:#x}.".format((tte >> 6) & 0x3)
-            print "SH         = {:#x}.".format((tte >> 8) & 0x3)
-            print "AF         = {:#x}.".format((tte >> 10) & 0x1)
-            print "nG         = {:#x}.".format((tte >> 11) & 0x1)
-            print "HINT       = {:#x}.".format((tte >> 52) & 0x1)
-            print "PXN        = {:#x}.".format((tte >> 53) & 0x1)
-            print "XN         = {:#x}.".format((tte >> 54) & 0x1)
-            print "SW Use     = {:#x}.".format((tte >> 55) & 0xf)
+            print("Type       = Block.")
+            print("AttrIdx    = {:#x}.".format((tte >> 2) & 0x7))
+            print("NS         = {:#x}.".format((tte >> 5) & 0x1))
+            print("AP         = {:#x}.".format((tte >> 6) & 0x3))
+            print("SH         = {:#x}.".format((tte >> 8) & 0x3))
+            print("AF         = {:#x}.".format((tte >> 10) & 0x1))
+            print("nG         = {:#x}.".format((tte >> 11) & 0x1))
+            print("HINT       = {:#x}.".format((tte >> 52) & 0x1))
+            print("PXN        = {:#x}.".format((tte >> 53) & 0x1))
+            print("XN         = {:#x}.".format((tte >> 54) & 0x1))
+            print("SW Use     = {:#x}.".format((tte >> 55) & 0xf))
     else:
-        print "Invalid."
+        print("Invalid.")
 
     return
 
@@ -858,7 +858,7 @@ def PmapWalkARM64(pmap, vaddr, verbose_level = vHUMAN):
         elif (level == 1):
             # L1
             if verbose_level >= vSCRIPT:
-                print "L1 entry: {:#x}".format(tte)
+                print("L1 entry: {:#x}".format(tte))
             if verbose_level >= vDETAIL:
                 PmapDecodeTTEARM64(tte, 1)
 
@@ -868,7 +868,7 @@ def PmapWalkARM64(pmap, vaddr, verbose_level = vHUMAN):
                     # Handle L1 block entry
                     paddr = tte & PmapBlockBaseMaskARM64(1)
                     paddr = paddr | (vaddr & PmapBlockOffsetMaskARM64(1))
-                    print "phys: {:#x}".format(paddr)
+                    print("phys: {:#x}".format(paddr))
                     break
                 else:
                     # Handle L1 table entry
@@ -879,18 +879,18 @@ def PmapWalkARM64(pmap, vaddr, verbose_level = vHUMAN):
                     assert(type(l2_virt) == long)
 
                     if verbose_level >= vDETAIL:
-                        print "L2 physical address: {:#x}. L2 virtual address: {:#x}".format(l2_phys, l2_virt)
+                        print("L2 physical address: {:#x}. L2 virtual address: {:#x}".format(l2_phys, l2_virt))
 
                     ttep = kern.GetValueFromAddress(l2_virt, "tt_entry_t*")
                     tte = long(unsigned(dereference(ttep)))
                     assert(type(tte) == long)
             elif verbose_level >= vHUMAN:
-                print "L1 entry invalid: {:#x}\n".format(tte)
+                print("L1 entry invalid: {:#x}\n".format(tte))
 
         elif (level == 2):
             # L2
             if verbose_level >= vSCRIPT:
-                print "L2 entry: {:#0x}".format(tte)
+                print("L2 entry: {:#0x}".format(tte))
             if verbose_level >= vDETAIL:
                 PmapDecodeTTEARM64(tte, 2)
 
@@ -910,18 +910,18 @@ def PmapWalkARM64(pmap, vaddr, verbose_level = vHUMAN):
                     assert(type(l3_virt) == long)
 
                     if verbose_level >= vDETAIL:
-                        print "L3 physical address: {:#x}. L3 virtual address: {:#x}".format(l3_phys, l3_virt)
+                        print("L3 physical address: {:#x}. L3 virtual address: {:#x}".format(l3_phys, l3_virt))
 
                     ttep = kern.GetValueFromAddress(l3_virt, "tt_entry_t*")
                     tte = long(unsigned(dereference(ttep)))
                     assert(type(tte) == long)
             elif verbose_level >= vHUMAN: # tte & 0x1 == 0x1
-                print "L2 entry invalid: {:#x}\n".format(tte)
+                print("L2 entry invalid: {:#x}\n".format(tte))
 
         elif (level == 3):
             # L3
             if verbose_level >= vSCRIPT:
-                print "L3 entry: {:#0x}".format(tte)
+                print("L3 entry: {:#0x}".format(tte))
             if verbose_level >= vDETAIL:
                 PmapDecodeTTEARM64(tte, 3)
 
@@ -929,7 +929,7 @@ def PmapWalkARM64(pmap, vaddr, verbose_level = vHUMAN):
                 paddr = tte & page_base_mask
                 paddr = paddr | (vaddr & page_offset_mask)
             elif verbose_level >= vHUMAN:
-                print "L3 entry invalid: {:#x}\n".format(tte)
+                print("L3 entry invalid: {:#x}\n".format(tte))
 
             # This was the leaf page table page for this request; we're done
             break
@@ -940,9 +940,9 @@ def PmapWalkARM64(pmap, vaddr, verbose_level = vHUMAN):
 
     if verbose_level >= vHUMAN:
         if paddr:
-            print "Translation of {:#x} is {:#x}.".format(vaddr, paddr)
+            print("Translation of {:#x} is {:#x}.".format(vaddr, paddr))
         else:
-            print "(no translation)"
+            print("(no translation)")
 
     return paddr
 
@@ -1000,7 +1000,7 @@ def PVWalkARM(pa):
     pn = (pa - unsigned(kern.globals.vm_first_phys)) / page_size
     pvh = unsigned(kern.globals.pv_head_table[pn])
     pvh_type = pvh & 0x3
-    print "PVH raw value: ({:#x})".format(pvh)
+    print("PVH raw value: ({:#x})".format(pvh))
     if kern.arch.startswith('arm64'):
         iommu_flag = 0x4
         iommu_table_flag = 1 << 63
@@ -1010,15 +1010,15 @@ def PVWalkARM(pa):
         iommu_table_flag = 0 
         pvh = pvh | PVH_HIGH_FLAGS_ARM32
     if pvh_type == 0:
-        print "PVH type: NULL"
+        print("PVH type: NULL")
         return
     elif pvh_type == 3:
-        print "PVH type: page-table descriptor ({:#x})".format(pvh & ~0x3)
+        print("PVH type: page-table descriptor ({:#x})".format(pvh & ~0x3))
         return
     elif pvh_type == 2:
         ptep = pvh & ~0x3
         pte_str = ''
-        print "PVH type: single PTE"
+        print("PVH type: single PTE")
         if ptep & iommu_flag:
             ptep = ptep & ~iommu_flag
             if ptep & iommu_table_flag:
@@ -1026,10 +1026,10 @@ def PVWalkARM(pa):
             else:
                 pte_str = ' (IOMMU state), descriptor'
                 ptep = ptep | iommu_table_flag
-        print "PTE {:#x}{:s}: {:#x}".format(ptep, pte_str, dereference(kern.GetValueFromAddress(ptep, 'pt_entry_t *')))
+        print("PTE {:#x}{:s}: {:#x}".format(ptep, pte_str, dereference(kern.GetValueFromAddress(ptep, 'pt_entry_t *'))))
     elif pvh_type == 1:
         pvep = pvh & ~0x3
-        print "PVH type: PTE list"
+        print("PVH type: PTE list")
         while pvep != 0:
             pve = kern.GetValueFromAddress(pvep, "pv_entry_t *")
             if unsigned(pve.pve_next) & 0x1:
@@ -1046,7 +1046,7 @@ def PVWalkARM(pa):
                 else:
                     pve_str = ' (IOMMU state), descriptor'
                     ptep = ptep | iommu_table_flag
-            print "PVE {:#x}, PTE {:#x}{:s}: {:#x}".format(current_pvep, ptep, pve_str, dereference(kern.GetValueFromAddress(ptep, 'pt_entry_t *')))
+            print("PVE {:#x}, PTE {:#x}{:s}: {:#x}".format(current_pvep, ptep, pve_str, dereference(kern.GetValueFromAddress(ptep, 'pt_entry_t *'))))
 
 @lldb_command('pv_walk')
 def PVWalk(cmd_args=None):
@@ -1068,9 +1068,9 @@ def KVToPhys(cmd_args=None):
     if cmd_args == None or len(cmd_args) < 1:
         raise ArgumentError("Too few arguments to kvtophys.")
     if kern.arch.startswith('arm'):
-        print "{:#x}".format(KVToPhysARM(long(unsigned(kern.GetValueFromAddress(cmd_args[0], 'unsigned long')))))
+        print("{:#x}".format(KVToPhysARM(long(unsigned(kern.GetValueFromAddress(cmd_args[0], 'unsigned long'))))))
     elif kern.arch == 'x86_64':
-        print "{:#x}".format(long(unsigned(kern.GetValueFromAddress(cmd_args[0], 'unsigned long'))) - unsigned(kern.globals.physmap_base))
+        print("{:#x}".format(long(unsigned(kern.GetValueFromAddress(cmd_args[0], 'unsigned long'))) - unsigned(kern.globals.physmap_base)))
 
 @lldb_command('phystokv')
 def PhysToKV(cmd_args=None):
@@ -1080,7 +1080,7 @@ def PhysToKV(cmd_args=None):
     """
     if cmd_args == None or len(cmd_args) < 1:
         raise ArgumentError("Too few arguments to phystokv.")
-    print "{:#x}".format(kern.PhysToKernelVirt(long(unsigned(kern.GetValueFromAddress(cmd_args[0], 'unsigned long')))))
+    print("{:#x}".format(kern.PhysToKernelVirt(long(unsigned(kern.GetValueFromAddress(cmd_args[0], 'unsigned long'))))))
 
 def KVToPhysARM(addr):
     if kern.arch.startswith('arm64'):
@@ -1105,8 +1105,8 @@ def ShowPTEARM(pte):
     if pvh_type != 0x3:
         raise ValueError("PV head {:#x} does not correspond to a page-table descriptor".format(pvh))
     ptd = kern.GetValueFromAddress(pvh & ~0x3, 'pt_desc_t *')
-    print "descriptor: {:#x}".format(ptd)
-    print "pmap: {:#x}".format(ptd.pmap)
+    print("descriptor: {:#x}".format(ptd))
+    print("pmap: {:#x}".format(ptd.pmap))
     pt_index = (pte % kern.globals.page_size) / page_size
     pte_pgoff = pte % page_size
     if kern.arch.startswith('arm64'):
@@ -1121,11 +1121,11 @@ def ShowPTEARM(pte):
     else:
         level = 3
         granule = page_size
-    print "maps VA: {:#x}".format(long(unsigned(ptd.ptd_info[pt_index].va)) + (pte_pgoff * granule))
+    print("maps VA: {:#x}".format(long(unsigned(ptd.ptd_info[pt_index].va)) + (pte_pgoff * granule)))
     pteval = long(unsigned(dereference(kern.GetValueFromAddress(unsigned(pte), 'pt_entry_t *'))))
-    print "value: {:#x}".format(pteval)
+    print("value: {:#x}".format(pteval))
     if kern.arch.startswith('arm64'):
-        print "level: {:d}".format(level)
+        print("level: {:d}".format(level))
         PmapDecodeTTEARM64(pteval, level)
     elif kern.arch == 'arm':
         PmapDecodeTTEARM(pteval, 2, vSCRIPT)
@@ -1182,7 +1182,7 @@ def FindMappingAtLevelARM(pmap, tt, nttes, level, action):
                 tt_next = kern.GetValueFromAddress(kern.PhysToKernelVirt(paddr), 'tt_entry_t *')
                 FindMappingAtLevelARM(pmap, tt_next, granule / 4, level + 1, action)
         except Exception as exc:
-            print "Unable to access tte {:#x}".format(unsigned(addressof(tt[i])))
+            print("Unable to access tte {:#x}".format(unsigned(addressof(tt[i]))))
 
 def FindMappingAtLevelARM64(pmap, tt, nttes, level, action):
     """ Perform the specified action for all valid mappings in an ARM64 translation table
@@ -1217,14 +1217,14 @@ def FindMappingAtLevelARM64(pmap, tt, nttes, level, action):
                     tt_next = kern.GetValueFromAddress(kern.PhysToKernelVirt(paddr), 'tt_entry_t *')
                     FindMappingAtLevelARM64(pmap, tt_next, granule / ARM64_TTE_SIZE, level + 1, action)
         except Exception as exc:
-            print "Unable to access tte {:#x}".format(unsigned(addressof(tt[i]))) 
+            print("Unable to access tte {:#x}".format(unsigned(addressof(tt[i])))) 
 
 def ScanPageTables(action, targetPmap=None):
     """ Perform the specified action for all valid mappings in all page tables,
         optionally restricted to a single pmap.
         pmap: pmap whose page table should be scanned.  If None, all pmaps on system will be scanned.
     """
-    print "Scanning all available translation tables.  This may take a long time..."
+    print("Scanning all available translation tables.  This may take a long time...")
     def ScanPmap(pmap, action):
         if kern.arch.startswith('arm64'):
             granule = kern.globals.arm64_root_pgtable_num_ttes * 8
@@ -1260,7 +1260,7 @@ def ShowAllMappings(cmd_args=None):
         targetPmap = cmd_args[1]
     def printMatchedMapping(pmap, level, type, tte, paddr, granule):
         if paddr <= pa < (paddr + granule):
-            print "pmap: {:#x}: L{:d} {:s} at {:#x}: [{:#x}, {:#x})".format(pmap, level, type, unsigned(tte), paddr, paddr + granule)
+            print("pmap: {:#x}: L{:d} {:s} at {:#x}: [{:#x}, {:#x})".format(pmap, level, type, unsigned(tte), paddr, paddr + granule))
     ScanPageTables(printMatchedMapping, targetPmap)
 
 def checkPVList(pmap, level, type, tte, paddr, granule):
@@ -1300,17 +1300,17 @@ def checkPVList(pmap, level, type, tte, paddr, granule):
     else:
         tte_str = "paddr {:#x}: ".format(paddr) 
     if pvh_type == 0 or pvh_type == 3:
-        print "{:s}{:s}unexpected PVH type {:d}".format(pmap_str, tte_str, pvh_type)
+        print("{:s}{:s}unexpected PVH type {:d}".format(pmap_str, tte_str, pvh_type))
     elif pvh_type == 2:
         ptep = pvh & ~0x3
         if tte is not None and ptep != unsigned(tte):
-            print "{:s}{:s}PVH mismatch ({:#x})".format(pmap_str, tte_str, ptep)
+            print("{:s}{:s}PVH mismatch ({:#x})".format(pmap_str, tte_str, ptep))
         try:
             pte = long(unsigned(dereference(kern.GetValueFromAddress(ptep, 'pt_entry_t *')))) & page_base_mask 
             if (pte != paddr):
-                print "{:s}{:s}PVH {:#x} maps wrong page ({:#x}) ".format(pmap_str, tte_str, ptep, pte)
+                print("{:s}{:s}PVH {:#x} maps wrong page ({:#x}) ".format(pmap_str, tte_str, ptep, pte))
         except Exception as exc:
-            print "{:s}{:s}Unable to read PVH {:#x}".format(pmap_str, tte_str, ptep)
+            print("{:s}{:s}Unable to read PVH {:#x}".format(pmap_str, tte_str, ptep))
     elif pvh_type == 1:
         pvep = pvh & ~0x3
         tte_match = False
@@ -1323,11 +1323,11 @@ def checkPVList(pmap, level, type, tte, paddr, granule):
             try:
                 pte = long(unsigned(dereference(kern.GetValueFromAddress(ptep, 'pt_entry_t *')))) & page_base_mask 
                 if (pte != paddr):
-                    print "{:s}{:s}PVE {:#x} maps wrong page ({:#x}) ".format(pmap_str, tte_str, ptep, pte)
+                    print("{:s}{:s}PVE {:#x} maps wrong page ({:#x}) ".format(pmap_str, tte_str, ptep, pte))
             except Exception as exc:
-                print "{:s}{:s}Unable to read PVE {:#x}".format(pmap_str, tte_str, ptep)
+                print("{:s}{:s}Unable to read PVE {:#x}".format(pmap_str, tte_str, ptep))
         if tte is not None and not tte_match:
-            print "{:s}{:s}not found in PV list".format(pmap_str, tte_str, paddr)
+            print("{:s}{:s}not found in PV list".format(pmap_str, tte_str, paddr))
 
 @lldb_command('pv_check', 'P')
 def PVCheck(cmd_args=None, cmd_options={}):
@@ -1380,4 +1380,4 @@ def PmapsForLedger(cmd_args=None):
     ledger = kern.GetValueFromAddress(cmd_args[0], 'ledger_t')
     for pmap in IterateQueue(kern.globals.map_pmap_list, 'pmap_t', 'pmaps'):
         if pmap.ledger == ledger:
-            print "pmap: {:#x}".format(pmap)
+            print("pmap: {:#x}".format(pmap))
