@@ -222,7 +222,7 @@ class CommandOutput(object):
         try:
             opts,args = getopt.gnu_getopt(args,'hvo:s:p:c:'+ cmdoptions,[])
             self.target_cmd_args = args
-        except getopt.GetoptError,err:
+        except getopt.GetoptError as err:
             raise ArgumentError(str(err))
         #continue with processing
         for o,a in opts :
