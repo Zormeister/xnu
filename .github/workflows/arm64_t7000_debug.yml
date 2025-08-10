@@ -15,6 +15,9 @@ jobs:
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
             git clone --branch rel/libdispatch-1173 https://github.com/apple-oss-distributions/libdispatch.git ~/libdispatch
             git clone  https://github.com/Zormeister/EmbeddedDeviceMap.git ~/EmbeddedDeviceMap
+        - name: Install Homebrew Packages
+          run: |
+            brew install jsoncpp
         - name: Prepare AvailabilityVersions
           run: |
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec
