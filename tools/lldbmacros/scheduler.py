@@ -127,13 +127,13 @@ def showinterruptsourceinfo(cmd_args = None):
     print(object_info)
     print("--- Dumping IOFilterInterruptEventSource object ---\n")
     #Dump the IOFilterInterruptEventSource object.
-    target_info=re.search('target =\s+(.*)',object_info)
+    target_info=re.search('target =\\s+(.*)',object_info)
     target= target_info.group()
     target= target.split()
     #Dump the Object pointer of the source who is triggering the Interrupts.
     vector_info=lldb_run_command("dumpobject {:s} ".format(target[2]))
     print(vector_info)
-    owner_info= re.search('owner =\s+(.*)',vector_info)
+    owner_info= re.search('owner =\\s+(.*)',vector_info)
     owner= owner_info.group()
     owner= owner.split()
     print("\n\n")

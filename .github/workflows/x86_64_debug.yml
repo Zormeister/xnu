@@ -55,7 +55,8 @@ jobs:
             export RC_ProjectNameAndSourceVersion="xnu-6153.141.2"
             export RC_ProjectBuildVersion="1"
             cd ~/xnu*/
-            make DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_kernels
+            make DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install
+            make DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
             cd $PWD/KernelRoot
             tar -cvf kernel_debug.tar.xz .
         - name: Upload Kernel Root tarball
@@ -63,4 +64,4 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: KernelRoot-x86-debug.tar.xz
-            path: /Users/runner/src/xnu-6153.141.1~1/KernelRoot/kernel_debug.tar.xz
+            path: /Users/runner/src/xnu-6153.141.2~1/KernelRoot/kernel_debug.tar.xz

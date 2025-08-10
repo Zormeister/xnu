@@ -417,10 +417,10 @@ def ShowAllSetidLinks(cmd_args=None, cmd_options={}):
                     opt_subtype_filter == "iR" or \
                     opt_subtype_filter == "iLR" or \
                     opt_subtype_filter == "iLRI"):
-                raise ArgumentError("Invalid LINK sub-type filter \{desc\}: {:s}".format(opt_subtype_filter))
+                raise ArgumentError("Invalid LINK sub-type filter \\{desc\\}: {:s}".format(opt_subtype_filter))
         elif opt_type_filt == "":
             if not opt_subtype_filter == "iP":
-                raise ArgumentError("Invalid sub-type filter \{desc\}: {:s}".format(opt_subtype_filter))
+                raise ArgumentError("Invalid sub-type filter \\{desc\\}: {:s}".format(opt_subtype_filter))
     table = kern.globals.g_wqlinktable
     nelem = int(table.nelem)
     wq_ptr = {}

@@ -412,7 +412,7 @@ def dsymForUUID(uuid):
         # because of <rdar://12713712>
         #plist = plistlib.readPlistFromString(output)
         #beginworkaround
-        keyvalue_extract_re = re.compile("<key>(.*?)</key>\s*<string>(.*?)</string>",re.IGNORECASE|re.MULTILINE|re.DOTALL)
+        keyvalue_extract_re = re.compile("<key>(.*?)</key>\\s*<string>(.*?)</string>",re.IGNORECASE|re.MULTILINE|re.DOTALL)
         plist={}
         plist[uuid] = {}
         for item in keyvalue_extract_re.findall(output):

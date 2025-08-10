@@ -26,7 +26,7 @@ import os.path
 panic_string = None
 ## If the following panic strings are modified in xnu/osfmk/kern/zalloc.c, they must be updated here to reflect the change.
 zone_element_modified = ".*a freed zone element has been modified in zone (?P<zone>.+): expected (0x)?([0-9A-Fa-f]*)? but found (0x)?([0-9A-Fa-f]*)?, bits changed (0x)?([0-9A-Fa-f]*)?, at offset ([0-9]*)? of ([0-9]*)? in element (?P<element>0x[0-9A-Fa-f]*), cookies (0x)?([0-9A-Fa-f]*)? (0x)?([0-9A-Fa-f]*)?.*"
-zone_map_exhausted = ".*zalloc: zone map exhausted while allocating from zone .+, likely due to memory leak in zone (?P<zone>.+) \(([0-9]*)? total bytes, ([0-9]*)? elements allocated\).*"
+zone_map_exhausted = ".*zalloc: zone map exhausted while allocating from zone .+, likely due to memory leak in zone (?P<zone>.+) \\(([0-9]*)? total bytes, ([0-9]*)? elements allocated\).*"
 
 # Macro: zonetriage, zonetriage_freedelement, zonetriage_memoryleak
 @lldb_command('zonetriage')

@@ -12,7 +12,7 @@ import lldb
 import re
 from lazytarget import *
 
-_cstring_rex = re.compile("((?:\s*|const\s+)\s*char(?:\s+\*|\s+[A-Za-z_0-9]*\s*\[|)\s*)",re.MULTILINE|re.DOTALL)
+_cstring_rex = re.compile("((?:\\s*|const\\s+)\\s*char(?:\\s+\*|\\s+[A-Za-z_0-9]*\\s*\[|)\\s*)",re.MULTILINE|re.DOTALL)
 
 class value(object):
     '''A class designed to wrap lldb.SBValue() objects so the resulting object

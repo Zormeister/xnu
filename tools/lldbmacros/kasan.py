@@ -219,13 +219,13 @@ def print_whatis(_addr, ctx):
         print("Poisoned memory, shadow {:x} [{}]".format(shbyte, shadow_byte_to_string(shbyte)))
         return
 
-    if shbyte is 0xf8:
+    if shbyte == 0xf8:
         extra = "Out-of-scope"
 
     # look for the base of the object
     while shbyte in [0,1,2,3,4,5,6,7,0xf8]:
         sz = 8 - shbyte
-        if shbyte is 0xf8:
+        if shbyte == 0xf8:
             sz = 8
         total_size += sz
         addr -= 8
@@ -247,7 +247,7 @@ def print_whatis(_addr, ctx):
     shbyte = get_shadow_byte(shadow_for_address(addr, shift))
     while shbyte in [0,1,2,3,4,5,6,7,0xf8]:
         sz = 8 - shbyte
-        if shbyte is 0xf8:
+        if shbyte == 0xf8:
             sz = 8
         total_size += sz
         addr += 8

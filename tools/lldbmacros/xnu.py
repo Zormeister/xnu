@@ -886,7 +886,7 @@ def __lldb_init_module(debugger, internal_dict):
         return
     _xnu_framework_init = True
     caching._GetDebuggerSessionID = GetDebuggerStopIDValue
-    debugger.HandleCommand('type summary add --regex --summary-string "${var%s}" -C yes -p -v "char \[[0-9]*\]"')
+    debugger.HandleCommand('type summary add --regex --summary-string "${var%s}" -C yes -p -v "char \\[[0-9]*\\]"')
     debugger.HandleCommand('type format add --format hex -C yes uintptr_t')
     kern = KernelTarget(debugger)
     if not hasattr(lldb.SBValue, 'GetValueAsAddress'):
