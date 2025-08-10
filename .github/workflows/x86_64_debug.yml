@@ -31,6 +31,7 @@ jobs:
             xcodebuild install CODE_SIGNING_ALLOWED=NO DSTROOT=$(xcrun --sdk macosx -show-sdk-platform-path) INSTALL_PATH="/usr/local/bin" -target ctfconvert -target ctfdump -target ctfmerge -sdk macosx
         - name: Install Kernel Headers
           run: |
+            export RC_XBS=YES
             export RC_ProjectNameAndSourceVersion="xnu-6153.141.2"
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=1"
@@ -45,6 +46,7 @@ jobs:
             xcodebuild install VALID_ARCHS="x86_64" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch x86_64
         - name: Build Kernel
           run: |
+            export RC_XBS=YES
             export RC_ProjectNameAndSourceVersion="xnu-6153.141.2"
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=1"
@@ -52,6 +54,7 @@ jobs:
             make DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
         - name: Package Kernel into tarball
           run: |
+            export RC_XBS=YES
             export RC_ProjectNameAndSourceVersion="xnu-6153.141.2"
             export RC_ProjectBuildVersion="1"
             cd ~/xnu*/
