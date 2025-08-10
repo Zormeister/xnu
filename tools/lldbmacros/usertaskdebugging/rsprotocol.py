@@ -31,7 +31,7 @@ class Message(object):
         try:
             data_begin = bytedata.index('$')
             data_end = bytedata.index('#')
-        except ValueError, e:
+        except ValueError as e:
             logging.error('Invalid bytedata considered as message %s' % bytedata)
             return None
                 
