@@ -290,6 +290,11 @@ struct thread {
 
 #define TH_SFLAG_EXEC_PROMOTED          0x8000          /* promote reason: thread is in an exec */
 
+#define TH_SFLAG_THREAD_GROUP_AUTO_JOIN 0x10000         /* thread has been auto-joined to thread group */
+#if __AMP__
+#define TH_SFLAG_BOUND_SOFT             0x20000         /* thread is soft bound to a cluster; can run anywhere if bound cluster unavailable */
+#endif /* __AMP__ */
+
 /* 'promote reasons' that request a priority floor only, not a custom priority */
 #define TH_SFLAG_PROMOTE_REASON_MASK    (TH_SFLAG_RW_PROMOTED | TH_SFLAG_WAITQ_PROMOTED | TH_SFLAG_EXEC_PROMOTED)
 
@@ -926,6 +931,9 @@ extern bool processor_active_thread_no_smt(processor_t processor);
 
 extern void thread_set_options(uint32_t thopt);
 
+#if CONFIG_THREAD_GROUPS
+struct thread_group *thread_get_current_voucher_thread_group(thread_t thread);
+#endif /* CONFIG_THREAD_GROUPS */
 
 #else   /* MACH_KERNEL_PRIVATE */
 

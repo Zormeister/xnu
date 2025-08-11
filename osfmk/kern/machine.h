@@ -164,5 +164,10 @@ extern void machine_switch_perfcontrol_state_update(perfcontrol_event event,
     uint32_t flags,
     thread_t thread);
 
+#if CONFIG_THREAD_GROUPS
+extern void machine_thread_group_init(struct thread_group *tg);
+extern void machine_thread_group_deinit(struct thread_group *tg);
+extern void machine_thread_group_flags_update(struct thread_group *tg, uint32_t flags);
+#endif
 
 #endif  /* _KERN_MACHINE_H_ */
