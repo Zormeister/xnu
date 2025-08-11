@@ -60,12 +60,14 @@ struct thread_group {
 	uint8_t                 tg_machine_data[] __attribute__((aligned(CACHELINE_SIZE)));
 } __attribute__((aligned(8)));
 
-static SECURITY_READ_ONLY_LATE(zone_t) tg_zone;
 static uint32_t tg_count;
 static queue_head_t tg_queue;
-static LCK_GRP_DECLARE(tg_lck_grp, "thread_group");
-static LCK_MTX_DECLARE(tg_lock, &tg_lck_grp);
-static LCK_SPIN_DECLARE(tg_flags_update_lock, &tg_lck_grp);
+static struct zone                      *tg_zone;
+static lck_grp_attr_t           tg_lck_grp_attr;
+lck_attr_t                                      tg_lck_attr;
+lck_grp_t                                       tg_lck_grp;
+lck_mtx_t                                       tg_lck;
+lck_spin_t                                      tg_flags_update_lock;
 
 static uint64_t tg_next_id = 0;
 static uint32_t tg_size;
