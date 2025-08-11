@@ -44,6 +44,14 @@ jobs:
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) KERNEL_CONFIGS="DEBUG" ARCH_CONFIGS="ARM64" MACHINE_CONFIGS="T7000" installhdrs
+        - name: Upload EXPORT_HDRS tarball
+          run: |
+            cd ~/xnu*/
+            tar -cvf DEBUG_EXPORT_HEADERS.tar.xz ./EXPORT_HDRS
+          uses: actions/upload-artifact@v4
+          with:
+            name: EXPORT_HDRS-ARM64-T7000-debug.tar.xz
+            path: /Users/runner/xnu-6153.143.1~1/DEBUG_EXPORT_HEADERS.tar.xz
         - name: Prepare libfirehose_kernel
           run: |
             cd ~/libdispatch
