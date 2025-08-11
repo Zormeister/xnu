@@ -209,7 +209,7 @@ sched_clutch_update_tg_flags(sched_clutch_t clutch, uint8_t flags)
 void
 thread_group_flags_update_lock(void)
 {
-	lck_spin_lock_grp(&tg_flags_update_lock, &tg_lck_grp);
+	lck_spin_lock_grp(&tg_flags_update_lock, tg_lck_grp);
 }
 
 void
