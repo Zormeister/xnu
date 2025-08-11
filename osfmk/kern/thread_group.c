@@ -66,7 +66,7 @@ static struct zone                      *tg_zone;
 static lck_grp_attr_t           tg_lck_grp_attr;
 lck_attr_t                                      tg_lck_attr;
 lck_grp_t                                       tg_lck_grp;
-lck_mtx_t                                       tg_lck;
+lck_mtx_t                                       tg_lock;
 lck_spin_t                                      tg_flags_update_lock;
 
 static uint64_t tg_next_id = 0;
@@ -109,7 +109,18 @@ thread_group_init(void)
 	tg_machine_data_size = tg_size - sizeof(struct thread_group);
 	// printf("tg_size=%d(%lu+%d)\n", tg_size, sizeof(struct thread_group), tg_machine_data_size);
 	assert(offsetof(struct thread_group, tg_machine_data) % CACHELINE_SIZE == 0);
-	tg_zone = zone_create("thread_groups", tg_size, ZC_NOENCRYPT | ZC_ALIGNMENT_REQUIRED);
+	tg_zone = zinit(tg_size,
+	    THREAD_GROUP_MAX_ID * tg_size,
+	    THREAD_GROUP_MAX_ID, "thread_groups");
+	assert(tg_zone != NULL);
+
+    tg_lck_grp_attr = lck_grp_attr_alloc_init();
+
+	tg_lck_grp = lck_grp_alloc_init("thread_group", tg_lck_grp_attr);
+	tg_lck_attr = lck_attr_alloc_init();
+
+	lck_mtx_init(&tg_lock, tg_lck_grp, tg_lck_attr);
+    lck_spin_init(&tg_flags_update_lock, tg_lck_grp, tg_lck_attr);
 
 	queue_head_init(tg_queue);
 	tg_system = thread_group_create_and_retain();
