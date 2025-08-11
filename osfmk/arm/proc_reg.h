@@ -247,12 +247,14 @@
  */
 #if !__ARM_AMP__ && CONFIG_CLUTCH
 #define CONFIG_SCHED_CLUTCH 1
+#error clutch scheduler has been enabled
 #else /* !__ARM_AMP__ && CONFIG_CLUTCH */
 #define CONFIG_SCHED_CLUTCH 0
 #endif /* !__ARM_AMP__ && CONFIG_CLUTCH */
 
 #if __ARM_AMP__ || CONFIG_SCHED_CLUTCH
 #define CONFIG_THREAD_GROUPS 1
+#error thread groups enabled
 #else /* __ARM_AMP__ || CONFIG_SCHED_CLUTCH */
 #define CONFIG_THREAD_GROUPS 0
 #endif
