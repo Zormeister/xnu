@@ -100,7 +100,6 @@
 #define __ARM_ARCH__                 8
 #define __ARM_VMSA__                 8
 #define __ARM_SMP__                  1
-#define __ARM_AMP__                  0
 #define __ARM_VFP__                  4
 #define __ARM_COHERENT_CACHE__       1
 #define __ARM_COHERENT_IO__          1
