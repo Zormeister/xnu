@@ -63,9 +63,9 @@ struct thread_group {
 static uint32_t tg_count;
 static queue_head_t tg_queue;
 static struct zone                      *tg_zone;
-static lck_grp_attr_t           tg_lck_grp_attr;
-lck_attr_t                                      tg_lck_attr;
-lck_grp_t                                       tg_lck_grp;
+static lck_grp_attr_t           *tg_lck_grp_attr;
+lck_attr_t                                      *tg_lck_attr;
+lck_grp_t                                       *tg_lck_grp;
 lck_mtx_t                                       tg_lock;
 lck_spin_t                                      tg_flags_update_lock;
 
@@ -183,7 +183,7 @@ sched_clutch_for_thread_group(struct thread_group *thread_group)
 static void
 sched_clutch_update_tg_flags(sched_clutch_t clutch, uint8_t flags)
 {
-	sched_clutch_tg_priority_t sc_tg_pri = 0;
+	uint8_t sc_tg_pri = 0;
 	if (flags & THREAD_GROUP_FLAGS_UI_APP) {
 		sc_tg_pri = SCHED_CLUTCH_TG_PRI_HIGH;
 	} else if (flags & THREAD_GROUP_FLAGS_EFFICIENT) {
@@ -856,100 +856,5 @@ thread_group_update_recommendation(struct thread_group *tg, cluster_type_t new_r
 	 */
 	os_atomic_store(&tg->tg_recommendation, new_recommendation, relaxed);
 }
-
-#if CONFIG_SCHED_EDGE
-
-int sched_edge_restrict_ut = 1;
-int sched_edge_restrict_bg = 1;
-
-void
-sched_perfcontrol_thread_group_recommend(void *machine_data __unused, cluster_type_t new_recommendation __unused)
-{
-	struct thread_group *tg = (struct thread_group *)((uintptr_t)machine_data - offsetof(struct thread_group, tg_machine_data));
-	/*
-	 * CLUSTER_TYPE_SMP was used for some debugging support when CLPC dynamic control was turned off.
-	 * In more recent implementations, CLPC simply recommends "P-spill" when dynamic control is turned off. So it should
-	 * never be recommending CLUSTER_TYPE_SMP for thread groups.
-	 */
-	assert(new_recommendation != CLUSTER_TYPE_SMP);
-	/*
-	 * The Edge scheduler expects preferred cluster recommendations for each QoS level within a TG. Until the new CLPC
-	 * routine is being called, fake out the call from the old CLPC interface.
-	 */
-	uint32_t tg_bucket_preferred_cluster[TH_BUCKET_SCHED_MAX] = {0};
-	/*
-	 * For all buckets higher than UT, apply the recommendation to the thread group bucket
-	 */
-	for (sched_bucket_t bucket = TH_BUCKET_FIXPRI; bucket < TH_BUCKET_SHARE_UT; bucket++) {
-		tg_bucket_preferred_cluster[bucket] = (new_recommendation == pset_type_for_id(0)) ? 0 : 1;
-	}
-	/* For UT & BG QoS, set the recommendation only if they havent been restricted via sysctls */
-	if (!sched_edge_restrict_ut) {
-		tg_bucket_preferred_cluster[TH_BUCKET_SHARE_UT] = (new_recommendation == pset_type_for_id(0)) ? 0 : 1;
-	}
-	if (!sched_edge_restrict_bg) {
-		tg_bucket_preferred_cluster[TH_BUCKET_SHARE_BG] = (new_recommendation == pset_type_for_id(0)) ? 0 : 1;
-	}
-	sched_perfcontrol_preferred_cluster_options_t options = 0;
-	if (new_recommendation == CLUSTER_TYPE_P) {
-		options |= SCHED_PERFCONTROL_PREFERRED_CLUSTER_MIGRATE_RUNNING;
-	}
-	sched_edge_tg_preferred_cluster_change(tg, tg_bucket_preferred_cluster, options);
-}
-
-void
-sched_perfcontrol_edge_matrix_get(sched_clutch_edge *edge_matrix, bool *edge_request_bitmap, uint64_t flags, uint64_t matrix_order)
-{
-	sched_edge_matrix_get(edge_matrix, edge_request_bitmap, flags, matrix_order);
-}
-
-void
-sched_perfcontrol_edge_matrix_set(sched_clutch_edge *edge_matrix, bool *edge_changes_bitmap, uint64_t flags, uint64_t matrix_order)
-{
-	sched_edge_matrix_set(edge_matrix, edge_changes_bitmap, flags, matrix_order);
-}
-
-void
-sched_perfcontrol_thread_group_preferred_clusters_set(void *machine_data, uint32_t tg_preferred_cluster,
-    uint32_t overrides[PERFCONTROL_CLASS_MAX], sched_perfcontrol_preferred_cluster_options_t options)
-{
-	struct thread_group *tg = (struct thread_group *)((uintptr_t)machine_data - offsetof(struct thread_group, tg_machine_data));
-	uint32_t tg_bucket_preferred_cluster[TH_BUCKET_SCHED_MAX] = {
-		[TH_BUCKET_FIXPRI]   = (overrides[PERFCONTROL_CLASS_ABOVEUI] != SCHED_PERFCONTROL_PREFERRED_CLUSTER_OVERRIDE_NONE) ? overrides[PERFCONTROL_CLASS_ABOVEUI] : tg_preferred_cluster,
-		[TH_BUCKET_SHARE_FG] = (overrides[PERFCONTROL_CLASS_UI] != SCHED_PERFCONTROL_PREFERRED_CLUSTER_OVERRIDE_NONE) ? overrides[PERFCONTROL_CLASS_UI] : tg_preferred_cluster,
-		[TH_BUCKET_SHARE_IN] = (overrides[PERFCONTROL_CLASS_UI] != SCHED_PERFCONTROL_PREFERRED_CLUSTER_OVERRIDE_NONE) ? overrides[PERFCONTROL_CLASS_UI] : tg_preferred_cluster,
-		[TH_BUCKET_SHARE_DF] = (overrides[PERFCONTROL_CLASS_NONUI] != SCHED_PERFCONTROL_PREFERRED_CLUSTER_OVERRIDE_NONE) ? overrides[PERFCONTROL_CLASS_NONUI] : tg_preferred_cluster,
-		[TH_BUCKET_SHARE_UT] = (overrides[PERFCONTROL_CLASS_UTILITY] != SCHED_PERFCONTROL_PREFERRED_CLUSTER_OVERRIDE_NONE) ? overrides[PERFCONTROL_CLASS_UTILITY] : tg_preferred_cluster,
-		[TH_BUCKET_SHARE_BG] = (overrides[PERFCONTROL_CLASS_BACKGROUND] != SCHED_PERFCONTROL_PREFERRED_CLUSTER_OVERRIDE_NONE) ? overrides[PERFCONTROL_CLASS_BACKGROUND] : tg_preferred_cluster,
-	};
-	sched_edge_tg_preferred_cluster_change(tg, tg_bucket_preferred_cluster, options);
-}
-
-#else /* CONFIG_SCHED_EDGE */
-
-void
-sched_perfcontrol_thread_group_recommend(__unused void *machine_data, __unused cluster_type_t new_recommendation)
-{
-	struct thread_group *tg = (struct thread_group *)((uintptr_t)machine_data - offsetof(struct thread_group, tg_machine_data));
-	SCHED(thread_group_recommendation_change)(tg, new_recommendation);
-}
-
-void
-sched_perfcontrol_edge_matrix_get(__unused sched_clutch_edge *edge_matrix, __unused bool *edge_request_bitmap, __unused uint64_t flags, __unused uint64_t matrix_order)
-{
-}
-
-void
-sched_perfcontrol_edge_matrix_set(__unused sched_clutch_edge *edge_matrix, __unused bool *edge_changes_bitmap, __unused uint64_t flags, __unused uint64_t matrix_order)
-{
-}
-
-void
-sched_perfcontrol_thread_group_preferred_clusters_set(__unused void *machine_data, __unused uint32_t tg_preferred_cluster,
-    __unused uint32_t overrides[PERFCONTROL_CLASS_MAX], __unused sched_perfcontrol_preferred_cluster_options_t options)
-{
-}
-
-#endif /* CONFIG_SCHED_EDGE */
 
 #endif /* CONFIG_THREAD_GROUPS */
