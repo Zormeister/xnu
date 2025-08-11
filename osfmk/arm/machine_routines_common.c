@@ -144,7 +144,30 @@ sched_perfcontrol_register_callbacks(sched_perfcontrol_callbacks_t callbacks, un
 	}
 
 	if (callbacks) {
+#if CONFIG_THREAD_GROUPS
+		if (callbacks->version >= SCHED_PERFCONTROL_CALLBACKS_VERSION_3) {
+			if (callbacks->thread_group_init != NULL) {
+				sched_perfcontrol_thread_group_init = callbacks->thread_group_init;
+			} else {
+				sched_perfcontrol_thread_group_init = sched_perfcontrol_thread_group_default;
+			}
+			if (callbacks->thread_group_deinit != NULL) {
+				sched_perfcontrol_thread_group_deinit = callbacks->thread_group_deinit;
+			} else {
+				sched_perfcontrol_thread_group_deinit = sched_perfcontrol_thread_group_default;
+			}
+			// tell CLPC about existing thread groups
+			thread_group_resync(TRUE);
+		}
 
+		if (callbacks->version >= SCHED_PERFCONTROL_CALLBACKS_VERSION_6) {
+			if (callbacks->thread_group_flags_update != NULL) {
+				sched_perfcontrol_thread_group_flags_update = callbacks->thread_group_flags_update;
+			} else {
+				sched_perfcontrol_thread_group_flags_update = sched_perfcontrol_thread_group_default;
+			}
+		}
+#endif
 		if (callbacks->version >= SCHED_PERFCONTROL_CALLBACKS_VERSION_7) {
 			if (callbacks->work_interval_ctl != NULL) {
 				sched_perfcontrol_work_interval_ctl = callbacks->work_interval_ctl;
@@ -206,6 +229,9 @@ sched_perfcontrol_register_callbacks(sched_perfcontrol_callbacks_t callbacks, un
 		}
 	} else {
 		/* reset to defaults */
+#if CONFIG_THREAD_GROUPS
+		thread_group_resync(FALSE);
+#endif
 		sched_perfcontrol_offcore = sched_perfcontrol_offcore_default;
 		sched_perfcontrol_switch = sched_perfcontrol_switch_default;
 		sched_perfcontrol_oncore = sched_perfcontrol_oncore_default;
@@ -230,6 +256,11 @@ machine_switch_populate_perfcontrol_thread_data(struct perfcontrol_thread_data *
 	data->perfctl_class = thread_get_perfcontrol_class(thread);
 	data->energy_estimate_nj = 0;
 	data->thread_id = thread->thread_id;
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *tg = thread_group_get(thread);
+	data->thread_group_id = thread_group_get_id(tg);
+	data->thread_group_data = thread_group_get_machine_data(tg);
+#endif
 	data->scheduling_latency_at_same_basepri = same_pri_latency;
 	data->perfctl_state = FIND_PERFCONTROL_STATE(thread);
 }
@@ -380,6 +411,11 @@ machine_thread_going_on_core(thread_t   new_thread,
 	on_core.urgency = urgency;
 	on_core.is_32_bit = thread_is_64bit_data(new_thread) ? FALSE : TRUE;
 	on_core.is_kernel_thread = new_thread->task == kernel_task;
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *tg = thread_group_get(new_thread);
+	on_core.thread_group_id = thread_group_get_id(tg);
+	on_core.thread_group_data = thread_group_get_machine_data(tg);
+#endif
 	on_core.scheduling_latency = sched_latency;
 	on_core.start_time = timestamp;
 	on_core.scheduling_latency_at_same_basepri = same_pri_latency;
@@ -413,6 +449,11 @@ machine_thread_going_off_core(thread_t old_thread, boolean_t thread_terminating,
 	off_core.thread_id = old_thread->thread_id;
 	off_core.energy_estimate_nj = 0;
 	off_core.end_time = last_dispatch;
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *tg = thread_group_get(old_thread);
+	off_core.thread_group_id = thread_group_get_id(tg);
+	off_core.thread_group_data = thread_group_get_machine_data(tg);
+#endif
 
 #if MONOTONIC
 	uint64_t counters[MT_CORE_NFIXED];
@@ -430,6 +471,47 @@ machine_thread_going_off_core(thread_t old_thread, boolean_t thread_terminating,
 #endif
 }
 
+#if CONFIG_THREAD_GROUPS
+void
+machine_thread_group_init(struct thread_group *tg)
+{
+	if (sched_perfcontrol_thread_group_init == sched_perfcontrol_thread_group_default) {
+		return;
+	}
+	struct thread_group_data data;
+	data.thread_group_id = thread_group_get_id(tg);
+	data.thread_group_data = thread_group_get_machine_data(tg);
+	data.thread_group_size = thread_group_machine_data_size();
+	sched_perfcontrol_thread_group_init(&data);
+}
+
+void
+machine_thread_group_deinit(struct thread_group *tg)
+{
+	if (sched_perfcontrol_thread_group_deinit == sched_perfcontrol_thread_group_default) {
+		return;
+	}
+	struct thread_group_data data;
+	data.thread_group_id = thread_group_get_id(tg);
+	data.thread_group_data = thread_group_get_machine_data(tg);
+	data.thread_group_size = thread_group_machine_data_size();
+	sched_perfcontrol_thread_group_deinit(&data);
+}
+
+void
+machine_thread_group_flags_update(struct thread_group *tg, uint32_t flags)
+{
+	if (sched_perfcontrol_thread_group_flags_update == sched_perfcontrol_thread_group_default) {
+		return;
+	}
+	struct thread_group_data data;
+	data.thread_group_id = thread_group_get_id(tg);
+	data.thread_group_data = thread_group_get_machine_data(tg);
+	data.thread_group_size = thread_group_machine_data_size();
+	data.thread_group_flags = flags;
+	sched_perfcontrol_thread_group_flags_update(&data);
+}
+#endif
 
 void
 machine_max_runnable_latency(uint64_t bg_max_latency,
@@ -471,6 +553,12 @@ machine_work_interval_notify(thread_t thread,
 		.next_start     = kwi_args->next_start,
 		.create_flags   = kwi_args->create_flags,
 	};
+#if CONFIG_THREAD_GROUPS
+	struct thread_group *tg;
+	tg = thread_group_get(thread);
+	work_interval.thread_group_id = thread_group_get_id(tg);
+	work_interval.thread_group_data = thread_group_get_machine_data(tg);
+#endif
 	sched_perfcontrol_work_interval_notify(state, &work_interval);
 }
 
