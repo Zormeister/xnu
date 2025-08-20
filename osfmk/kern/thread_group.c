@@ -857,4 +857,11 @@ thread_group_update_recommendation(struct thread_group *tg, cluster_type_t new_r
 	os_atomic_store(&tg->tg_recommendation, new_recommendation, relaxed);
 }
 
+void
+sched_perfcontrol_thread_group_recommend(__unused void *machine_data, __unused cluster_type_t new_recommendation)
+{
+	struct thread_group *tg = (struct thread_group *)((uintptr_t)machine_data - offsetof(struct thread_group, tg_machine_data));
+	SCHED(thread_group_recommendation_change)(tg, new_recommendation);
+}
+
 #endif /* CONFIG_THREAD_GROUPS */
