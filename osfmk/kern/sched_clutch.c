@@ -45,6 +45,7 @@
 #include <machine/atomic.h>
 #include <kern/sched_clutch.h>
 #include <sys/kdebug.h>
+#include <kern/thread_group.h>
 
 #if __AMP__
 #include <kern/sched_amp_common.h>

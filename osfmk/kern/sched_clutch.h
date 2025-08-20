@@ -300,6 +300,7 @@ uint32_t sched_clutch_root_count(sched_clutch_root_t);
 
 /* Grouping specific external routines */
 extern sched_clutch_t sched_clutch_for_thread(thread_t);
+extern sched_clutch_t sched_clutch_for_thread_group(struct thread_group *);
 
 #endif /* CONFIG_SCHED_CLUTCH */
 

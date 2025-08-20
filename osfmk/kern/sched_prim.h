@@ -762,6 +762,11 @@ struct sched_dispatch_table {
 
 	/* Routine to inform the scheduler when a new pset becomes schedulable */
 	void (*pset_made_schedulable)(processor_t processor, processor_set_t pset, boolean_t drop_lock);
+
+#if CONFIG_THREAD_GROUPS
+	/* Routine to inform the scheduler when CLPC changes a thread group recommendation */
+	void (*thread_group_recommendation_change)(struct thread_group *tg, cluster_type_t new_recommendation);
+#endif
 };
 
 #if defined(CONFIG_SCHED_TRADITIONAL)
