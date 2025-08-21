@@ -11,7 +11,7 @@ jobs:
       steps:
         - name: Clone Sources
           run: |
-            git clone --branch 6153/dev https://github.com/Zormeister/xnu ~/xnu-6153.144.1~1
+            git clone --branch 6153/dev https://github.com/Zormeister/xnu ~/xnu-6153.144.1~2
             git clone --branch rel/dtrace-338 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
             git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
@@ -42,7 +42,7 @@ jobs:
         - name: Install XNU headers
           run: |
             export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
-            export RC_ProjectBuildVersion="1"
+            export RC_ProjectBuildVersion="2"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) ARCH_CONFIGS="ARM ARM64 X86_64" installhdrs
@@ -56,7 +56,7 @@ jobs:
         - name: Build XNU for x86_64
           run: |
             export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
-            export RC_ProjectBuildVersion="1"
+            export RC_ProjectBuildVersion="2"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
@@ -65,7 +65,7 @@ jobs:
         - name: Build XNU for T7000 (ARM64)
           run: |
             export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
-            export RC_ProjectBuildVersion="1"
+            export RC_ProjectBuildVersion="2"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="n61"  RC_DARWIN_KERNEL_VERSION="19.6.0"
@@ -73,17 +73,13 @@ jobs:
         - name: Build XNU for T7001 (ARM64)
           run: |
             export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
-            export RC_ProjectBuildVersion="1"
+            export RC_ProjectBuildVersion="2"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="j81"  RC_DARWIN_KERNEL_VERSION="19.6.0"
             make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="j81" RC_DARWIN_KERNEL_VERSION="19.6.0" install
         - name: Package KernelRoot into a tarball
           run: |
-            export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
-            export RC_ProjectBuildVersion="1"
-            export MAKEFLAGS="--jobs=3"
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 OBJROOT=$PWD DSTROOT=$PWD/KernelRoot ARCH_CONFIGS="ARM64 X86_64" installhdrs
             cd ~/xnu*/
             cd $PWD/KernelRoot
             tar -cvf XNUConsolidatedRoot.tar.xz .
@@ -92,4 +88,4 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: XNUConsolidatedRoot.tar.xz
-            path: /Users/runner/xnu-6153.144.1~1/KernelRoot/XNUConsolidatedRoot.tar.xz
+            path: /Users/runner/xnu-6153.144.1~2/KernelRoot/XNUConsolidatedRoot.tar.xz
