@@ -20,7 +20,7 @@ jobs:
       steps:
         - name: Clone Sources
           run: |
-            git clone --branch 6153/${GITHUB_REF_NAME} https://github.com/Zormeister/xnu ~/xnu-6153.144.1~2
+            git clone --branch ${GITHUB_REF_NAME} https://github.com/Zormeister/xnu ~/xnu-6153.144.1~2
             git clone --branch rel/dtrace-338 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
             git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
