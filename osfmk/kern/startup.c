@@ -363,6 +363,10 @@ kernel_bootstrap(void)
 	/*
 	 *	Initialize the IPC, task, and thread subsystems.
 	 */
+#if CONFIG_THREAD_GROUPS
+	kernel_bootstrap_log("thread_group_init");
+	thread_group_init();
+#endif
 
 #if CONFIG_COALITIONS
 	kernel_bootstrap_log("coalitions_init");

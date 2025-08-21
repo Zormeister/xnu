@@ -1290,7 +1290,7 @@ coprocessor_type_t
 PEGetCoprocessorVersion( void )
 {
 	coprocessor_type_t coprocessor_version = kCoprocessorVersionNone;
-#if !CONFIG_EMBEDDED
+#if defined (__x86_64__)
 	IORegistryEntry     *platform_entry = NULL;
 	OSData              *coprocessor_version_obj = NULL;
 
@@ -1315,7 +1315,7 @@ IOPlatformExpert::registerNVRAMController(IONVRAMController * caller)
 	OSString *        string = NULL;
 	uuid_string_t     uuid;
 
-#if CONFIG_EMBEDDED
+#if !defined (__x86_64__)
 	entry = IORegistryEntry::fromPath( "/chosen", gIODTPlane );
 	if (entry) {
 		OSData * data1;
@@ -1348,7 +1348,7 @@ IOPlatformExpert::registerNVRAMController(IONVRAMController * caller)
 	}
 #endif /* CONFIG_EMBEDDED */
 
-#if defined(XNU_TARGET_OS_OSX)
+#if defined (__x86_64__)
 	/*
 	 * If we have panic debugging enabled and the bridgeOS panic SoC watchdog is enabled,
 	 * disable cross panics so that the co-processor doesn't cause the system
