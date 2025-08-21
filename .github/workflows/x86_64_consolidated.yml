@@ -40,7 +40,7 @@ jobs:
           run: |
             cd ~/AvailabilityVersions
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec
-            make DSTROOT=$(xcrun --sdk macosx -show-sdk-path) install
+            make DSTROOT=$(xcrun --sdk macosx -show-sdk-path) install_script
         - name: Install EmbeddedDeviceMap
           run: |
             cd ~/EmbeddedDeviceMap
