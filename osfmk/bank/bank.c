@@ -950,6 +950,9 @@ bank_task_alloc_init(task_t task)
 	new_bank_task->bt_persona_id = proc_persona_id(task->bsd_info);
 	new_bank_task->bt_uid = proc_getuid(task->bsd_info);
 	new_bank_task->bt_gid = proc_getgid(task->bsd_info);
+#if CONFIG_THREAD_GROUPS
+	new_bank_task->bt_thread_group = thread_group_retain(task_coalition_get_thread_group(task));
+#endif
 	proc_getexecutableuuid(task->bsd_info, new_bank_task->bt_macho_uuid, sizeof(new_bank_task->bt_macho_uuid));
 
 #if DEVELOPMENT || DEBUG
@@ -1040,6 +1043,9 @@ bank_account_alloc_init(
 	new_bank_account->ba_holder = bank_holder;
 	new_bank_account->ba_secureoriginator = bank_secureoriginator;
 	new_bank_account->ba_proximateprocess = bank_proximateprocess;
+#if CONFIG_THREAD_GROUPS
+	new_bank_account->ba_thread_group = thread_group;
+#endif
 	new_bank_account->ba_so_persona_id = persona_id;
 
 	/* Iterate through accounts need to pay list to find the existing entry */
@@ -1084,6 +1090,10 @@ bank_account_alloc_init(
 	bank_task_reference(bank_merchant);
 	bank_task_reference(bank_secureoriginator);
 	bank_task_reference(bank_proximateprocess);
+#if CONFIG_THREAD_GROUPS
+	assert(new_bank_account->ba_thread_group != NULL);
+	thread_group_retain(new_bank_account->ba_thread_group);
+#endif
 
 #if DEVELOPMENT || DEBUG
 	new_bank_account->ba_task = NULL;
@@ -1169,6 +1179,9 @@ bank_task_dealloc(
 	lck_mtx_destroy(&bank_task->bt_acc_to_pay_lock, &bank_lock_grp);
 	lck_mtx_destroy(&bank_task->bt_acc_to_charge_lock, &bank_lock_grp);
 
+#if CONFIG_THREAD_GROUPS
+	thread_group_release(bank_task->bt_thread_group);
+#endif
 
 #if DEVELOPMENT || DEBUG
 	lck_mtx_lock(&bank_tasks_list_lock);
@@ -1246,6 +1259,10 @@ bank_account_dealloc_with_sync(
 	bank_task_dealloc(bank_merchant, 1);
 	bank_task_dealloc(bank_secureoriginator, 1);
 	bank_task_dealloc(bank_proximateprocess, 1);
+#if CONFIG_THREAD_GROUPS
+	assert(bank_account->ba_thread_group != NULL);
+	thread_group_release(bank_account->ba_thread_group);
+#endif
 
 #if DEVELOPMENT || DEBUG
 	lck_mtx_lock(&bank_accounts_list_lock);
@@ -1706,6 +1723,11 @@ bank_get_bank_task_thread_group(bank_task_t bank_task __unused)
 {
 	struct thread_group *banktg = NULL;
 
+#if CONFIG_THREAD_GROUPS
+	if (bank_task != BANK_TASK_NULL) {
+		banktg = bank_task->bt_thread_group;
+	}
+#endif /* CONFIG_THREAD_GROUPS */
 
 	return banktg;
 }
@@ -1719,6 +1741,11 @@ bank_get_bank_account_thread_group(bank_account_t bank_account __unused)
 {
 	struct thread_group *banktg = NULL;
 
+#if CONFIG_THREAD_GROUPS
+	if (bank_account != BANK_ACCOUNT_NULL) {
+		banktg = bank_account->ba_thread_group;
+	}
+#endif /* CONFIG_THREAD_GROUPS */
 
 	return banktg;
 }
