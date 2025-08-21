@@ -1,13 +1,17 @@
 name: x86-64 Consolidated Build
 
-branches:
-  - 6153/dev
-  - 6153/arm-dev
-  - 6153/x86-dev
-
 on:
-  - workflow_dispatch 
-  - push
+  workflow_dispatch:
+    branches:
+      - 6153/dev
+      - 6153/arm-dev
+      - 6153/x86-dev
+
+  push:
+    branches:
+      - 6153/dev
+      - 6153/arm-dev
+      - 6153/x86-dev
   
 jobs:
     build:
