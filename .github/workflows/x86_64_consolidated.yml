@@ -1,5 +1,10 @@
 name: x86-64 Consolidated Build
 
+branches:
+  - 6153/dev
+  - 6153/arm-dev
+  - 6153/x86-dev
+
 on:
   - workflow_dispatch 
   - push
@@ -11,7 +16,7 @@ jobs:
       steps:
         - name: Clone Sources
           run: |
-            git clone --branch 6153/dev https://github.com/Zormeister/xnu ~/xnu-6153.144.1~2
+            git clone --branch 6153/${GITHUB_REF_NAME} https://github.com/Zormeister/xnu ~/xnu-6153.144.1~2
             git clone --branch rel/dtrace-338 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
             git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
@@ -60,8 +65,8 @@ jobs:
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
             make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG KASAN" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG KASAN" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
         - name: Package KernelRoot into a tarball
           run: |
             cd ~/xnu*/
