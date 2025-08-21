@@ -45,14 +45,14 @@ jobs:
             export RC_ProjectBuildVersion="2"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) PRODUCT_CONFIGS="j81" installhdrs
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) ARCH_CONFIGS="ARM64" MACHINE_CONFIGS="T7001" installhdrs
         - name: Prepare libfirehose_kernel
           run: |
             cd ~/libdispatch
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             cp ~/libdispatch/os/firehose_buffer_private.h $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             awk '/include "<DEVELOPER/ {next;} /SDKROOT =/ {print "SDKROOT = macosx"; next;} {print $0}' xcodeconfig/libdispatch.xcconfig > .__tmp__ && mv -f .__tmp__ xcodeconfig/libdispatch.xcconfig
-            xcodebuild install VALID_ARCHS="x86_64 x86_64h arm64 armv7 armv7k" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch arm64 -arch x86_64 -arch armv7 -arch armv7k
+            xcodebuild install VALID_ARCHS="x86_64 x86_64h arm64 armv7 armv7k" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch arm64
         - name: Build XNU for T7000
           run: |
             export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
