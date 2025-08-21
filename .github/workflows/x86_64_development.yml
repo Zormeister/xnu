@@ -9,7 +9,7 @@ jobs:
       steps:
         - name: Clone Sources
           run: |
-            git clone --branch 6153/dev https://github.com/Zormeister/xnu ~/xnu-6153.143.1~1
+            git clone --branch 6153/dev https://github.com/Zormeister/xnu ~/xnu-6153.144.1~1
             git clone --branch rel/dtrace-338 https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
             git clone --branch rel/libplatform-220 https://github.com/apple-oss-distributions/libplatform.git ~/libplatform
             git clone --branch rel/AvailabilityVersions-45 https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
@@ -32,7 +32,7 @@ jobs:
         - name: Install Kernel Headers
           run: |
             export RC_XBS=YES
-            export RC_ProjectNameAndSourceVersion="xnu-6153.143.1"
+            export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
@@ -47,7 +47,7 @@ jobs:
         - name: Build Kernel
           run: |
             export RC_XBS=YES
-            export RC_ProjectNameAndSourceVersion="xnu-6153.143.1"
+            export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
@@ -55,7 +55,7 @@ jobs:
         - name: Package Kernel into tarball
           run: |
             export RC_XBS=YES
-            export RC_ProjectNameAndSourceVersion="xnu-6153.143.1"
+            export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
             export RC_ProjectBuildVersion="1"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
@@ -68,4 +68,4 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: KernelRoot-x86-development.tar.xz
-            path: /Users/runner/xnu-6153.143.1~1/KernelRoot/kernel_development.tar.xz
+            path: /Users/runner/xnu-6153.144.1~1/KernelRoot/kernel_development.tar.xz
