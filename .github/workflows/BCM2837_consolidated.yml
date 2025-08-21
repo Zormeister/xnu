@@ -27,7 +27,8 @@ jobs:
             git clone  https://github.com/Zormeister/EmbeddedDeviceMap.git ~/EmbeddedDeviceMap
         - name: Set Project Name and Source Version variable.
           run: |
-            echo "RC_ProjectNameAndSourceVersion=xnu-$(cat ~/xnu/sourceversion) RC_ProjectBuildVersion=$(cat ~/xnu/buildversion)" >> $GITHUB_ENV
+            echo "RC_ProjectNameAndSourceVersion=xnu-$(cat ~/xnu/sourceversion)" >> $GITHUB_ENV
+            echo "RC_ProjectBuildVersion=$(cat ~/xnu/buildversion)" >> $GITHUB_ENV
         - name: Install Homebrew Packages
           run: |
             brew install jsoncpp
