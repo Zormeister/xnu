@@ -864,4 +864,21 @@ sched_perfcontrol_thread_group_recommend(__unused void *machine_data, __unused c
 	SCHED(thread_group_recommendation_change)(tg, new_recommendation);
 }
 
+#else
+
+/*
+ * Regardless of actual support, these symbols are exported as Private KPI.
+ */
+#if defined (__arm64__)
+void
+thread_group_join_io_storage(void)
+{
+}
+
+void
+sched_perfcontrol_thread_group_recommend(__unused void *machine_data, __unused cluster_type_t new_recommendation)
+{
+}
+#endif
+
 #endif /* CONFIG_THREAD_GROUPS */
