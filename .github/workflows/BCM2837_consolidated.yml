@@ -1,4 +1,4 @@
-name: T8002 Consolidated Build
+name: BCM2837 Consolidated Build
 
 on:
   workflow_dispatch:
@@ -54,31 +54,32 @@ jobs:
             export RC_ProjectBuildVersion="2"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) PRODUCT_CONFIGS="x619" installhdrs
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) PRODUCT_CONFIGS="rpi3b" installhdrs
         - name: Prepare libfirehose_kernel
           run: |
             cd ~/libdispatch
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             cp ~/libdispatch/os/firehose_buffer_private.h $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             awk '/include "<DEVELOPER/ {next;} /SDKROOT =/ {print "SDKROOT = macosx"; next;} {print $0}' xcodeconfig/libdispatch.xcconfig > .__tmp__ && mv -f .__tmp__ xcodeconfig/libdispatch.xcconfig
-            xcodebuild install VALID_ARCHS="x86_64 x86_64h arm64 armv7 armv7k" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch armv7 -arch armv7k
+            xcodebuild install VALID_ARCHS="x86_64 x86_64h arm64 armv7 armv7k" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch arm64
         - name: Build XNU
           run: |
             export RC_ProjectNameAndSourceVersion="xnu-6153.144.1"
             export RC_ProjectBuildVersion="2"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu*/
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="x619"  RC_DARWIN_KERNEL_VERSION="19.6.0"
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="x619" RC_DARWIN_KERNEL_VERSION="19.6.0" install
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="x619" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="rpi3b"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="rpi3b" RC_DARWIN_KERNEL_VERSION="19.6.0" install
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="rpi3b" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
         - name: Package KernelRoot into a tarball
           run: |
             cd ~/xnu*/
             cd $PWD/KernelRoot
-            tar -cvf T8002ConsolidatedRoot.tar.xz .
+            echo ${GITHUB_SHA} >> ./sha.txt
+            tar -cvf BCM2837ConsolidatedRoot.tar.xz .
         - name: Upload Kernel Root tarball
           if: success()
           uses: actions/upload-artifact@v4
           with:
-            name: T8002ConsolidatedRoot.tar.xz
-            path: /Users/runner/xnu-6153.144.1~2/KernelRoot/T8002ConsolidatedRoot.tar.xz
+            name: BCM2837ConsolidatedRoot.tar.xz
+            path: /Users/runner/xnu-6153.144.1~2/KernelRoot/BCM2837ConsolidatedRoot.tar.xz
