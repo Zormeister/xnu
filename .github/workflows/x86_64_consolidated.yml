@@ -76,7 +76,7 @@ jobs:
             export RC_ProjectNameAndSourceVersion="xnu-$(cat ~/xnu/sourceversion)"
             cd ~/xnu/
             cd $PWD/RELEASEROOT
-            tar -cvf "xnu-${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
+            tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
             mkdir -p ~/xnu/BUILDS
             cp ./*.tar.xz ~/xnu/BUILDS/
         - name: Build XNU in DEVELOPMENT configuration
@@ -93,7 +93,7 @@ jobs:
             export RC_ProjectNameAndSourceVersion="xnu_development-$(cat ~/xnu/sourceversion)"
             cd ~/xnu/
             cd $PWD/DEVELOPMENTROOT
-            tar -cvf "xnu-${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
+            tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
             mkdir -p ~/xnu/BUILDS
             cp ./*.tar.xz ~/xnu/BUILDS/
         - name: Build XNU in DEBUG configuration
@@ -110,7 +110,7 @@ jobs:
             export RC_ProjectNameAndSourceVersion="xnu_debug-$(cat ~/xnu/sourceversion)"
             cd ~/xnu/
             cd $PWD/DEBUGROOT
-            tar -cvf "xnu-${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
+            tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
             mkdir -p ~/xnu/BUILDS
             cp ./*.tar.xz ~/xnu/BUILDS/
         - name: Build XNU in KASAN configuration
@@ -127,7 +127,7 @@ jobs:
             export RC_ProjectNameAndSourceVersion="xnu_kasan-$(cat ~/xnu/sourceversion)"
             cd ~/xnu/
             cd $PWD/KASANROOT
-            tar -cvf "xnu-${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
+            tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
             mkdir -p ~/xnu/BUILDS
             cp ./*.tar.xz ~/xnu/BUILDS/
         - name: Upload Kernel Root tarball
