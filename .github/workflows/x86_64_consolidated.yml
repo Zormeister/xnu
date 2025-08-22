@@ -1,0 +1,83 @@
+name: x86-64 Consolidated Build
+
+on:
+  workflow_dispatch:
+    branches:
+      - 6153/dev
+      - 6153/arm-dev
+      - 6153/x86-dev
+
+  push:
+    branches:
+      - 6153/dev
+      - 6153/arm-dev
+      - 6153/x86-dev
+
+jobs:
+    build:
+      runs-on: macos-latest
+  
+      steps:
+        - name: Clone Sources
+          run: |
+            git clone --branch ${GITHUB_REF_NAME} https://github.com/Zormeister/xnu ~/xnu
+            git clone --branch $(cat ~/xnu/depconfig/dtrace) https://github.com/apple-oss-distributions/dtrace.git ~/dtrace
+            git clone --branch $(cat ~/xnu/depconfig/AvailabilityVersions) https://github.com/apple-oss-distributions/AvailabilityVersions.git ~/AvailabilityVersions
+            git clone --branch $(cat ~/xnu/depconfig/libdispatch) https://github.com/apple-oss-distributions/libdispatch.git ~/libdispatch
+            git clone  https://github.com/Zormeister/EmbeddedDeviceMap.git ~/EmbeddedDeviceMap
+        - name: Set Project Name and Source Version variable.
+          run: |
+            echo "RC_ProjectNameAndSourceVersion=xnu-$(cat ~/xnu/sourceversion)" >> $GITHUB_ENV
+            echo "RC_ProjectBuildVersion=$(cat ~/xnu/buildversion)" >> $GITHUB_ENV
+        - name: Install Homebrew Packages
+          run: |
+            brew install jsoncpp
+        - name: Run Preflight script
+          run: |
+            cd ~/xnu/
+            ${PWD}/ci_preflight.sh
+        - name: Install availability.pl
+          run: |
+            cd ~/AvailabilityVersions
+            mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/libexec
+            make DSTROOT=$(xcrun --sdk macosx -show-sdk-path) install_script
+        - name: Install EmbeddedDeviceMap
+          run: |
+            cd ~/EmbeddedDeviceMap
+            make DESTDIR=$(xcrun --sdk macosx -show-sdk-platform-path) install
+        - name: Install ctfconvert, ctfdump and ctfmerge.
+          run: |
+            cd ~/dtrace
+            echo "#include <stdint.h>" > include/llvm-Support/DataTypes.h
+            sed -i -e 's,include "llvm/Support/DataTypes,include "llvm-Support/DataTypes,' include/llvm-Support/PointerLikeTypeTraits.h
+            xcodebuild install CODE_SIGNING_ALLOWED=NO DSTROOT=$(xcrun --sdk macosx -show-sdk-platform-path) INSTALL_PATH="/usr/local/bin" -target ctfconvert -target ctfdump -target ctfmerge -sdk macosx
+        - name: Install XNU headers
+          run: |
+            export MAKEFLAGS="--jobs=3"
+            cd ~/xnu/
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 OBJROOT=$PWD DSTROOT=$(xcrun --sdk macosx -show-sdk-path) ARCH_CONFIGS="X86_64" installhdrs
+        - name: Prepare libfirehose_kernel
+          run: |
+            cd ~/libdispatch
+            mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
+            cp ~/libdispatch/os/firehose_buffer_private.h $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
+            awk '/include "<DEVELOPER/ {next;} /SDKROOT =/ {print "SDKROOT = macosx"; next;} {print $0}' xcodeconfig/libdispatch.xcconfig > .__tmp__ && mv -f .__tmp__ xcodeconfig/libdispatch.xcconfig
+            xcodebuild install VALID_ARCHS="x86_64 x86_64h arm64 armv7 armv7k" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch x86_64
+        - name: Build XNU
+          run: |
+            export MAKEFLAGS="--jobs=3"
+            cd ~/xnu/
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
+        - name: Package KernelRoot into a tarball
+          run: |
+            cd ~/xnu/
+            cd $PWD/KernelRoot
+            tar -cvf x86ConsolidatedRoot.tar.xz .
+        - name: Upload Kernel Root tarball
+          if: success()
+          uses: actions/upload-artifact@v4
+          with:
+            name: x86ConsolidatedRoot.tar.xz
+            path: /Users/runner/xnu/KernelRoot/x86ConsolidatedRoot.tar.xz
