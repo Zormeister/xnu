@@ -10,7 +10,7 @@ re_comments=re.compile(r'#.*$')
 
 nentries = 0
 extra_entries = 5
-bl = file(sys.argv[1])
+bl = open(sys.argv[1], 'r')
 
 print(r'struct blacklist_entry blacklist[] = {')
 
