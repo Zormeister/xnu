@@ -57,7 +57,7 @@ for i in xrange(0, extra_entries):
 	}},""".format("NULL", "NULL", 0))
 
 print(r'};')
-print()
+print('')
 
 print('static size_t blacklist_entries = {};'.format(nentries))
 print('static const size_t blacklist_max_entries = {};'.format(nentries + extra_entries))
