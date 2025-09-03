@@ -49,7 +49,7 @@ for line in bl.readlines():
 # add space for new entries added at runtime
 print('')
 print(r'	/* Unused entries that can be populated at runtime */')
-for i in xrange(0, extra_entries):
+for i in range(extra_entries):
 	print("""	{{
 		.kext_name = {},
 		.func_name = {},
