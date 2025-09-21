@@ -729,6 +729,7 @@ ml_init_lock_timeout(void)
 #endif
 	uint32_t        slto;
 	uint32_t        prt;
+	i386_cpu_info_t *cpu_infop = cpuid_info();
 
 	/*
 	 * This is a workaround to try and combat kernel instability on AMD platforms.
