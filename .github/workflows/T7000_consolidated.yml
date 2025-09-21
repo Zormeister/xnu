@@ -27,7 +27,6 @@ jobs:
             git clone  https://github.com/Zormeister/EmbeddedDeviceMap.git ~/EmbeddedDeviceMap
         - name: Set Project Name and Source Version variable.
           run: |
-            echo "RC_ProjectNameAndSourceVersion=xnu-$(cat ~/xnu/sourceversion)" >> $GITHUB_ENV
             echo "RC_ProjectBuildVersion=$(cat ~/xnu/buildversion)" >> $GITHUB_ENV
         - name: Install Homebrew Packages
           run: |
@@ -62,22 +61,60 @@ jobs:
             mkdir -p $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             cp ~/libdispatch/os/firehose_buffer_private.h $(xcrun --sdk macosx -show-sdk-path)/usr/local/include/os
             awk '/include "<DEVELOPER/ {next;} /SDKROOT =/ {print "SDKROOT = macosx"; next;} {print $0}' xcodeconfig/libdispatch.xcconfig > .__tmp__ && mv -f .__tmp__ xcodeconfig/libdispatch.xcconfig
-            xcodebuild install VALID_ARCHS="x86_64 x86_64h arm64 armv7 armv7k" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch arm64
-        - name: Build XNU
+            xcodebuild install VALID_ARCHS="x86_64 x86_64h arm64 armv7 armv7k" DSTROOT=$(xcrun --sdk macosx -show-sdk-path) -target libfirehose_kernel -arch x86_64
+        - name: Build XNU in RELEASE configuration
           run: |
+            echo "BuildVersion = ${RC_ProjectBuildVersion}"
+            export RC_ProjectNameAndSourceVersion="xnu-$(cat ~/xnu/sourceversion)"
             export MAKEFLAGS="--jobs=3"
             cd ~/xnu/
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="n61"  RC_DARWIN_KERNEL_VERSION="19.6.0"
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="n61" RC_DARWIN_KERNEL_VERSION="19.6.0" install
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KernelRoot USE_WERROR=0 KERNEL_CONFIGS="RELEASE DEVELOPMENT DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="n61" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
-        - name: Package KernelRoot into a tarball
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD PRODUCT_CONFIGS="n61"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/RELEASEROOT USE_WERROR=0 KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD PRODUCT_CONFIGS="n61" RC_DARWIN_KERNEL_VERSION="19.6.0" install
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/RELEASEROOT USE_WERROR=0 KERNEL_CONFIGS="RELEASE" OBJROOT=$PWD PRODUCT_CONFIGS="n61" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
+        - name: Package RELEASEROOT into a tarball
           run: |
+            export RC_ProjectNameAndSourceVersion="xnu-$(cat ~/xnu/sourceversion)"
             cd ~/xnu/
-            cd $PWD/KernelRoot
-            tar -cvf T7000ConsolidatedRoot.tar.xz .
+            cd $PWD/RELEASEROOT
+            tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
+            mkdir -p ~/xnu/BUILDS
+            cp ./*.tar.xz ~/xnu/BUILDS/
+        - name: Build XNU in DEVELOPMENT configuration
+          run: |
+            echo "BuildVersion = ${RC_ProjectBuildVersion}"
+            export RC_ProjectNameAndSourceVersion="xnu_development-$(cat ~/xnu/sourceversion)"
+            export MAKEFLAGS="--jobs=3"
+            cd ~/xnu/
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD PRODUCT_CONFIGS="n61"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/DEVELOPMENTROOT USE_WERROR=0 KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD PRODUCT_CONFIGS="n61" RC_DARWIN_KERNEL_VERSION="19.6.0" install
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/DEVELOPMENTROOT USE_WERROR=0 KERNEL_CONFIGS="DEVELOPMENT" OBJROOT=$PWD PRODUCT_CONFIGS="n61" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
+        - name: Package DEVELOPMENTROOT into a tarball
+          run: |
+            export RC_ProjectNameAndSourceVersion="xnu_development-$(cat ~/xnu/sourceversion)"
+            cd ~/xnu/
+            cd $PWD/DEVELOPMENTROOT
+            tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
+            mkdir -p ~/xnu/BUILDS
+            cp ./*.tar.xz ~/xnu/BUILDS/
+        - name: Build XNU in DEBUG configuration
+          run: |
+            echo "BuildVersion = ${RC_ProjectBuildVersion}"
+            export RC_ProjectNameAndSourceVersion="xnu_debug-$(cat ~/xnu/sourceversion)"
+            export MAKEFLAGS="--jobs=3"
+            cd ~/xnu/
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="n61"  RC_DARWIN_KERNEL_VERSION="19.6.0"
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/DEBUGROOT USE_WERROR=0 KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="n61" RC_DARWIN_KERNEL_VERSION="19.6.0" install
+            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/DEBUGROOT USE_WERROR=0 KERNEL_CONFIGS="DEBUG" OBJROOT=$PWD PRODUCT_CONFIGS="n61" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
+        - name: Package DEBUGROOT into a tarball
+          run: |
+            export RC_ProjectNameAndSourceVersion="xnu_debug-$(cat ~/xnu/sourceversion)"
+            cd ~/xnu/
+            cd $PWD/DEBUGROOT
+            tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
+            mkdir -p ~/xnu/BUILDS
+            cp ./*.tar.xz ~/xnu/BUILDS/
         - name: Upload Kernel Root tarball
           if: success()
           uses: actions/upload-artifact@v4
           with:
-            name: T7000ConsolidatedRoot.tar.xz
-            path: /Users/runner/xnu/KernelRoot/T7000ConsolidatedRoot.tar.xz
+            path: /Users/runner/xnu/BUILDS

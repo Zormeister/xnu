@@ -15,7 +15,7 @@ on:
 
 jobs:
     build:
-      runs-on: macos-14
+      runs-on: macos-latest
   
       steps:
         - name: Clone Sources
@@ -110,23 +110,6 @@ jobs:
             export RC_ProjectNameAndSourceVersion="xnu_debug-$(cat ~/xnu/sourceversion)"
             cd ~/xnu/
             cd $PWD/DEBUGROOT
-            tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
-            mkdir -p ~/xnu/BUILDS
-            cp ./*.tar.xz ~/xnu/BUILDS/
-        - name: Build XNU in KASAN configuration
-          run: |
-            echo "BuildVersion = ${RC_ProjectBuildVersion}"
-            export RC_ProjectNameAndSourceVersion="xnu_kasan-$(cat ~/xnu/sourceversion)"
-            export MAKEFLAGS="--jobs=3"
-            cd ~/xnu/
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 USE_WERROR=0 XNU_LOGCOLORS=y KERNEL_CONFIGS="KASAN" OBJROOT=$PWD ARCH_CONFIGS="X86_64"  RC_DARWIN_KERNEL_VERSION="19.6.0"
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KASANROOT USE_WERROR=0 KERNEL_CONFIGS="KASAN" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install
-            make EMBEDDED_DEVICE_MAP=$(xcrun -f embedded_device_map) EDM_DBPATH=$(xcrun --sdk macosx -show-sdk-platform-path)/usr/local/standalone/firmware/device_map.db DO_CTFMERGE=0 DSTROOT=$PWD/KASANROOT USE_WERROR=0 KERNEL_CONFIGS="KASAN" OBJROOT=$PWD ARCH_CONFIGS="X86_64" RC_DARWIN_KERNEL_VERSION="19.6.0" install_config
-        - name: Package KASANROOT into a tarball
-          run: |
-            export RC_ProjectNameAndSourceVersion="xnu_kasan-$(cat ~/xnu/sourceversion)"
-            cd ~/xnu/
-            cd $PWD/KASANROOT
             tar -cvf "${RC_ProjectNameAndSourceVersion}~${RC_ProjectBuildVersion}.tar.xz" .
             mkdir -p ~/xnu/BUILDS
             cp ./*.tar.xz ~/xnu/BUILDS/
