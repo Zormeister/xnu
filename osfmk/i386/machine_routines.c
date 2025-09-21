@@ -730,6 +730,22 @@ ml_init_lock_timeout(void)
 	uint32_t        slto;
 	uint32_t        prt;
 
+	/*
+	 * This is a workaround to try and combat kernel instability on AMD platforms.
+	 *
+	 * The spin-lock timeout timer is unforgiving, and it may be too harsh on AMD.
+	 * 
+	 * I haven't personally had this issue on my desktop, but my laptop with Cezanne
+	 * has encountered strange issues with the spin-lock timeout being weird.
+	 *
+	 * Overall, the TSC is a seriously unreliable time keeper.
+	 *
+	 * I wonder if I should move the kernel to the HPET, if that's even possible.
+	 */
+	if (cpu_infop->cpu_vendor == CPU_VENDOR_AMD) {
+		default_timeout_ns = 0xFFFFFFFF * NSEC_PER_USEC;
+	}
+
 	if (PE_parse_boot_argn("slto_us", &slto, sizeof(slto))) {
 		default_timeout_ns = slto * NSEC_PER_USEC;
 	}
