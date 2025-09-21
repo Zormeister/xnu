@@ -742,7 +742,7 @@ ml_init_lock_timeout(void)
 	 *
 	 * I wonder if I should move the kernel to the HPET, if that's even possible.
 	 */
-	if (cpu_infop->cpu_vendor == CPU_VENDOR_AMD) {
+	if (cpu_infop->cpuid_vendor_id == CPUID_VENDOR_ID_AMD) {
 		default_timeout_ns = 0xFFFFFFFF * NSEC_PER_USEC;
 	}
 
