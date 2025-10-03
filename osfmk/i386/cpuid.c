@@ -859,7 +859,7 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 		DBG("  denominator   : 0x%x\n", reg[eax]);
 	}
 
-	/* 
+	/*
 	 * Extract from the Intel SDM:
 	 * If sub-leaf index “N” returns an invalid domain type in ECX[15:08] (00H), then all sub-leaves with an
 	 * index greater than “N” shall also return an invalid domain type. A sub-leaf returning an invalid domain
@@ -1621,4 +1621,50 @@ cpuid_do_precpuid_was(void)
 	 * that data as well.
 	 */
 
+}
+
+/*
+ * This should be able to collect the data of the calling processor.
+ */
+x86_core_type_t
+cpuid_get_current_core_type(void)
+{
+    i386_cpu_info_t *info_p = cpuid_info();
+    x86_core_type_t type = X86_CORE_TYPE_PERFORMANCE;
+    uint32_t reg[4] = {0, 0, 0, 0};
+    uint32_t raw_type;
+
+    if (info_p->cpuid_vendor_id == CPUID_VENDOR_ID_INTEL &&
+        info_p->cpuid_max_basic >= 0x1a) {
+        /* Fetch the part value from the Native Model ID leaf */
+        reg[eax] = 0x1a;
+        cpuid(reg);
+        raw_type = bitfield32(reg[eax], 31, 24);
+        if (raw_type == INTEL_CORE_TYPE_ATOM) {
+            /*
+             * https://community.intel.com/t5/Mobile-and-Desktop-Processors/Detecting-LP-E-Cores-on-Meteor-Lake-in-software/m-p/1584555#M70732
+             */
+            reg[eax] = 0x4;
+            reg[ecx] = 0x3;
+            cpuid(reg);
+            if (reg[eax] == 0) {
+                type = X86_CORE_TYPE_EFFICIENCY_LP;
+            } else {
+                type = X86_CORE_TYPE_EFFICIENCY;
+            }
+        } else if (!(raw_type == INTEL_CORE_TYPE_CORE)) {
+            panic("cpuid_get_current_core_type: unexpected core type 0x%x", raw_type);
+        }
+    } else if (info_p->cpuid_vendor_id == CPUID_VENDOR_ID_AMD &&
+               info_p->cpuid_max_ext >= 0x80000026) {
+        cpuid_fn(0x80000026, reg);
+        raw_type = bitfield32(reg[ebx], 31, 28);
+        if (raw_type == 0x1) {
+            type = X86_CORE_TYPE_EFFICIENCY;
+        } else if (raw_type != 0) {
+            panic("cpuid_get_current_core_type: unexpected core type 0x%x", raw_type);
+        }
+    }
+
+    return type;
 }

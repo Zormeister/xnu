@@ -71,6 +71,29 @@ struct cpu_data;
 struct mca_state;
 
 /*
+ * Define the types of cores that can be found in an x86 system.
+ *
+ * X86_CORE_TYPE_PERFORMANCE
+ * This is a (regular) performance core.
+ * Additionally, this serves as the default value for non-HSA systems.
+ *
+ * TODO:
+ * The scheduler can probably be looked over with the newly collected data,
+ * taking advantage of the groups of cores, eg: the AMP scheduler for ARM + thread groups.
+ *
+ * X86_CORE_TYPE_EFFICIENCY
+ * An efficiency core, as seen in Intel products since 2021.
+ *
+ * X86_CORE_TYPE_EFFICIENCY_LP
+ * A low-power efficiency core, as seen in Arrow Lake and Meteor Lake.
+ */
+ typedef enum {
+     X86_CORE_TYPE_PERFORMANCE   = 0,
+     X86_CORE_TYPE_EFFICIENCY    = 1,
+     X86_CORE_TYPE_EFFICIENCY_LP = 2
+ } x86_core_type_t;
+
+/*
  * Define the states that a (logical) CPU can be in.
  *
  * LCPU_OFF	This indicates that the CPU is "off".  It requires a full
@@ -164,6 +187,7 @@ typedef struct x86_core {
 	uint32_t            active_lcpus;/* Number of {running, idle} cpus */
 	void                *pmStats;   /* Power management stats for core */
 	void                *pmState;   /* Power management state for core */
+	x86_core_type_t     core_type;  /* The type of core */
 } x86_core_t;
 
 #define X86DIE_FL_PRESENT       0x80000000      /* die is present */

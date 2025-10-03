@@ -43,6 +43,7 @@
 #include <i386/hw_defs.h>
 #include <i386/pio.h>
 #include <i386/machine_routines.h>
+#include <i386/cpu_topology.h>
 #endif
 
 #ifdef __APPLE_API_PRIVATE
@@ -431,6 +432,11 @@ typedef struct {
 	cpuid_ext_topology_domain_leaf_t domains[EXT_TOPO_DOMAIN_MAX];
 } cpuid_ext_topology_leaf_t;
 
+typedef enum {
+    INTEL_CORE_TYPE_ATOM = 0x20, /* Efficiency core. */
+    INTEL_CORE_TYPE_CORE = 0x40  /* Performance core. */
+} cpuid_intel_core_type_t;
+
 /* Physical CPU info - this is exported out of the kernel (kexts), so be wary of changes */
 typedef struct {
 	char            cpuid_vendor[16];
@@ -598,6 +604,7 @@ extern i386_vmm_info_t  *cpuid_vmm_info(void);
 extern uint32_t         cpuid_vmm_family(void);
 extern cwa_classifier_e cpuid_wa_required(cpu_wa_e wa);
 extern void cpuid_do_was(void);
+extern x86_core_type_t  cpuid_get_current_core_type(void);
 #endif
 
 #ifdef __cplusplus

@@ -972,6 +972,11 @@ cpu_thread_init(void)
 	}
 
 	/*
+	 * Read x86 core type here for the sake of completeness.
+	 */
+	cpup->cpu_core_type = cpuid_get_current_core_type();
+
+	/*
 	 * Do the CPU accounting.
 	 */
 	core = cpup->lcpu.core;
@@ -981,6 +986,7 @@ cpu_thread_init(void)
 		machine_info.physical_cpu += 1;
 	}
 	core->active_lcpus += 1;
+	core->core_type = cpup->cpu_core_type;
 	simple_unlock(&x86_topo_lock);
 
 	pmCPUMarkRunning(cpup);
@@ -1236,6 +1242,7 @@ debug_topology_print(void)
 			core = die->cores;
 			while (core != NULL) {
 				kprintf("        Core:\n");
+				kprintf("            Type: %d\n",     core->core_type);
 				kprintf("            Physical: %d\n", core->pcore_num);
 				kprintf("            Logical:  %d\n", core->lcore_num);
 
