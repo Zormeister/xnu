@@ -681,6 +681,7 @@ __END_DECLS
 #define     MSR_IA32_EFER_LME                       0x00000100
 #define     MSR_IA32_EFER_LMA                       0x00000400
 #define     MSR_IA32_EFER_NXE                       0x00000800
+#define     MSR_IA32_EFER_SVME                      0x00001000
 
 #define MSR_IA32_STAR                           0xC0000081
 #define MSR_IA32_LSTAR                          0xC0000082
@@ -697,12 +698,19 @@ __END_DECLS
 #define HV_VMX_EPTP_WALK_LENGTH(wl)             (0ULL | ((((wl) - 1) & 0x7) << 3))
 #define HV_VMX_EPTP_ENABLE_AD_FLAGS             (1ULL << 6)
 
-#define MSR_AMD_HWCR                            0xC0010015
-#define     MSR_AMD_K17_HWCR_LOCKTSC                0x00200000
+#define MSR_AMD64_HWCR                          0xC0010015
+#define     MSR_AMD64_K17_HWCR_LOCKTSC              0x00200000
 
-#define MSR_AMD_NB_CFG1                         0xC001001F
+#define MSR_AMD64_NB_CFG1                       0xC001001F
 
-#define MSR_AMD_PSTATE_BASE                     0xC0010064
+#define MSR_AMD64_PSTATE_BASE                   0xC0010064
 
+#define MSR_AMD64_VM_CR                         0xC0010114
+#define     MSR_AMD64_VM_CR_SVME_DISABLE            0x00000008
+#define     MSR_AMD64_VM_CR_LOCK                    0x00000010
+
+#define MSR_AMD64_VM_HSAVE_PA                   0xC0010117
+
+#define MSR_AMD64_VM_LOCK_KEY                   0xC0010118
 
 #endif  /* _I386_PROC_REG_H_ */
