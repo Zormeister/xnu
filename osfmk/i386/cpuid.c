@@ -956,6 +956,9 @@ cpuid_set_cpufamily_amd(i386_cpu_info_t *info_p)
 	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
 
 	switch (info_p->cpuid_family) {
+	case 0x14:
+	    cpufamily = CPUFAMILY_AMD_BOBCAT;
+		break;
 	case 0x15:
         switch (info_p->cpuid_model) {
         case CPUID_MODEL_ZAMBEZI:
@@ -1119,6 +1122,19 @@ cpuid_set_info(void)
 			info_p->thread_count = bitfield32((uint32_t)msr, 15, 0);
 			cpuid_set_cache_info(info_p);
 			break;
+		}
+		case CPUFAMILY_AMD_BOBCAT: {
+		    uint32_t reg[4];
+
+			cpuid_set_cache_info(info_p);
+
+			cpuid_fn(0x80000008, reg);
+			info_p->cpuid_cores_per_package = bitfield32(reg[ecx], 7, 0) + 1;
+			info_p->core_count = info_p->cpuid_cores_per_package;
+
+			info_p->thread_count = info_p->core_count;
+			info_p->cpuid_logical_per_package = info_p->cpuid_cores_per_package;
+		    break;
 		}
 		case CPUFAMILY_AMD_PILEDRIVER: {
 			uint32_t cpuid[4];

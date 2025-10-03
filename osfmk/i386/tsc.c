@@ -230,6 +230,22 @@ tsc_init(void)
 
 		break;
 	}
+	case CPUFAMILY_AMD_BOBCAT: {
+	    uint64_t pzero = rdmsr64(MSR_AMD64_PSTATE_BASE);
+		uint32_t divisor = bitfield32((uint32_t)pzero, 8, 6);
+		uint32_t fid = bitfield32((uint32_t)pzero, 5, 0);
+
+		tscFreq = 100 * (fid + 0x10) / (1 << divisor);
+		tscFCvtt2n = ((1 * Giga) << 32) / tscFreq;
+		tscFCvtn2t = 0xFFFFFFFFFFFFFFFFULL / tscFCvtt2n;
+
+		/* Get the FSB (Local APIC Timer) frequency from EFI */
+		busFreq = EFI_get_frequency("FSBFrequency");
+
+		/* If we need it, the TSC granularity is found here. */
+		tscGranularity = tscFreq / busFreq;
+	    break;
+	}
 	case CPUFAMILY_AMD_BULLDOZER:
 	case CPUFAMILY_AMD_PILEDRIVER:
 	case CPUFAMILY_AMD_STEAMROLLER:
