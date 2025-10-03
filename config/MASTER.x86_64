@@ -75,6 +75,7 @@ options	    CONFIG_MCA			    # Machine Check Architecture	# <config_mca>
 options	    CONFIG_VMX			    # Virtual Machine Extensions	# <config_vmx>
 options	    CONFIG_MTRR			    # Memory Type Range Registers	# <config_mtrr>
 options     CONFIG_MACF_LAZY_VNODE_LABELS   # Turn on labels, don't preallocate
+options     CONFIG_SVM              # Secure Virutal Machine Architecture   # <config_svm>
 
 options     NO_NESTED_PMAP                  # <no_nested_pmap>
 
