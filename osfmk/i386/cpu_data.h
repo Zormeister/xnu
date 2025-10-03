@@ -56,6 +56,10 @@
 #include <i386/vmx/vmx_cpu.h>
 #endif
 
+#if CONFIG_SVM
+#include <i386/svm/svm_cpu.h>
+#endif
+
 #if MONOTONIC
 #include <machine/monotonic.h>
 #endif /* MONOTONIC */
@@ -362,6 +366,10 @@ typedef struct cpu_data {
 	uint64_t                cpu_pcid_last_cr3;
 #endif
 	boolean_t               cpu_rendezvous_in_progress;
+#if CONFIG_SVM
+    svm_cpu_t               cpu_svm;
+#endif
+	x86_core_type_t         cpu_core_type;
 } cpu_data_t;
 
 extern cpu_data_t       *cpu_data_ptr[];

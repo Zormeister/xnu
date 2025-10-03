@@ -197,6 +197,7 @@
  * The CPUID_EXTFEATURE_XXX values define 64-bit values
  * returned in %ecx:%edx to a CPUID request with %eax of 0x80000001:
  */
+#define CPUID_EXTFEATURE_SVM       _Bit(2)
 #define CPUID_EXTFEATURE_SYSCALL   _Bit(11)     /* SYSCALL/sysret */
 #define CPUID_EXTFEATURE_XD        _Bit(20)     /* eXecute Disable */
 
@@ -272,16 +273,16 @@
 #define CPUID_MODEL_KABYLAKE_ULX        0x8E
 #define CPUID_MODEL_KABYLAKE_DT         0x9E
 
+/* Family 16h */
 #define CPUID_MODEL_KABINI              0x01    /* Temash, Kyoto */
 #define CPUID_MODEL_MULLINS             0x30    /* Beema, Steppe Eagle, Crowned Eagle */
 
-#define CPUID_MODEL_SUMMIT_RIDGE        0x01    /* Whitehaven, Naples */
-#define CPUID_MODEL_RAVEN_RIDGE         0x11 
-#define CPUID_MODEL_DALI                0x20
-
-#define CPUID_MODEL_PINNACLE_RIDGE      0x08    /* Colfax */
+/* Family 17h */
+#define CPUID_MODEL_SUMMITRIDGE         0x01    /* Whitehaven, Naples */
+#define CPUID_MODEL_PINNACLERIDGE       0x08    /* Colfax */
+#define CPUID_MODEL_RAVENRIDGE          0x11
 #define CPUID_MODEL_PICASSO             0x18    /* Banded Kestrel */
-
+#define CPUID_MODEL_DALI                0x20
 #define CPUID_MODEL_ROME                0x31    /* Castle Peak */
 #define CPUID_MODEL_RENOIR              0x60    /* Grey Hawk */
 #define CPUID_MODEL_LUCIENNE            0x68
@@ -289,6 +290,7 @@
 #define CPUID_MODEL_VAN_GOGH            0x90
 #define CPUID_MODEL_MENDOCINO           0xA0
 
+/* Family 19h */
 #define CPUID_MODEL_MILAN               0x01
 #define CPUID_MODEL_CHAGALL             0x08
 #define CPUID_MODEL_VERMEER             0x21

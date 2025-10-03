@@ -966,12 +966,12 @@ cpuid_set_cpufamily_amd(i386_cpu_info_t *info_p)
 		break;
 	case 0x17:
 		switch (info_p->cpuid_model) {
-		case CPUID_MODEL_SUMMIT_RIDGE:
-		case CPUID_MODEL_RAVEN_RIDGE:
+		case CPUID_MODEL_SUMMITRIDGE:
+		case CPUID_MODEL_RAVENRIDGE:
 		case CPUID_MODEL_DALI:
 			cpufamily = CPUFAMILY_AMD_ZEN;
 			break;
-		case CPUID_MODEL_PINNACLE_RIDGE:
+		case CPUID_MODEL_PINNACLERIDGE:
 		case CPUID_MODEL_PICASSO:
 			cpufamily = CPUFAMILY_AMD_ZENX;
 			break;
@@ -1220,6 +1220,7 @@ static struct table {
 	{0, 0}
 },
     extfeature_map[] = {
+    {CPUID_EXTFEATURE_SVM, "SVM"},
 	{CPUID_EXTFEATURE_SYSCALL, "SYSCALL"},
 	{CPUID_EXTFEATURE_XD, "XD"},
 	{CPUID_EXTFEATURE_1GBPAGE, "1GBPAGE"},

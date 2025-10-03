@@ -46,6 +46,9 @@
 #if CONFIG_VMX
 #include <i386/vmx/vmx_cpu.h>
 #endif
+#if CONFIG_SVM
+#include <i386/svm/svm_cpu.h>
+#endif
 #include <vm/vm_kern.h>
 #include <kern/timer_call.h>
 
@@ -193,6 +196,10 @@ cpu_machine_init(
 #if CONFIG_VMX
 	/* initialize VMX for every CPU */
 	vmx_cpu_init();
+#endif
+
+#if CONFIG_SVM
+    svm_cpu_init();
 #endif
 }
 
