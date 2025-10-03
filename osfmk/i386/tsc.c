@@ -230,6 +230,7 @@ tsc_init(void)
 
 		break;
 	}
+	case CPUFAMILY_AMD_K10:
 	case CPUFAMILY_AMD_BOBCAT: {
 	    uint64_t pzero = rdmsr64(MSR_AMD64_PSTATE_BASE);
 		uint32_t divisor = bitfield32((uint32_t)pzero, 8, 6);
