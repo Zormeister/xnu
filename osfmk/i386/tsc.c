@@ -94,9 +94,8 @@ uint64_t        tsc_at_boot = 0;
 /* I have absolutely no idea if this works, or if CF8 is even usable here. */
 
 /* The CPB Capabilities are at Device 18H, Function 4H, register 0x15C */
-/* To be more specific: Dev 0x1584, Ven 0x1022 */
-static inline uint32_t
-puma_get_cpbcap(void)
+static uint32_t
+amd_15h_get_cpb_caps(void)
 {
 	i386_ioport_t cfgAdr = 0x3f8;
 	i386_ioport_t cfgDat = 0x3fc;
@@ -231,10 +230,15 @@ tsc_init(void)
 
 		break;
 	}
+	case CPUFAMILY_AMD_BULLDOZER:
+	case CPUFAMILY_AMD_PILEDRIVER:
+	case CPUFAMILY_AMD_STEAMROLLER:
+	case CPUFAMILY_AMD_EXCAVATOR:
+	case CPUFAMILY_AMD_JAGUAR:
 	case CPUFAMILY_AMD_PUMA: {
 		/* The number of boosted states is located at Device 18H, Function 4H, register 0x15C */
-		uint32_t boost_states = bitfield32(puma_get_cpbcap(), 4, 2);
-		uint64_t msr = rdmsr64(MSR_AMD_PSTATE_BASE + boost_states);
+		uint32_t boost_states = bitfield32(amd_15h_get_cpb_caps(), 4, 2);
+		uint64_t msr = rdmsr64(MSR_AMD64_PSTATE_BASE + boost_states);
 
 		uint32_t divisor = bitfield32((uint32_t)msr, 8, 6);
 		uint32_t fid = bitfield32((uint32_t)msr, 5, 0);
@@ -255,13 +259,13 @@ tsc_init(void)
 	case CPUFAMILY_AMD_ZENX:
 	case CPUFAMILY_AMD_ZEN2:
 	case CPUFAMILY_AMD_ZEN3: {
-		uint64_t hwcr = rdmsr64(MSR_AMD_HWCR);
-		uint64_t pstate = rdmsr64(MSR_AMD_PSTATE_BASE);
+		uint64_t hwcr = rdmsr64(MSR_AMD64_HWCR);
+		uint64_t pstate = rdmsr64(MSR_AMD64_PSTATE_BASE);
 
 		/* Lock the TSC to the current P0 in the event that PM ever overrides it. */
-		if (!(hwcr & MSR_AMD_K17_HWCR_LOCKTSC)) {
-			hwcr |= MSR_AMD_K17_HWCR_LOCKTSC;
-			wrmsr64(MSR_AMD_HWCR, hwcr);
+		if (!(hwcr & MSR_AMD64_K17_HWCR_LOCKTSC)) {
+			hwcr |= MSR_AMD64_K17_HWCR_LOCKTSC;
+			wrmsr64(MSR_AMD64_HWCR, hwcr);
 		}
 
 		uint32_t divisor = bitfield32((uint32_t)pstate, 13, 8) / 8;

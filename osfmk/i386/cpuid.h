@@ -273,6 +273,16 @@
 #define CPUID_MODEL_KABYLAKE_ULT        0x8E
 #define CPUID_MODEL_KABYLAKE_ULX        0x8E
 #define CPUID_MODEL_KABYLAKE_DT         0x9E
+/* Family 15h */
+#define CPUID_MODEL_ZAMBEZI             0x01    /* Zurich, Valencia, Interlagos */
+#define CPUID_MODEL_VISHERA             0x02    /* Delhi, Seoul, Warsaw, Abu Dhabi */
+#define CPUID_MODEL_TRINITY             0x10
+#define CPUID_MODEL_RICHLAND            0x13
+#define CPUID_MODEL_KAVERI              0x30    /* Bald Eagle */
+#define CPUID_MODEL_GODAVARI            0x38
+#define CPUID_MODEL_CARRIZO             0x60
+#define CPUID_MODEL_BRISTOLRIDGE        0x65
+#define CPUID_MODEL_STONEYRIDGE         0x70
 
 /* Family 16h */
 #define CPUID_MODEL_KABINI              0x01    /* Temash, Kyoto */

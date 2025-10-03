@@ -956,9 +956,32 @@ cpuid_set_cpufamily_amd(i386_cpu_info_t *info_p)
 	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
 
 	switch (info_p->cpuid_family) {
+	case 0x15:
+        switch (info_p->cpuid_model) {
+        case CPUID_MODEL_ZAMBEZI:
+            cpufamily = CPUFAMILY_AMD_BULLDOZER;
+            break;
+        case CPUID_MODEL_VISHERA:
+        case CPUID_MODEL_TRINITY:
+        case CPUID_MODEL_RICHLAND:
+            cpufamily = CPUFAMILY_AMD_PILEDRIVER;
+            break;
+        case CPUID_MODEL_KAVERI:
+        case CPUID_MODEL_GODAVARI:
+            cpufamily = CPUFAMILY_AMD_STEAMROLLER;
+            break;
+        case CPUID_MODEL_CARRIZO:
+        case CPUID_MODEL_BRISTOLRIDGE:
+        case CPUID_MODEL_STONEYRIDGE:
+            cpufamily = CPUFAMILY_AMD_EXCAVATOR;
+            break;
+        }
+        break;
 	case 0x16:
 		switch (info_p->cpuid_model) {
 		case CPUID_MODEL_KABINI:
+		    cpufamily = CPUFAMILY_AMD_JAGUAR;
+			break;
 		case CPUID_MODEL_MULLINS:
 			cpufamily = CPUFAMILY_AMD_PUMA;
 			break;
@@ -1097,18 +1120,47 @@ cpuid_set_info(void)
 			cpuid_set_cache_info(info_p);
 			break;
 		}
-		case CPUFAMILY_AMD_PUMA: {
+		case CPUFAMILY_AMD_PILEDRIVER: {
 			uint32_t cpuid[4];
+
+			/*
+			 * 15h & 16h w/ CMT ERRATA:
+			 * Treat each 'compute unit' as a single core, and treat the cores as logical processors.
+			 * Hacky solution, I know.
+			 */
 
 			cpuid_set_cache_info(info_p);
 
 			cpuid_fn(0x80000008, cpuid);
-			info_p->cpuid_cores_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
+			info_p->cpuid_logical_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
+			info_p->thread_count = info_p->cpuid_cores_per_package;
+
+			cpuid_fn(0x8000001e, cpuid);
+			info_p->cpuid_cores_per_package = info_p->cpuid_logical_per_package / (bitfield32(cpuid[ebx], 9, 8) + 1);
 			info_p->core_count = info_p->cpuid_cores_per_package;
+			break;
+		}
+		case CPUFAMILY_AMD_STEAMROLLER:
+		case CPUFAMILY_AMD_EXCAVATOR:
+		case CPUFAMILY_AMD_JAGUAR:
+		case CPUFAMILY_AMD_PUMA: {
+			uint32_t cpuid[4];
+
+			/*
+			 * 15h & 16h w/ CMT ERRATA:
+			 * Treat each 'compute unit' as a single core, and treat the cores as logical processors.
+			 * Hacky solution, I know.
+			 */
+
+			cpuid_set_cache_info(info_p);
+
+			cpuid_fn(0x80000008, cpuid);
+			info_p->cpuid_logical_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
+			info_p->thread_count = info_p->cpuid_cores_per_package;
 
 			/* Does AMD define the number of cores per compute unit? */
 			cpuid_fn(0x8000001e, cpuid);
-			info_p->cpuid_logical_per_package = info_p->cpuid_cores_per_package * (bitfield32(cpuid[ebx], 15, 8) + 1);
+			info_p->cpuid_cores_per_package = info_p->cpuid_logical_per_package / (bitfield32(cpuid[ebx], 15, 8) + 1);
 			info_p->thread_count = info_p->cpuid_logical_per_package;
 			break;
 		}
