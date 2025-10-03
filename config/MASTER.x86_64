@@ -48,7 +48,7 @@
 #  PERF_DBG_RELEASE=[ PERF_DBG_BASE ]
 #  PERF_DBG_DEV    =[ PERF_DBG_BASE lock_stats ]
 #  PERF_DBG_DEBUG = [ PERF_DBG_BASE lock_stats ]
-#  MACH_BASE =      [ mach config_kext_basement mdebug ipc_debug config_mca config_vmx config_mtrr config_lapic config_telemetry importance_inheritance config_atm config_coalitions hypervisor config_iosched config_sysdiagnose config_mach_bridge_send_time copyout_shim ]
+#  MACH_BASE =      [ mach config_kext_basement mdebug ipc_debug config_mca config_vmx config_mtrr config_lapic config_telemetry importance_inheritance config_atm config_coalitions hypervisor config_iosched config_sysdiagnose config_mach_bridge_send_time copyout_shim config_svm ]
 #  MACH_RELEASE =   [ MACH_BASE ]
 #  MACH_DEV =       [ MACH_BASE task_zone_info importance_trace config_ledger_interval_max ]
 #  MACH_DEBUG =     [ MACH_BASE task_zone_info importance_trace config_ledger_interval_max importance_debug ]
