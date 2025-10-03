@@ -257,10 +257,16 @@
 #define CPUID_MODEL_HASWELL             0x3C
 #define CPUID_MODEL_HASWELL_EP          0x3F
 #define CPUID_MODEL_HASWELL_ULT         0x45
+#define CPUID_MODEL_BAYTRAIL            0x37
+#define CPUID_MODEL_TANGIER             0x4A
+#define CPUID_MODEL_AVOTON              0x4D
+#define CPUID_MODEL_ANNIEDALE           0x5A
+#define CPUID_MODEL_SOFIA               0x5D
 #define CPUID_MODEL_BROADWELL           0x3D
 #define CPUID_MODEL_BROADWELL_ULX       0x3D
 #define CPUID_MODEL_BROADWELL_ULT       0x3D
 #define CPUID_MODEL_BRYSTALWELL         0x47
+#define CPUID_MODEL_BRASWELL            0x4C
 #define CPUID_MODEL_SKYLAKE             0x4E
 #define CPUID_MODEL_SKYLAKE_ULT         0x4E
 #define CPUID_MODEL_SKYLAKE_ULX         0x4E
@@ -269,10 +275,40 @@
 #define PLATID_XEON_SP_1                0x00
 #define PLATID_XEON_SP_2                0x07
 #define PLATID_MAYBE_XEON_SP            0x01
+#define CPUID_MODEL_APOLLOLAKE          0x5C
+#define CPUID_MODEL_DENVERTON           0x5F
 #define CPUID_MODEL_KABYLAKE            0x8E
 #define CPUID_MODEL_KABYLAKE_ULT        0x8E
 #define CPUID_MODEL_KABYLAKE_ULX        0x8E
 #define CPUID_MODEL_KABYLAKE_DT         0x9E
+#define CPUID_MODEL_GEMINILAKE          0x7A
+#define CPUID_MODEL_ICELAKE             0x7E
+#define CPUID_MODEL_ICELAKE_ULT         0x7E
+#define CPUID_MODEL_ICELAKE_ULX         0x7E
+#define CPUID_MODEL_ICELAKE_DT          0x7D
+#define CPUID_MODEL_ICELAKE_H           0x9F
+#define CPUID_MODEL_ICELAKE_SP          0x6A
+#define CPUID_MODEL_ICELAKE_DE          0x6C
+#define CPUID_MODEL_COMETLAKE_DT        0xA5
+#define CPUID_MODEL_LAKEFIELD           0x8A
+#define CPUID_MODEL_TIGERLAKE_U         0x8C
+#define CPUID_MODEL_TIGERLAKE_H         0x8D
+#define CPUID_MODEL_ELKHARTLAKE         0x96
+#define CPUID_MODEL_ALDERLAKE           0x97
+#define CPUID_MODEL_ALDERLAKE_P         0x9A
+#define CPUID_MODEL_JASPERLAKE          0x9C
+#define CPUID_MODEL_ROCKETLAKE          0xA7
+#define CPUID_MODEL_RAPTORLAKE          0xB7
+#define CPUID_MODEL_RAPTORLAKE_P        0xBA
+#define CPUID_MODEL_SAPPHIRERAPIDS      0x8F
+#define CPUID_MODEL_EMERALDRAPIDS       0xCF
+#define CPUID_MODEL_METEORLAKE_U        0xAA
+#define CPUID_MODEL_METEORLAKE_S        0xAC
+#define CPUID_MODEL_ARROWLAKE_U         0xB5
+#define CPUID_MODEL_ARROWLAKE_H         0xC5
+#define CPUID_MODEL_ARROWLAKE_S         0xC6
+
+
 /* Family 15h */
 #define CPUID_MODEL_ZAMBEZI             0x01    /* Zurich, Valencia, Interlagos */
 #define CPUID_MODEL_VISHERA             0x02    /* Delhi, Seoul, Warsaw, Abu Dhabi */
