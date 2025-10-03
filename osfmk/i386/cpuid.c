@@ -1219,11 +1219,18 @@ cpuid_set_info(void)
 			info_p->cpuid_logical_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
 			info_p->thread_count = info_p->cpuid_cores_per_package;
 
+			/*
+			 * PILEDRIVER ERRATA:
+			 * The CoresPerComputeUnit field is bits 9:8 on Piledriver, for some reason.
+			 * They reverted this in Steamroller.
+			 */
+
 			cpuid_fn(0x8000001e, cpuid);
 			info_p->cpuid_cores_per_package = info_p->cpuid_logical_per_package / (bitfield32(cpuid[ebx], 9, 8) + 1);
 			info_p->core_count = info_p->cpuid_cores_per_package;
 			break;
 		}
+		case CPUFAMILY_AMD_BULLDOZER:
 		case CPUFAMILY_AMD_STEAMROLLER:
 		case CPUFAMILY_AMD_EXCAVATOR:
 		case CPUFAMILY_AMD_JAGUAR:
