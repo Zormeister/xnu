@@ -1185,6 +1185,9 @@ cpuid_set_cpufamily_amd(i386_cpu_info_t *info_p)
 	uint32_t cpufamily = CPUFAMILY_UNKNOWN;
 
 	switch (info_p->cpuid_family) {
+	case 0x0f:
+	    cpufamily = CPUFAMILY_AMD_K8;
+		break;
 	case 0x10:
 	case 0x11:
 	case 0x12:
@@ -1357,6 +1360,7 @@ cpuid_set_info(void)
 			cpuid_set_cache_info(info_p);
 			break;
 		}
+		case CPUFAMILY_AMD_K8:
 		case CPUFAMILY_AMD_K10:
 		case CPUFAMILY_AMD_BOBCAT: {
 		    uint32_t reg[4];
