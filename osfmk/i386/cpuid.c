@@ -229,6 +229,43 @@ cpuid_leaf2_find(uint8_t value)
 	return NULL;
 }
 
+typedef struct cpuid_amd_cache_associativity {
+    uint32_t value;
+    uint32_t actual;
+} cpuid_amd_cache_associativity_t;
+
+static cpuid_amd_cache_associativity_t amd_associativity_table[] = {
+    {0x00, 0x00},
+    {0x01, 0x01},
+    {0x02, 0x02},
+    {0x04, 0x04},
+    {0x06, 0x08},
+    {0x08, 0x10},
+    {0x0A, 0x20},
+    {0x0B, 0x30},
+    {0x0C, 0x40},
+    {0x0D, 0x60},
+    {0x0E, 0x80},
+    {0x0F, 0xFFFF},
+};
+
+#define AMD_ASSOCIATIVITY_NUM sizeof(amd_associativity_table) / \
+                                sizeof(cpuid_amd_cache_associativity_t)
+
+static inline cpuid_amd_cache_associativity_t *
+cpuid_amd_find_associativity(uint32_t raw)
+{
+    unsigned int i;
+
+    for (i = 0; i < AMD_ASSOCIATIVITY_NUM; i++) {
+        if (amd_associativity_table[i].value == raw) {
+            return &amd_associativity_table[i];
+        }
+    }
+
+    return NULL;
+}
+
 /*
  * CPU identification routines.
  */
@@ -315,6 +352,124 @@ cpuid_get_deterministic_cache_leaf(i386_cpu_info_t *info_p)
 	}
 }
 
+/*
+ * Tech doc refs:
+ * - BIOS and Kernel Developer’s Guide for AMD NPT Family 0Fh Processors
+ * - AMD Family 10h Processor BKDG
+ * - AMD Family 11h Processor BKDG
+ * - AMD Family 12h Processor BKDG
+ * - BKDG for AMD Family 14h Models 00h-0Fh Processors
+ */
+static void
+cpuid_set_cache_info_amd_legacy( i386_cpu_info_t * info_p )
+{
+    uint32_t reg[4];
+    uint32_t assoc[LCACHE_MAX];
+    uint32_t linesizes[LCACHE_MAX];
+    uint32_t sets;
+    uint32_t colors;
+    int      i;
+
+    DBG("cpuid_set_cache_info_amd_legacy(%p)\n", info_p);
+
+    /* CPUID Fn8000_0005 TLB and L1 Cache Identifiers */
+    reg[eax] = 0x80000005;
+    cpuid(reg);
+    DBG("cpuid(0x80000005)\n");
+
+    /* L1 Data cache */
+    info_p->cache_sharing[L1D] = 1;
+    info_p->cache_size[L1D] = bitfield32(reg[ecx], 31, 24) * KB;
+    info_p->cache_partitions[L1D] = bitfield32(reg[ecx], 15, 8);
+    linesizes[L1D] = bitfield32(reg[ecx], 7, 0);
+    assoc[L1D] = bitfield32(reg[ecx], 23, 16);
+
+    DBG(" cache_size[L1D]      : %d\n",
+		info_p->cache_size[L1D]);
+	DBG(" cache_sharing[L1D]   : %d\n",
+		info_p->cache_sharing[L1D]);
+	DBG(" cache_partitions[L1D]: %d\n",
+		info_p->cache_partitions[L1D]);
+
+    /* L1 Instruction */
+    info_p->cache_sharing[L1I] = 1;
+    info_p->cache_size[L1I] = bitfield32(reg[edx], 31, 24);
+    info_p->cache_partitions[L1I] = bitfield32(reg[edx], 15, 8) * KB;
+    linesizes[L1I] = bitfield32(reg[edx], 7, 0);
+    assoc[L1I] = bitfield32(reg[ecx], 23, 16);
+
+    DBG(" cache_size[L1I]      : %d\n",
+		info_p->cache_size[L1I]);
+	DBG(" cache_sharing[L1I]   : %d\n",
+		info_p->cache_sharing[L1I]);
+	DBG(" cache_partitions[L1I]: %d\n",
+		info_p->cache_partitions[L1I]);
+
+	reg[eax] = 0x80000006;
+    cpuid(reg);
+    DBG("cpuid(0x80000006)\n");
+
+    /* L2 cache */
+    if (info_p->cpuid_cpufamily == CPUFAMILY_AMD_K8) {
+        info_p->cache_sharing[L2U] = 1;
+        info_p->cache_size[L2U] = bitfield32(reg[ecx], 31, 24);
+        info_p->cache_partitions[L2U] = bitfield32(reg[ecx], 15, 8) * KB;
+        linesizes[L2U] = bitfield32(reg[ecx], 7, 0);
+        assoc[L2U] = cpuid_amd_find_associativity(bitfield32(reg[ecx], 23, 16))->actual;
+    } else {
+        /*
+         * This is the case for:
+         * - K10
+         * - Bobcat
+         *
+         * I haven't validated beyond pre-Bulldozer, as by that point 0x8000001d
+         * was available.
+         */
+        info_p->cache_sharing[L2U] = 1;
+        info_p->cache_size[L2U] = bitfield32(reg[ecx], 31, 16) * KB;
+        info_p->cache_partitions[L2U] = bitfield32(reg[ecx], 11, 8);
+        linesizes[L2U] = bitfield32(reg[ecx], 7, 0);
+        assoc[L2U] = cpuid_amd_find_associativity(bitfield32(reg[ecx], 15, 12))->actual;
+    }
+
+    DBG(" cache_size[L2U]      : %d\n",
+		info_p->cache_size[L2U]);
+	DBG(" cache_sharing[L2U]   : %d\n",
+		info_p->cache_sharing[L2U]);
+	DBG(" cache_partitions[L2U]: %d\n",
+		info_p->cache_partitions[L2U]);
+
+    /* EDX is non-zero if there is L3 cache present. */
+    if (reg[edx]) {
+        /* According to the BKDGs, only true K10 (Family ID 0x0f) has L3 cache? */
+        info_p->cache_sharing[L3U] = info_p->thread_count;
+        info_p->cache_size[L3U] = bitfield32(reg[edx], 31, 18) * (512 * KB);
+        info_p->cache_partitions[L3U] = bitfield32(reg[edx], 11, 8);
+        linesizes[L3U] = bitfield32(reg[edx], 7, 0);
+        assoc[L3U] = cpuid_amd_find_associativity(bitfield32(reg[ecx], 15, 12))->actual;
+
+        DBG(" cache_size[L3U]      : %d\n",
+            info_p->cache_size[L3U]);
+        DBG(" cache_sharing[L3U]   : %d\n",
+            info_p->cache_sharing[L3U]);
+        DBG(" cache_partitions[L3U]: %d\n",
+            info_p->cache_partitions[L3U]);
+    }
+
+    for (i = 0; i < LCACHE_MAX; i++) {
+        sets = info_p->cache_size[i] / (info_p->cache_partitions[i] * linesizes[i] * assoc[i]);
+
+        colors = (sets * linesizes[i]) >> 12;
+        if (colors > vm_cache_geometry_colors) {
+            vm_cache_geometry_colors = colors;
+        }
+    }
+
+    /* Update other fields here */
+    info_p->cpuid_cache_L2_associativity = assoc[L2U];
+    info_p->cpuid_cache_linesize = linesizes[L2U];
+}
+
 /* this function is Intel-specific */
 static void
 cpuid_set_cache_info( i386_cpu_info_t * info_p )
@@ -326,6 +481,7 @@ cpuid_set_cache_info( i386_cpu_info_t * info_p )
 	unsigned int    i;
 	unsigned int    j;
 	boolean_t       cpuid_deterministic_supported = FALSE;
+	uint32_t        cpuid_deterministic_leaf;
 
 	DBG("cpuid_set_cache_info(%p)\n", info_p);
 
@@ -362,13 +518,17 @@ cpuid_set_cache_info( i386_cpu_info_t * info_p )
 	 * Loop over each cache on the processor.
 	 */
 	cpuid_fn(0, cpuid_result);
-	if (cpuid_result[eax] >= 4) {
+	if (info_p->cpuid_vendor_id == CPUID_VENDOR_ID_INTEL &&
+	    cpuid_result[eax] >= 4) {
 		cpuid_deterministic_supported = TRUE;
+		cpuid_deterministic_leaf = 0x4;
 	}
 
 	cpuid_fn(0x80000000, cpuid_result);
-	if (cpuid_result[eax] >= 0x8000001d) {
+	if (info_p->cpuid_vendor_id == CPUID_VENDOR_ID_AMD &&
+	    cpuid_result[eax] >= 0x8000001d) {
 		cpuid_deterministic_supported = TRUE;
+		cpuid_deterministic_leaf = 0x8000001d;
 	}
 
 	for (index = 0; cpuid_deterministic_supported; index++) {
@@ -383,7 +543,7 @@ cpuid_set_cache_info( i386_cpu_info_t * info_p )
 		uint32_t        cache_partitions;
 		uint32_t        colors;
 
-		reg[eax] = cpuid_get_deterministic_cache_leaf(info_p);    /* cpuid cache leaf request */
+		reg[eax] = cpuid_deterministic_leaf;                      /* cpuid cache leaf request */
 		reg[ecx] = index;       	                              /* index starting at 0 */
 		cpuid(reg);
 		DBG("cpuid(4) index=%d eax=0x%x\n", index, reg[eax]);
@@ -481,6 +641,13 @@ cpuid_set_cache_info( i386_cpu_info_t * info_p )
 			}
 		}
 	}
+
+	if (cpuid_deterministic_supported == FALSE &&
+	    info_p->cpuid_vendor_id == CPUID_VENDOR_ID_AMD) {
+		cpuid_set_cache_info_amd_legacy(info_p);
+		linesizes[L2U] = info_p->cpuid_cache_linesize;
+	}
+
 	DBG(" vm_cache_geometry_colors: %d\n", vm_cache_geometry_colors);
 
 	/*
@@ -1194,14 +1361,13 @@ cpuid_set_info(void)
 		case CPUFAMILY_AMD_BOBCAT: {
 		    uint32_t reg[4];
 
-			cpuid_set_cache_info(info_p);
-
 			cpuid_fn(0x80000008, reg);
-			info_p->cpuid_cores_per_package = bitfield32(reg[ecx], 7, 0) + 1;
-			info_p->core_count = info_p->cpuid_cores_per_package;
-
+			info_p->core_count = bitfield32(reg[ecx], 7, 0) + 1;
 			info_p->thread_count = info_p->core_count;
-			info_p->cpuid_logical_per_package = info_p->cpuid_cores_per_package;
+			info_p->cpuid_cores_per_package = info_p->core_count;
+			info_p->cpuid_logical_per_package = info_p->thread_count;
+
+			cpuid_set_cache_info(info_p);
 		    break;
 		}
 		case CPUFAMILY_AMD_PILEDRIVER: {
@@ -1213,11 +1379,8 @@ cpuid_set_info(void)
 			 * Hacky solution, I know.
 			 */
 
-			cpuid_set_cache_info(info_p);
-
 			cpuid_fn(0x80000008, cpuid);
 			info_p->cpuid_logical_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
-			info_p->thread_count = info_p->cpuid_cores_per_package;
 
 			/*
 			 * PILEDRIVER ERRATA:
@@ -1227,7 +1390,11 @@ cpuid_set_info(void)
 
 			cpuid_fn(0x8000001e, cpuid);
 			info_p->cpuid_cores_per_package = info_p->cpuid_logical_per_package / (bitfield32(cpuid[ebx], 9, 8) + 1);
+
+			cpuid_set_cache_info(info_p);
+
 			info_p->core_count = info_p->cpuid_cores_per_package;
+			info_p->thread_count = info_p->cpuid_logical_per_package;
 			break;
 		}
 		case CPUFAMILY_AMD_BULLDOZER:
@@ -1243,15 +1410,15 @@ cpuid_set_info(void)
 			 * Hacky solution, I know.
 			 */
 
-			cpuid_set_cache_info(info_p);
-
 			cpuid_fn(0x80000008, cpuid);
 			info_p->cpuid_logical_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
-			info_p->thread_count = info_p->cpuid_cores_per_package;
 
-			/* Does AMD define the number of cores per compute unit? */
 			cpuid_fn(0x8000001e, cpuid);
 			info_p->cpuid_cores_per_package = info_p->cpuid_logical_per_package / (bitfield32(cpuid[ebx], 15, 8) + 1);
+
+			cpuid_set_cache_info(info_p);
+
+			info_p->core_count = info_p->cpuid_cores_per_package;
 			info_p->thread_count = info_p->cpuid_logical_per_package;
 			break;
 		}
@@ -1261,8 +1428,6 @@ cpuid_set_info(void)
 		case CPUFAMILY_AMD_ZEN3: {
 			uint32_t cpuid[4];
 
-			cpuid_set_cache_info(info_p);
-
 			cpuid_fn(0x80000008, cpuid);
 			info_p->cpuid_logical_per_package = bitfield32(cpuid[ecx], 7, 0) + 1;
 			info_p->thread_count = info_p->cpuid_logical_per_package;
@@ -1270,6 +1435,8 @@ cpuid_set_info(void)
 			cpuid_fn(0x8000001e, cpuid);
 			info_p->cpuid_cores_per_package = info_p->cpuid_logical_per_package / (bitfield32(cpuid[ebx], 15, 8) + 1);
 			info_p->core_count = info_p->cpuid_cores_per_package;
+
+			cpuid_set_cache_info(info_p);
 			break;
 		}
 		default: {
