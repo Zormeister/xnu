@@ -339,19 +339,6 @@ cpuid_do_was(void)
 	do_cwas(cpuid_info(), TRUE);
 }
 
-static uint32_t
-cpuid_get_deterministic_cache_leaf(i386_cpu_info_t *info_p)
-{
-	switch (info_p->cpuid_vendor_id) {
-	case CPUID_VENDOR_ID_INTEL:
-		return 0x4;
-	case CPUID_VENDOR_ID_AMD:
-		return 0x8000001d;
-	default:
-		panic("Unsupported CPU.");
-	}
-}
-
 /*
  * Tech doc refs:
  * - BIOS and Kernel Developer’s Guide for AMD NPT Family 0Fh Processors
