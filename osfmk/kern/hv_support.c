@@ -37,6 +37,10 @@
 #include <i386/vmx/vmx_cpu.h>
 #endif
 
+#if defined(__x86_64__) && CONFIG_SVM
+#include <i386/svm/svm_cpu.h>
+#endif
+
 #include <kern/hv_support.h>
 
 int hv_support_available = 0;
@@ -67,13 +71,35 @@ static int hv_callbacks_enabled = 0;
 static lck_grp_t *hv_support_lck_grp = NULL;
 static lck_mtx_t *hv_support_lck_mtx = NULL;
 
+static boolean_t
+hv_svm_available(void)
+{
+    boolean_t available = FALSE;
+
+#if defined (__x86_64__) && CONFIG_SVM
+    available = svm_hv_support();
+#endif
+
+    return available;
+}
+
+static boolean_t
+hv_vmx_available(void)
+{
+    boolean_t available = FALSE;
+
+#if defined (__x86_64__) && CONFIG_VMX
+    available = vmx_hv_support();
+#endif
+
+    return available;
+}
+
 /* hv_support boot initialization */
 void
 hv_support_init(void)
 {
-#if defined(__x86_64__) && CONFIG_VMX
-	hv_support_available = vmx_hv_support();
-#endif
+	hv_support_available = (hv_vmx_available() || hv_svm_available());
 
 	hv_support_lck_grp = lck_grp_alloc_init("hv_support", LCK_GRP_ATTR_NULL);
 	assert(hv_support_lck_grp);

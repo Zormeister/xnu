@@ -51,28 +51,32 @@ boolean_t svm_hv_support(void);
 #define SVM_FEATURE_NESTED_VIRT   (1 << 15)
 #define SVM_FEATURE_VGIF          (1 << 16)
 
+#define SVM_K10_HSAVE_LIMIT    0xFD000000
+#define SVM_BOBCAT_HSAVE_LIMIT 0xFFFFFF000
+#define SVM_ZEN_HSAVE_LIMIT    0xFFFFFFFFF
 
 typedef struct svm_specs {
-    boolean_t   svm_present;    /* If the host supports SVM */
-    boolean_t   svm_enabled;    /* If the current CPU has SVM enabled */
+    boolean_t   svm_present;      /* If the host supports SVM */
+    boolean_t   svm_configured;   /* If the CPU has SVM enabled configured (HSAVE_PA is non-zero) */
 
-    uint32_t    revision;   /* The revision of SVM as detected from CPUID. */
-    uint32_t    num_asids;      /* The number of available ASIDs */
+    uint32_t    revision;         /* The revision of SVM as detected from CPUID. */
+    uint32_t    num_asids;        /* The number of available ASIDs */
 
-    uint32_t    features;       /* CPUID 8000000a - EDX */
+    uint32_t    features;         /* CPUID 8000000a - EDX */
+
+    uint64_t    highest_hsave_pa; /* The highest address the HSAVE_PA region can be located at. */
 
     boolean_t   inited;
 } svm_specs_t;
 
 typedef struct svm_cpu {
     svm_specs_t     specs;
-    void            *svm_hsave_page; /* Written to HSAVE_PA */
-    void            *svm_vmcb_page;  /* The main VMCB page */
+    boolean_t       locked;
+    void            *hsave_region; /* Written to HSAVE_PA */
 } svm_cpu_t;
 
+void svm_init(void);
 void svm_cpu_init(void);
-
-boolean_t svm_has_feature(uint32_t feature);
 
 /*
  * TODO: rest of the SVM subsytem for a hv to use.

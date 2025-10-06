@@ -189,6 +189,10 @@ extern void cpu_physwindow_init(int);
 #include <i386/vmx/vmx_cpu.h>
 #endif
 
+#if (defined(__i386__) || defined(__x86_64__)) && CONFIG_SVM
+#include <i386/svm/svm_cpu.h>
+#endif
+
 #if CONFIG_DTRACE
 extern void dtrace_early_init(void);
 extern void sdt_early_init(void);
@@ -561,6 +565,10 @@ kernel_bootstrap_thread(void)
 
 #if (defined(__i386__) || defined(__x86_64__)) && CONFIG_VMX
 	vmx_init();
+#endif
+
+#if (defined(__i386__) || defined(__x86_64__)) && CONFIG_SVM
+	svm_init();
 #endif
 
 	kernel_bootstrap_thread_log("ktrace_init");
