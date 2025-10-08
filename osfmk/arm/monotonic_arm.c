@@ -38,6 +38,11 @@ mt_early_init(void)
 {
 }
 
+void
+mt_cpu_init(void)
+{
+}
+
 uint64_t
 mt_core_snap(__unused unsigned int ctr)
 {

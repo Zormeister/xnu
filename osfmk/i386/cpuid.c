@@ -1059,6 +1059,10 @@ cpuid_set_cpufamily_intel(i386_cpu_info_t *info_p)
 		case 23:
 			cpufamily = CPUFAMILY_INTEL_PENRYN;
 			break;
+		case CPUID_MODEL_DIAMONDVILLE:
+		case CPUID_MODEL_SILVERTHORNE:
+			cpufamily = CPUFAMILY_INTEL_BONNELL;
+			break;
 		case CPUID_MODEL_NEHALEM:
 		case CPUID_MODEL_FIELDS:
 		case CPUID_MODEL_DALES:
@@ -1069,6 +1073,11 @@ cpuid_set_cpufamily_intel(i386_cpu_info_t *info_p)
 		case CPUID_MODEL_WESTMERE:
 		case CPUID_MODEL_WESTMERE_EX:
 			cpufamily = CPUFAMILY_INTEL_WESTMERE;
+			break;
+		case CPUID_MODEL_PENWELL:
+		case CPUID_MODEL_CLOVERVIEW:
+		case CPUID_MODEL_CEDARVIEW:
+			cpufamily = CPUFAMILY_INTEL_SALTWELL;
 			break;
 		case CPUID_MODEL_SANDYBRIDGE:
 		case CPUID_MODEL_JAKETOWN:

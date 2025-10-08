@@ -1250,6 +1250,11 @@ mt_early_init(void)
 }
 
 void
+mt_cpu_init(void)
+{
+}
+
+void
 mt_cpu_idle(cpu_data_t *cpu)
 {
 	core_idle(cpu);

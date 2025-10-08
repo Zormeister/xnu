@@ -242,6 +242,8 @@
 #define CPUID_MWAIT_BREAK       _Bit(1) /* interrupts are break events	   */
 
 #define CPUID_MODEL_PENRYN              0x17
+#define CPUID_MODEL_DIAMONDVILLE        0x1C
+#define CPUID_MODEL_SILVERTHORNE        0x26
 #define CPUID_MODEL_NEHALEM             0x1A
 #define CPUID_MODEL_FIELDS              0x1E    /* Lynnfield, Clarksfield */
 #define CPUID_MODEL_DALES               0x1F    /* Havendale, Auburndale */
@@ -249,6 +251,9 @@
 #define CPUID_MODEL_DALES_32NM          0x25    /* Clarkdale, Arrandale */
 #define CPUID_MODEL_WESTMERE            0x2C    /* Gulftown, Westmere-EP/-WS */
 #define CPUID_MODEL_WESTMERE_EX         0x2F
+#define CPUID_MODEL_PENWELL             0x27
+#define CPUID_MODEL_CLOVERVIEW          0x35
+#define CPUID_MODEL_CEDARVIEW           0x36
 #define CPUID_MODEL_SANDYBRIDGE         0x2A
 #define CPUID_MODEL_JAKETOWN            0x2D
 #define CPUID_MODEL_IVYBRIDGE           0x3A
@@ -307,6 +312,9 @@
 #define CPUID_MODEL_ARROWLAKE_U         0xB5
 #define CPUID_MODEL_ARROWLAKE_H         0xC5
 #define CPUID_MODEL_ARROWLAKE_S         0xC6
+#define CPUID_MODEL_GRANITERAPIDS       0xAD
+#define CPUID_MODEL_GRANITERAPIDS_D     0xAE
+#define CPUID_MODEL_SIERRAFOREST        0xAF
 
 
 /* Family 15h */

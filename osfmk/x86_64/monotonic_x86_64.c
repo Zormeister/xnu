@@ -207,7 +207,7 @@ core_up(cpu_data_t *cpu)
 
 	mtc = &cpu->cpu_monotonic;
 
-	for (int i = 0; i < MT_CORE_NFIXED; i++) {
+	for (int i = 0; i < mtc->internal.mt_pmc_count; i++) {
 		mt_core_set_snap(i, mtc->mtc_snaps[i]);
 	}
 	enable_counters();
@@ -251,7 +251,7 @@ mt_check_for_pmi(struct mt_cpu *mtc, x86_saved_state_t *state)
 		disable_counters();
 	}
 
-	for (unsigned int i = 0; i < MT_CORE_NFIXED; i++) {
+	for (unsigned int i = 0; i < mtc->internal.mt_pmc_count; i++) {
 		if (status & CTR_FIX_POS(i)) {
 			uint64_t prior = CTR_MAX - mtc->mtc_snaps[i];
 			assert(prior <= CTR_MAX);
@@ -305,7 +305,7 @@ mt_microstackshot_start_remote(__unused void *arg)
 
 	wrmsr64(FIXED_CTR_CTRL, FIXED_CTR_CTRL_INIT);
 
-	for (int i = 0; i < MT_CORE_NFIXED; i++) {
+	for (int i = 0; i < mtc->internal.mt_pmc_count; i++) {
 		uint64_t delta = mt_mtc_update_count(mtc, i);
 		mtc->mtc_counts[i] += delta;
 		mt_core_set_snap(i, mt_core_reset_values[i]);
@@ -344,6 +344,30 @@ mt_early_init(void)
 	if (info->cpuid_arch_perf_leaf.version >= 2) {
 		lapic_set_pmi_func((i386_intr_func_t)mt_pmi_x86_64);
 		mt_core_supported = true;
+	}
+}
+
+static uint32_t mt_cached_pmc_count;
+
+void
+mt_cpu_init(void)
+{
+	struct mt_cpu *cpu = mt_cur_cpu();
+
+	if (mt_cached_pmc_count) {
+		cpu->internal.mt_pmc_count = mt_cached_pmc_count;
+	} else {
+		i386_cpu_info_t *info = cpuid_info();
+
+		switch (info->cpuid_cpufamily) {
+			case CPUFAMILY_INTEL_SILVERMONT:
+			case CPUFAMILY_INTEL_AIRMONT:
+				mt_cached_pmc_count = 1;
+				cpu->internal.mt_pmc_count = mt_cached_pmc_count;
+			default:
+				mt_cached_pmc_count = 3;
+				cpu->internal.mt_pmc_count = mt_cached_pmc_count;
+		}
 	}
 }
 

@@ -154,6 +154,11 @@ int mt_microstackshot_start(unsigned int ctr, uint64_t period, mt_pmi_fn fn,
     void *ctx);
 int mt_microstackshot_stop(void);
 
+/*
+ * Ran once per-processor.
+ */
+void mt_cpu_init(void);
+
 __END_DECLS
 
 #endif /* MACH_KERNEL_PRIVATE */

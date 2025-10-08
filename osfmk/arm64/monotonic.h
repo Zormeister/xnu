@@ -55,6 +55,10 @@ __BEGIN_DECLS
 #define MT_CORE_NFIXED 2
 #define MT_CORE_MAXVAL ((UINT64_C(1) << 48) - 1)
 
+struct mt_cpu_internal {
+    unsigned int __reserved;
+};
+
 __END_DECLS
 
 #endif /* KERNEL_PRIVATE */

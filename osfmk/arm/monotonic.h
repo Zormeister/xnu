@@ -34,4 +34,8 @@
 #define MT_CORE_CYCLES 0
 #define MT_CORE_MAXVAL UINT32_MAX
 
+struct mt_cpu_internal {
+    unsigned int __reserved;
+};
+
 #endif /* !defined(ARM_MONOTONIC_H) */

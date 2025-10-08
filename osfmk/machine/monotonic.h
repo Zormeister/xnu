@@ -53,6 +53,7 @@ struct mt_cpu {
 	 * Whether this CPU should be using PMCs.
 	 */
 	bool mtc_active;
+	struct mt_cpu_internal mtc_internal;
 };
 
 struct mt_thread {
