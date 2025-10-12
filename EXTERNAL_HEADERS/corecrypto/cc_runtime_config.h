@@ -36,8 +36,8 @@
     #define CC_HAS_AESNI() ((cpuid_features() & CPUID_FEATURE_AES) != 0)
     #define CC_HAS_SupplementalSSE3() ((cpuid_features() & CPUID_FEATURE_SSSE3) != 0)
     #define CC_HAS_AVX1() ((cpuid_features() & CPUID_FEATURE_AVX1_0) != 0)
-    #define CC_HAS_AVX2() ((cpuid_info()->cpuid_leaf7_features & CPUID_LEAF7_FEATURE_AVX2) != 0)
-    #define CC_HAS_AVX512_AND_IN_KERNEL()    ((cpuid_info()->cpuid_leaf7_features & CPUID_LEAF7_FEATURE_AVX512F) !=0)
+    #define CC_HAS_AVX2() ((cpuid_leaf7_features() & CPUID_LEAF7_FEATURE_AVX2) != 0)
+    #define CC_HAS_AVX512_AND_IN_KERNEL()    ((cpuid_leaf7_features() & CPUID_LEAF7_FEATURE_AVX512F) !=0)
 
 #elif CC_XNU_KERNEL_AVAILABLE
     #include <System/i386/cpu_capabilities.h>

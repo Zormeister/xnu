@@ -53,5 +53,33 @@ struct intel_ucupdate {
 	uint32_t data;
 };
 
+struct amd_ucupdate {
+	uint32_t data_code;
+	uint32_t update_revision; /* patch_id */
+	uint16_t mc_patch_data_id;
+	uint8_t  mc_patch_data_len;
+	uint8_t  init_flag;
+	uint32_t mc_patch_data_checksum;
+	uint32_t nb_device_id;
+	uint32_t sb_device_id;
+	uint16_t cpu_revision_id;
+	uint8_t  nb_revision_id;
+	uint8_t  sb_revision_id;
+	uint8_t  bios_api_rev;
+
+	uint8_t  reserved0;
+	uint8_t  reserved1;
+	uint8_t  reserved2;
+
+	uint32_t match_reg0;
+	uint32_t match_reg1;
+	uint32_t match_reg2;
+	uint32_t match_reg3;
+	uint32_t match_reg4;
+	uint32_t match_reg5;
+	uint32_t match_reg6;
+	uint32_t match_reg7;
+};
+
 extern int ucode_interface(uint64_t addr);
 extern void ucode_update_wake_and_apply_cpu_was(void);

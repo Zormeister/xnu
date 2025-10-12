@@ -195,10 +195,15 @@
 #define CPUID_LEAF7_EXTFEATURE_SSBD             _Bit(31)        /* Speculative Store Bypass Disable */
 
 /*
+ * Leaf 7, subleaf 1 features
+ */
+#define CPUID_LEAF7_SL1_FEATURE_SHA512          _Bit(0)         /* SHA-512 instructions */
+
+/*
  * The CPUID_EXTFEATURE_XXX values define 64-bit values
  * returned in %ecx:%edx to a CPUID request with %eax of 0x80000001:
  */
-#define CPUID_EXTFEATURE_SVM       _Bit(2)
+#define CPUID_EXTFEATURE_SVM       _Bit(2)      /* Secure Virtual Machine Architecture */
 #define CPUID_EXTFEATURE_SYSCALL   _Bit(11)     /* SYSCALL/sysret */
 #define CPUID_EXTFEATURE_XD        _Bit(20)     /* eXecute Disable */
 
@@ -295,6 +300,7 @@
 #define CPUID_MODEL_ICELAKE_SP          0x6A
 #define CPUID_MODEL_ICELAKE_DE          0x6C
 #define CPUID_MODEL_COMETLAKE_DT        0xA5
+#define CPUID_MODEL_JACOBSVILLE         0x86
 #define CPUID_MODEL_LAKEFIELD           0x8A
 #define CPUID_MODEL_TIGERLAKE_U         0x8C
 #define CPUID_MODEL_TIGERLAKE_H         0x8D
@@ -315,6 +321,8 @@
 #define CPUID_MODEL_GRANITERAPIDS       0xAD
 #define CPUID_MODEL_GRANITERAPIDS_D     0xAE
 #define CPUID_MODEL_SIERRAFOREST        0xAF
+
+#define CPUID_MODEL_DIAMONDRAPIDS       0x01
 
 
 /* Family 15h */
@@ -342,7 +350,7 @@
 #define CPUID_MODEL_RENOIR              0x60    /* Grey Hawk */
 #define CPUID_MODEL_LUCIENNE            0x68
 #define CPUID_MODEL_MATISSE             0x71
-#define CPUID_MODEL_VAN_GOGH            0x90
+#define CPUID_MODEL_VANGOGH             0x90
 #define CPUID_MODEL_MENDOCINO           0xA0
 
 /* Family 19h */
@@ -564,8 +572,8 @@ typedef struct {
 	cpuid_thermal_leaf_t    *cpuid_thermal_leafp;
 	cpuid_arch_perf_leaf_t  *cpuid_arch_perf_leafp;
 	cpuid_xsave_leaf_t      *cpuid_xsave_leafp;
-	uint64_t                cpuid_leaf7_features;
-	uint64_t                cpuid_leaf7_extfeatures;
+	uint64_t                cpuid_leaf7_features[2];
+	uint64_t                cpuid_leaf7_extfeatures[2];
 	cpuid_tsc_leaf_t        cpuid_tsc_leaf;
 	cpuid_xsave_leaf_t      cpuid_xsave_leaf[2];
 	cpuid_ext_topology_leaf_t cpuid_ext_topo_leaf;
