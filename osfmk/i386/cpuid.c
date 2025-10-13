@@ -999,8 +999,8 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 		 * Leaf7 Features:
 		 */
 		cpuid_fn(0x7, reg);
-		info_p->cpuid_leaf7_features[0] = quad(reg[ecx], reg[ebx]);
-		info_p->cpuid_leaf7_extfeatures[0] = reg[edx];
+		info_p->cpuid_leaf7_features = quad(reg[ecx], reg[ebx]);
+		info_p->cpuid_leaf7_extfeatures = reg[edx];
 
 		DBG(" Feature Leaf7:\n");
 		DBG("  EBX           : 0x%x\n", reg[ebx]);
@@ -1336,7 +1336,7 @@ cpuid_set_info(void)
 	if (enable_x86_64h &&
 	    ((info_p->cpuid_features & CPUID_X86_64_H_FEATURE_SUBSET) == CPUID_X86_64_H_FEATURE_SUBSET) &&
 	    ((info_p->cpuid_extfeatures & CPUID_X86_64_H_EXTFEATURE_SUBSET) == CPUID_X86_64_H_EXTFEATURE_SUBSET) &&
-	    ((info_p->cpuid_leaf7_features[0] & CPUID_X86_64_H_LEAF7_FEATURE_SUBSET) == CPUID_X86_64_H_LEAF7_FEATURE_SUBSET)) {
+	    ((info_p->cpuid_leaf7_features & CPUID_X86_64_H_LEAF7_FEATURE_SUBSET) == CPUID_X86_64_H_LEAF7_FEATURE_SUBSET)) {
 		info_p->cpuid_cpu_subtype = CPU_SUBTYPE_X86_64_H;
 	} else {
 		info_p->cpuid_cpu_subtype = CPU_SUBTYPE_X86_ARCH1;
@@ -1787,13 +1787,13 @@ cpuid_extfeatures(void)
 uint64_t
 cpuid_leaf7_features(void)
 {
-	return cpuid_info()->cpuid_leaf7_features[0];
+	return cpuid_info()->cpuid_leaf7_features;
 }
 
 uint64_t
 cpuid_leaf7_extfeatures(void)
 {
-	return cpuid_info()->cpuid_leaf7_extfeatures[0];
+	return cpuid_info()->cpuid_leaf7_extfeatures;
 }
 
 static i386_vmm_info_t  *_cpuid_vmm_infop = NULL;
@@ -1897,7 +1897,7 @@ cpuid_wa_required(cpu_wa_e wa)
 	switch (wa) {
 	case CPU_INTEL_SEGCHK:
 		/* First, check to see if this CPU requires the workaround */
-		if ((info_p->cpuid_leaf7_extfeatures[0] & CPUID_LEAF7_EXTFEATURE_ACAPMSR) != 0) {
+		if ((info_p->cpuid_leaf7_extfeatures & CPUID_LEAF7_EXTFEATURE_ACAPMSR) != 0) {
 			/* We have ARCHCAP, so check it for either RDCL_NO or MDS_NO */
 			uint64_t archcap_msr = rdmsr64(MSR_IA32_ARCH_CAPABILITIES);
 			if ((archcap_msr & (MSR_IA32_ARCH_CAPABILITIES_RDCL_NO | MSR_IA32_ARCH_CAPABILITIES_MDS_NO)) != 0) {
@@ -1906,7 +1906,7 @@ cpuid_wa_required(cpu_wa_e wa)
 			}
 		}
 
-		if ((info_p->cpuid_leaf7_extfeatures[0] & CPUID_LEAF7_EXTFEATURE_MDCLEAR) != 0) {
+		if ((info_p->cpuid_leaf7_extfeatures & CPUID_LEAF7_EXTFEATURE_MDCLEAR) != 0) {
 			return CWA_ON;
 		}
 
@@ -1923,8 +1923,8 @@ cpuid_wa_required(cpu_wa_e wa)
 		 * Otherwise, if the CPU supports both TSX(HLE) and FORCE_ABORT, return that
 		 * the workaround should be enabled.
 		 */
-		if ((info_p->cpuid_leaf7_extfeatures[0] & CPUID_LEAF7_EXTFEATURE_TSXFA) != 0 &&
-		    (info_p->cpuid_leaf7_features[0] & CPUID_LEAF7_FEATURE_RTM) != 0) {
+		if ((info_p->cpuid_leaf7_extfeatures & CPUID_LEAF7_EXTFEATURE_TSXFA) != 0 &&
+		    (info_p->cpuid_leaf7_features & CPUID_LEAF7_FEATURE_RTM) != 0) {
 			return CWA_ON;
 		}
 		break;

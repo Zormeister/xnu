@@ -572,12 +572,13 @@ typedef struct {
 	cpuid_thermal_leaf_t    *cpuid_thermal_leafp;
 	cpuid_arch_perf_leaf_t  *cpuid_arch_perf_leafp;
 	cpuid_xsave_leaf_t      *cpuid_xsave_leafp;
-	uint64_t                cpuid_leaf7_features[2];
-	uint64_t                cpuid_leaf7_extfeatures[2];
+	uint64_t                cpuid_leaf7_features;
+	uint64_t                cpuid_leaf7_extfeatures;
 	cpuid_tsc_leaf_t        cpuid_tsc_leaf;
 	cpuid_xsave_leaf_t      cpuid_xsave_leaf[2];
 	cpuid_ext_topology_leaf_t cpuid_ext_topo_leaf;
 	uint32_t                cpuid_vendor_id;
+	uint64_t				cpuid_leaf7_sl1_features;
 } i386_cpu_info_t;
 
 #if defined(MACH_KERNEL_PRIVATE) && !defined(ASSEMBLER)
