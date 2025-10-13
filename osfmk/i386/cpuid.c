@@ -1006,6 +1006,13 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 		DBG("  EBX           : 0x%x\n", reg[ebx]);
 		DBG("  ECX           : 0x%x\n", reg[ecx]);
 		DBG("  EDX           : 0x%x\n", reg[edx]);
+
+		if (reg[eax] >= 1) {
+			reg[eax] = 0x7;
+			reg[ecx] = 1;
+			cpuid(reg);
+			info_p->cpuid_leaf7_sl1_features = quad(reg[eax], reg[ebx]);
+		}
 	}
 
 	if (info_p->cpuid_max_basic >= 0x15) {
@@ -1598,12 +1605,18 @@ static struct table {
 	{CPUID_LEAF7_FEATURE_VPCLMULQDQ, "VPCLMULQDQ"},
 	{CPUID_LEAF7_FEATURE_AVX512VNNI, "AVX512VNNI"},
 	{CPUID_LEAF7_FEATURE_AVX512BITALG, "AVX512BITALG"},
+	{CPUID_LEAF7_FEATURE_TME, "TME"},
 	{CPUID_LEAF7_FEATURE_AVX512VPCDQ, "AVX512VPOPCNTDQ"},
+	{CPUID_LEAF7_FEATURE_LA57, "LA57"},
 	{CPUID_LEAF7_FEATURE_RDPID, "RDPID"},
+	{CPUID_LEAF7_FEATURE_KEYLOCKER, "KEYLOCKER"},
+	{CPUID_LEAF7_FEATURE_BUSLOCKDETECT, "BUSLOCKDETECT"},
 	{CPUID_LEAF7_FEATURE_CLDEMOTE, "CLDEMOTE"},
 	{CPUID_LEAF7_FEATURE_MOVDIRI, "MOVDIRI"},
 	{CPUID_LEAF7_FEATURE_MOVDIRI64B, "MOVDIRI64B"},
+	{CPUID_LEAF7_FEATURE_ENQCMD, "ENQCMD"},
 	{CPUID_LEAF7_FEATURE_SGXLC, "SGXLC"},
+	{CPUID_LEAF7_FEATURE_PKS, "PKS"},
 	{0, 0}
 },
     leaf7_extfeature_map[] = {
@@ -1794,6 +1807,12 @@ uint64_t
 cpuid_leaf7_extfeatures(void)
 {
 	return cpuid_info()->cpuid_leaf7_extfeatures;
+}
+
+uint64_t
+cpuid_leaf7_sl1_features(void)
+{
+	return cpuid_info()->cpuid_leaf7_sl1_features;
 }
 
 static i386_vmm_info_t  *_cpuid_vmm_infop = NULL;

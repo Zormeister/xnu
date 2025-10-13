@@ -160,23 +160,29 @@
 #define CPUID_LEAF7_FEATURE_AVX512BW   _Bit(30)   /* AVX512BW instructions */
 #define CPUID_LEAF7_FEATURE_AVX512VL   _Bit(31)   /* AVX512VL instructions */
 
-#define CPUID_LEAF7_FEATURE_PREFETCHWT1  _HBit(0)  /* Prefetch Write/T1 hint */
-#define CPUID_LEAF7_FEATURE_AVX512VBMI   _HBit(1)  /* AVX512VBMI instructions */
-#define CPUID_LEAF7_FEATURE_UMIP         _HBit(2)  /* User Mode Instruction Prevention */
-#define CPUID_LEAF7_FEATURE_PKU          _HBit(3)  /* Protection Keys for Usermode */
-#define CPUID_LEAF7_FEATURE_OSPKE        _HBit(4)  /* OS has enabled PKE */
-#define CPUID_LEAF7_FEATURE_WAITPKG      _HBit(5)  /* WAITPKG instructions */
-#define CPUID_LEAF7_FEATURE_GFNI         _HBit(8)  /* Galois Field New Instructions */
-#define CPUID_LEAF7_FEATURE_VAES         _HBit(9)  /* Vector-encoded AES */
-#define CPUID_LEAF7_FEATURE_VPCLMULQDQ   _HBit(10) /* Vector Carryless-multiply */
-#define CPUID_LEAF7_FEATURE_AVX512VNNI   _HBit(11) /* AVX512 Vector Neural Net Instructions */
-#define CPUID_LEAF7_FEATURE_AVX512BITALG _HBit(12) /* AVX512 VPOPCNT{B,W} and VPSHUFBITQMB */
-#define CPUID_LEAF7_FEATURE_AVX512VPCDQ  _HBit(14) /* AVX512 VPOPCNTDQ instruction */
-#define CPUID_LEAF7_FEATURE_RDPID        _HBit(22) /* RDPID and IA32_TSC_AUX */
-#define CPUID_LEAF7_FEATURE_CLDEMOTE     _HBit(25) /* Cache line demote */
-#define CPUID_LEAF7_FEATURE_MOVDIRI      _HBit(27) /* MOVDIRI instruction */
-#define CPUID_LEAF7_FEATURE_MOVDIRI64B   _HBit(28) /* MOVDIRI64B instruction */
-#define CPUID_LEAF7_FEATURE_SGXLC        _HBit(30) /* SGX Launch Configuration */
+#define CPUID_LEAF7_FEATURE_PREFETCHWT1   _HBit(0)  /* Prefetch Write/T1 hint */
+#define CPUID_LEAF7_FEATURE_AVX512VBMI    _HBit(1)  /* AVX512VBMI instructions */
+#define CPUID_LEAF7_FEATURE_UMIP          _HBit(2)  /* User Mode Instruction Prevention */
+#define CPUID_LEAF7_FEATURE_PKU           _HBit(3)  /* Protection Keys for Usermode */
+#define CPUID_LEAF7_FEATURE_OSPKE         _HBit(4)  /* OS has enabled PKE */
+#define CPUID_LEAF7_FEATURE_WAITPKG       _HBit(5)  /* WAITPKG instructions */
+#define CPUID_LEAF7_FEATURE_GFNI          _HBit(8)  /* Galois Field New Instructions */
+#define CPUID_LEAF7_FEATURE_VAES          _HBit(9)  /* Vector-encoded AES */
+#define CPUID_LEAF7_FEATURE_VPCLMULQDQ    _HBit(10) /* Vector Carryless-multiply */
+#define CPUID_LEAF7_FEATURE_AVX512VNNI    _HBit(11) /* AVX512 Vector Neural Net Instructions */
+#define CPUID_LEAF7_FEATURE_AVX512BITALG  _HBit(12) /* AVX512 VPOPCNT{B,W} and VPSHUFBITQMB */
+#define CPUID_LEAF7_FEATURE_TME			  _HBit(13) /* TME */
+#define CPUID_LEAF7_FEATURE_AVX512VPCDQ   _HBit(14) /* AVX512 VPOPCNTDQ instruction */
+#define CPUID_LEAF7_FEATURE_LA57          _HBit(16) /* 57-bit linear addresses + 5-layer page map */
+#define CPUID_LEAF7_FEATURE_RDPID         _HBit(22) /* RDPID and IA32_TSC_AUX */
+#define CPUID_LEAF7_FEATURE_KEYLOCKER     _HBit(23) /* Intel Key Locker instructions */
+#define CPUID_LEAF7_FEATURE_BUSLOCKDETECT _HBit(24) /* Bus Lock Detect */
+#define CPUID_LEAF7_FEATURE_CLDEMOTE      _HBit(25) /* Cache line demote */
+#define CPUID_LEAF7_FEATURE_MOVDIRI       _HBit(27) /* MOVDIRI instruction */
+#define CPUID_LEAF7_FEATURE_MOVDIRI64B    _HBit(28) /* MOVDIRI64B instruction */
+#define CPUID_LEAF7_FEATURE_ENQCMD        _HBit(29) /* Enqueue Stores */
+#define CPUID_LEAF7_FEATURE_SGXLC         _HBit(30) /* SGX Launch Configuration */
+#define CPUID_LEAF7_FEATURE_PKS			  _HBit(31) /* Protection Keys for Supervisor-Mode Pages */
 
 /*
  * Values in EDX returned by CPUID Leaf 7, subleaf 0
@@ -198,6 +204,9 @@
  * Leaf 7, subleaf 1 features
  */
 #define CPUID_LEAF7_SL1_FEATURE_SHA512          _Bit(0)         /* SHA-512 instructions */
+#define CPUID_LEAF7_SL1_FEATURE_SM3             _Bit(1)         /* SM3 instructions */
+#define CPUID_LEAF7_SL1_FEATURE_SM4             _Bit(2)         /* SM4 instructions */
+#define CPUID_LEAF7_SL1_FEATURE_RAOINT          _Bit(3)         /* RAO-INT instructions */
 
 /*
  * The CPUID_EXTFEATURE_XXX values define 64-bit values
@@ -655,6 +664,7 @@ extern uint64_t         cpuid_features(void);
 extern uint64_t         cpuid_extfeatures(void);
 extern uint64_t         cpuid_leaf7_features(void);
 extern uint64_t         cpuid_leaf7_extfeatures(void);
+extern uint64_t         cpuid_leaf7_sl1_features(void);
 extern uint32_t         cpuid_family(void);
 extern uint32_t         cpuid_cpufamily(void);
 

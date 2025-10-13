@@ -389,6 +389,8 @@ commpage_init_cpu_capabilities( void )
 		    CPUID_LEAF7_FEATURE_AVX512BITALG);
 		setif(bits, kHasAVX512VPOPCNTDQ, cpuid_leaf7_features() &
 		    CPUID_LEAF7_FEATURE_AVX512VPCDQ);
+		setif(bits, kHasSHA512, cpuid_leaf7_sl1_features() &
+		    CPUID_LEAF7_SL1_FEATURE_SHA512);
 	}
 
 	uint64_t misc_enable = 1ULL;
