@@ -713,4 +713,14 @@ __END_DECLS
 
 #define MSR_AMD64_VM_LOCK_KEY                   0xC0010118
 
+/*
+ * SAMUEL ZORMEISTER:
+ * This is a bit of a thought experiment, I'll probably revert it if the CI fails.
+ */
+#if __apple_clang__ >= 150000 || __clang__ >= 140000
+#define CONFIG_LARGE_CPUMASK 1
+#else
+#define CONFIG_LARGE_CPUMASK 0
+#endif
+
 #endif  /* _I386_PROC_REG_H_ */

@@ -67,7 +67,11 @@
 #include <i386/mp_events.h>
 #include <machine/limits.h>
 
+#if CONFIG_LARGE_CPUMASK
+#define MAX_CPUS        512             /* 8 * sizeof(cpumask_t) */
+#else
 #define MAX_CPUS        64              /* 8 * sizeof(cpumask_t) */
+#endif
 
 #ifndef ASSEMBLER
 #include <stdint.h>
@@ -154,7 +158,13 @@ typedef enum    {KDP_XCPU_NONE = 0xffff, KDP_CURRENT_LCPU = 0xfffe} kdp_cpu_t;
 #endif
 
 typedef uint32_t cpu_t;
+
+#if CONFIG_LARGE_CPUMASK
+typedef volatile _BitInt(512) cpumask_t;
+#warning "CONFIG_LARGE_CPUMASK is ENGAGED, this is UNTESTED behaviour!"
+#else
 typedef volatile uint64_t cpumask_t;
+#endif
 
 static_assert(sizeof(cpumask_t) * CHAR_BIT >= MAX_CPUS, "cpumask_t bitvector is too small for current MAX_CPUS value");
 
