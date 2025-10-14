@@ -69,7 +69,7 @@ lck_ticket_init(lck_ticket_t *tlock)
 	/* Current ticket size limit--tickets can be trivially expanded
 	 * to 16-bits if needed
 	 */
-	static_assert(MAX_CPUS < 256);
+	static_assert(MAX_CPUS < 65536);
 
 	__assert_only   lck_ticket_internal *tlocki = &tlock->tu;
 	/* Verify alignment */

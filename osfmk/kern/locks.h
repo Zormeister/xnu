@@ -98,10 +98,10 @@ extern  void                    lck_attr_cleardebug(
 #ifdef  XNU_KERNEL_PRIVATE
 
 typedef union {
-	uint16_t tcurnext;
+	uint32_t tcurnext;
 	struct {
-		uint8_t cticket;
-		uint8_t nticket;
+		uint16_t cticket;
+		uint16_t nticket;
 	};
 } lck_ticket_internal;
 
