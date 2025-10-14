@@ -1278,7 +1278,7 @@ mp_cpus_call_wait(boolean_t     intrs_enabled,
 				(uint64_t)(((cpus_unresponsive) >> 255) & 0xFFFFFFFFFFFFFFFF),
 				(uint64_t)(((cpus_unresponsive) >> 191) & 0xFFFFFFFFFFFFFFFF),
 				(uint64_t)(((cpus_unresponsive) >> 127) & 0xFFFFFFFFFFFFFFFF),
-				(uint64_t)(((cpus_unresponsive) >>  63) & 0xFFFFFFFFFFFFFFFF);
+				(uint64_t)(((cpus_unresponsive) >>  63) & 0xFFFFFFFFFFFFFFFF));
 		}
 	}
 }
