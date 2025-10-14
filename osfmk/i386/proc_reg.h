@@ -717,7 +717,7 @@ __END_DECLS
  * SAMUEL ZORMEISTER:
  * This is a bit of a thought experiment, I'll probably revert it if the CI fails.
  */
-#if __apple_clang__ >= 150000 || __clang__ >= 140000
+#if __apple_build_version__ >= 15000000 || __clang_major__ >= 14
 #define CONFIG_LARGE_CPUMASK 1
 #else
 #define CONFIG_LARGE_CPUMASK 0
