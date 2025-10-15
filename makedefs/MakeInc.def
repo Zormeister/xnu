@@ -512,7 +512,7 @@ KERNEL_STATIC_BASE      = $(shell printf "0x%016x" \
 KERNEL_HIB_SECTION_BASE = $(shell printf "0x%016x" \
 			  $$[ $(KERNEL_STATIC_BASE) + $(KERNEL_STATIC_SLIDE) ])
 KERNEL_TEXT_BASE        = $(shell printf "0x%016x" \
-			  $$[ $(KERNEL_HIB_SECTION_BASE) + 0x100000 ])
+			  $$[ $(KERNEL_HIB_SECTION_BASE) + 0x600000 ])
 
 LDFLAGS_KERNEL_RELEASEX86_64 = \
 	-Wl,-pie \
