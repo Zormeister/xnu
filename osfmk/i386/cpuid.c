@@ -1030,7 +1030,7 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 			reg[ecx] = 1;
 			cpuid(reg);
 			info_p->cpuid_leaf7_sl1_features = quad(reg[eax], reg[ebx]);
-			info_p->cpuid_leaf7_sl1_features = quad(reg[ecx], reg[edx]);
+			info_p->cpuid_leaf7_sl1_extfeatures = quad(reg[ecx], reg[edx]);
 		}
 
 		/* sub-leaf 2 exists. god dang it. */
