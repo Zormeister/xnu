@@ -87,6 +87,7 @@
 #define kHasAVX512VPOPCNTDQ     0x0002000000000000ULL
 #define kHasSHA                 0x0004000000000000ULL
 #define kHasSHA512              0x0008000000000000ULL
+#define kHasGFNI                0x0010000000000000ULL
 
 #define kIsTranslated           0x4000000000000000ULL
 

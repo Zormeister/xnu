@@ -289,7 +289,6 @@ static void
 do_cwas(i386_cpu_info_t *cpuinfo, boolean_t on_slave)
 {
 	extern int force_thread_policy_tecs;
-	cwa_classifier_e wa_reqd;
 
 	/*
 	 * Workaround for reclaiming perf counter 3 due to TSX memory ordering erratum.
@@ -337,6 +336,25 @@ void
 cpuid_do_was(void)
 {
 	do_cwas(cpuid_info(), TRUE);
+}
+
+static void
+cpuid_set_keylocker_info( i386_cpu_info_t * info_p )
+{
+	uint32_t reg[4];
+
+	cpuid_fn(0x19, reg);
+
+	info_p->cpuid_keylocker_leaf.kle_cpl0_only = 0 != (reg[eax] & 0x1);
+	info_p->cpuid_keylocker_leaf.kle_no_encrypt = 0 != (reg[eax] & 0x2);
+	info_p->cpuid_keylocker_leaf.kle_no_decrypt = 0 != (reg[eax] & 0x4);
+
+	info_p->cpuid_keylocker_leaf.kle_enabled = 0 != (reg[ebx] & 0x1);
+	info_p->cpuid_keylocker_leaf.kle_supported = 0 != (reg[ebx] & 0x4);
+	info_p->cpuid_keylocker_leaf.kle_iwkey_msrs = 0 != (reg[ebx] & 0x10);
+
+	info_p->cpuid_keylocker_leaf.kle_no_backup_supported = 0 != (reg[ecx] & 0x1);
+	info_p->cpuid_keylocker_leaf.kle_random_iwkey_supported = 0 != (reg[ecx] & 0x2);
 }
 
 /*
@@ -1012,7 +1030,10 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 			reg[ecx] = 1;
 			cpuid(reg);
 			info_p->cpuid_leaf7_sl1_features = quad(reg[eax], reg[ebx]);
+			info_p->cpuid_leaf7_sl1_features = quad(reg[ecx], reg[edx]);
 		}
+
+		/* sub-leaf 2 exists. god dang it. */
 	}
 
 	if (info_p->cpuid_max_basic >= 0x15) {
@@ -1026,6 +1047,11 @@ cpuid_set_generic_info(i386_cpu_info_t *info_p)
 		DBG(" TSC/CCC Information Leaf:\n");
 		DBG("  numerator     : 0x%x\n", reg[ebx]);
 		DBG("  denominator   : 0x%x\n", reg[eax]);
+	}
+
+	if ((info_p->cpuid_max_basic >= 0x19) && 
+		 info_p->cpuid_leaf7_features & CPUID_LEAF7_FEATURE_KEYLOCKER) {
+		cpuid_set_keylocker_info(info_p);
 	}
 
 	/*
@@ -1632,6 +1658,53 @@ static struct table {
 	{ CPUID_LEAF7_EXTFEATURE_CCAPMSR, "CCAPMSR" },
 	{ CPUID_LEAF7_EXTFEATURE_SSBD, "SSBD" },
 	{0, 0}
+}, 
+	leaf7_sl1_feature_map[] = {
+	{CPUID_LEAF7_SL1_FEATURE_SHA512, "SHA512"},
+	{CPUID_LEAF7_SL1_FEATURE_SM3, "SM3"},
+	{CPUID_LEAF7_SL1_FEATURE_SM4, "SM4"},
+	{CPUID_LEAF7_SL1_FEATURE_RAOINT, "RAOINT"},
+	{CPUID_LEAF7_SL1_FEATURE_AVXVNNI, "AVXVNNI"},
+	{CPUID_LEAF7_SL1_FEATURE_AVX512BF16, "AVX512BF16"},
+	{CPUID_LEAF7_SL1_FEATURE_LASS, "LASS"},
+	{CPUID_LEAF7_SL1_FEATURE_CMPCCXADD, "CMPCCXADD"},
+	{CPUID_LEAF7_SL1_FEATURE_PERFMONEXT, "PERFMONEXT"},
+	{CPUID_LEAF7_SL1_FEATURE_ZLMOVSB, "ZLMOVSB"},
+	{CPUID_LEAF7_SL1_FEATURE_FSSTOSB, "FSSTOSB"},
+	{CPUID_LEAF7_SL1_FEATURE_FSCMPSB, "FSCMPSB"},
+	{CPUID_LEAF7_SL1_FEATURE_FRED, "FRED"},
+	{CPUID_LEAF7_SL1_FEATURE_LKGS, "LKGS"},
+	{CPUID_LEAF7_SL1_FEATURE_WRMSRNS, "WRMSRNS"},
+	{CPUID_LEAF7_SL1_FEATURE_NMISRC, "NMISRC"},
+	{CPUID_LEAF7_SL1_FEATURE_AMXFP16, "AMXFP16"},
+	{CPUID_LEAF7_SL1_FEATURE_HRESET, "HRESET"},
+	{CPUID_LEAF7_SL1_FEATURE_AVXIFMA, "AVXIFMA"},
+	{CPUID_LEAF7_SL1_FEATURE_LAM, "LAM"},
+	{CPUID_LEAF7_SL1_FEATURE_MSRLIST, "MSRLIST"},
+	{CPUID_LEAF7_SL1_FEATURE_NOINVDPOSTBIOS, "NOINVDPOSTBIOS"},
+	{CPUID_LEAF7_SL1_FEATURE_MOVRS, "MOVRS"},
+	{CPUID_LEAF7_SL1_FEATURE_PPIN, "PPIN"},
+	{CPUID_LEAF7_SL1_FEATURE_PBNDKB, "PBNDKB"},
+	{CPUID_LEAF7_SL1_FEATURE_NOCPUIDLIMIT, "NOCPUIDLIMIT"},
+	{0, 0}
+}, leaf7_sl1_extfeature_map[] = {
+	{CPUID_LEAF7_SL1_EXTFEATURE_RDTM, "RDTM"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_RDTA, "RDTA"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_MSRIMM, "MSRIMM"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_AVXVNNIINT8, "AVXVNNIINT8"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_AVXNECONVERT, "AVXNECONVERT"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_AMXCOMPLEX, "AMXCOMPLEX"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_AVXVNNIINT16, "AVXVNNIINT16"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_UTMR, "UTMR"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_PREFTECHI, "PREFETCHI"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_USERMSR, "USERMSR"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_UIRETUIF, "UIRETUIF"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_CETSSS, "CETSSS"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_AVX10, "AVX10"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_APXF, "APXF"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_MWAIT, "MWAIT"},
+	{CPUID_LEAF7_SL1_EXTFEATURE_SLSM, "SLSM"},
+	{0, 0}
 };
 
 static char *
@@ -1695,10 +1768,25 @@ cpuid_get_leaf7_extfeature_names(uint64_t features, char *buf, unsigned buf_len)
 	return cpuid_get_names(leaf7_extfeature_map, features, buf, buf_len);
 }
 
+char *
+cpuid_get_leaf7_sl1_feature_names(uint64_t features, char *buf, unsigned buf_len)
+{
+	return cpuid_get_names(leaf7_sl1_feature_map, features, buf, buf_len);
+}
+
+char *
+cpuid_get_leaf7_sl1_extfeature_names(uint64_t features, char *buf, unsigned buf_len)
+{
+	return cpuid_get_names(leaf7_sl1_extfeature_map, features, buf, buf_len);
+}
+
 void
 cpuid_feature_display(
 	const char      *header)
 {
+	/*
+	 * FIXME: Update the size of this buffer?
+	 */
 	char    buf[320];
 
 	kprintf("%s: %s", header,
@@ -1710,6 +1798,14 @@ cpuid_feature_display(
 	if (cpuid_leaf7_extfeatures()) {
 		kprintf(" %s", cpuid_get_leaf7_extfeature_names(
 			    cpuid_leaf7_extfeatures(), buf, sizeof(buf)));
+	}
+	if (cpuid_leaf7_sl1_features()) {
+		kprintf(" %s", cpuid_get_leaf7_sl1_feature_names(
+			    cpuid_leaf7_sl1_features(), buf, sizeof(buf)));
+	}
+	if (cpuid_leaf7_sl1_extfeatures()) {
+		kprintf(" %s", cpuid_get_leaf7_sl1_extfeature_names(
+			    cpuid_leaf7_sl1_extfeatures(), buf, sizeof(buf)));
 	}
 	kprintf("\n");
 	if (cpuid_features() & CPUID_FEATURE_HTT) {
@@ -1813,6 +1909,12 @@ uint64_t
 cpuid_leaf7_sl1_features(void)
 {
 	return cpuid_info()->cpuid_leaf7_sl1_features;
+}
+
+uint64_t
+cpuid_leaf7_sl1_extfeatures(void)
+{
+	return cpuid_info()->cpuid_leaf7_sl1_extfeatures;
 }
 
 static i386_vmm_info_t  *_cpuid_vmm_infop = NULL;

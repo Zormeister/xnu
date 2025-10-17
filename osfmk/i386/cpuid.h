@@ -207,6 +207,45 @@
 #define CPUID_LEAF7_SL1_FEATURE_SM3             _Bit(1)         /* SM3 instructions */
 #define CPUID_LEAF7_SL1_FEATURE_SM4             _Bit(2)         /* SM4 instructions */
 #define CPUID_LEAF7_SL1_FEATURE_RAOINT          _Bit(3)         /* RAO-INT instructions */
+#define CPUID_LEAF7_SL1_FEATURE_AVXVNNI         _Bit(4)         /* VEX encoded AVX VNNI instructions */
+#define CPUID_LEAF7_SL1_FEATURE_AVX512BF16      _Bit(5)         /* VNNI instructions with bfloat16 support */
+#define CPUID_LEAF7_SL1_FEATURE_LASS            _Bit(6)         /* Linear Address Space Separation */
+#define CPUID_LEAF7_SL1_FEATURE_CMPCCXADD       _Bit(7)         /* CMPccXADD instruction */
+#define CPUID_LEAF7_SL1_FEATURE_PERFMONEXT      _Bit(8)         /* CPUID Leaf 23h validity */
+#define CPUID_LEAF7_SL1_FEATURE_ZLMOVSB         _Bit(10)        /* Zero-Length MOVSB */
+#define CPUID_LEAF7_SL1_FEATURE_FSSTOSB         _Bit(11)        /* Fast short STOSB */
+#define CPUID_LEAF7_SL1_FEATURE_FSCMPSB         _Bit(12)        /* Fast short CMPSB + SCASB */
+#define CPUID_LEAF7_SL1_FEATURE_FRED            _Bit(17)        /* Flexible Return and Event Delivery */
+#define CPUID_LEAF7_SL1_FEATURE_LKGS            _Bit(18)        /* Load Kernel GS instruction */
+#define CPUID_LEAF7_SL1_FEATURE_WRMSRNS         _Bit(19)        /* WRMSRNS instruction */
+#define CPUID_LEAF7_SL1_FEATURE_NMISRC          _Bit(20)        /* NMI source filtering */
+#define CPUID_LEAF7_SL1_FEATURE_AMXFP16         _Bit(21)        /* AMX FP16 support */
+#define CPUID_LEAF7_SL1_FEATURE_HRESET          _Bit(22)        /* History Reset */
+#define CPUID_LEAF7_SL1_FEATURE_AVXIFMA         _Bit(23)        /* AVX IFMA instructions */
+#define CPUID_LEAF7_SL1_FEATURE_LAM             _Bit(26)        /* Linear Address Masking */
+#define CPUID_LEAF7_SL1_FEATURE_MSRLIST         _Bit(27)        /* RDMSRLIST + WRMSRLIST instructions */
+#define CPUID_LEAF7_SL1_FEATURE_NOINVDPOSTBIOS  _Bit(30)        /* INVD execution prevention post BIOS Done */
+#define CPUID_LEAF7_SL1_FEATURE_MOVRS           _Bit(31)        /* MOVRS instruction */
+#define CPUID_LEAF7_SL1_FEATURE_PPIN            _HBit(0)        /* IA32_PPIN* MSRs */
+#define CPUID_LEAF7_SL1_FEATURE_PBNDKB          _HBit(1)		/* PBNDKB instruction */
+#define CPUID_LEAF7_SL1_FEATURE_NOCPUIDLIMIT    _HBit(3)        /* The CPUID Leaf 0h maximum cannot be limited if this bit is set. */
+
+#define CPUID_LEAF7_SL1_EXTFEATURE_RDTM         _Bit(0)    /* RDT-M */
+#define CPUID_LEAF7_SL1_EXTFEATURE_RDTA         _Bit(1)    /* RDT-A */
+#define CPUID_LEAF7_SL1_EXTFEATURE_MSRIMM       _Bit(5)    /* MSR accesses in immediate forms */
+#define CPUID_LEAF7_SL1_EXTFEATURE_AVXVNNIINT8  _HBit(4)   /* AVX VNNI INT8 instructions */
+#define CPUID_LEAF7_SL1_EXTFEATURE_AVXNECONVERT _HBit(5)   /* AVX-NE-CONVERT instructions */
+#define CPUID_LEAF7_SL1_EXTFEATURE_AMXCOMPLEX   _HBit(8)   /* AMX-COMPLEX instructions */
+#define CPUID_LEAF7_SL1_EXTFEATURE_AVXVNNIINT16 _HBit(10)  /* AVX-VNNI INT16 instructions */
+#define CPUID_LEAF7_SL1_EXTFEATURE_UTMR         _HBit(13)  /* User-Timer events */
+#define CPUID_LEAF7_SL1_EXTFEATURE_PREFTECHI    _HBit(14)  /* PREFETCHIT0/PREFETCHIT1 instructions */
+#define CPUID_LEAF7_SL1_EXTFEATURE_USERMSR      _HBit(15)  /* URDMSR/UWRMSR instructions */
+#define CPUID_LEAF7_SL1_EXTFEATURE_UIRETUIF     _HBit(17)  /* UIRET sets UIF to 1 */
+#define CPUID_LEAF7_SL1_EXTFEATURE_CETSSS       _HBit(18)  /* Supervisor Shadow Stacks can be enabled */
+#define CPUID_LEAF7_SL1_EXTFEATURE_AVX10        _HBit(19)  /* AVX10 support + CPUID Leaf 24h */
+#define CPUID_LEAF7_SL1_EXTFEATURE_APXF         _HBit(21)  /* APX-F */
+#define CPUID_LEAF7_SL1_EXTFEATURE_MWAIT        _HBit(23)  /* MWAIT */
+#define CPUID_LEAF7_SL1_EXTFEATURE_SLSM         _HBit(24)  /* SLSM */
 
 /*
  * The CPUID_EXTFEATURE_XXX values define 64-bit values
@@ -508,6 +547,17 @@ typedef enum {
     INTEL_CORE_TYPE_CORE = 0x40  /* Performance core. */
 } cpuid_intel_core_type_t;
 
+typedef struct {
+	boolean_t kle_cpl0_only;
+	boolean_t kle_no_encrypt;
+	boolean_t kle_no_decrypt;
+	boolean_t kle_enabled;
+	boolean_t kle_supported;
+	boolean_t kle_iwkey_msrs;
+	boolean_t kle_no_backup_supported;
+	boolean_t kle_random_iwkey_supported;
+} cpuid_keylocker_leaf_t;
+
 /* Physical CPU info - this is exported out of the kernel (kexts), so be wary of changes */
 typedef struct {
 	char            cpuid_vendor[16];
@@ -588,6 +638,8 @@ typedef struct {
 	cpuid_ext_topology_leaf_t cpuid_ext_topo_leaf;
 	uint32_t                cpuid_vendor_id;
 	uint64_t				cpuid_leaf7_sl1_features;
+	uint64_t				cpuid_leaf7_sl1_extfeatures;
+	cpuid_keylocker_leaf_t  cpuid_keylocker_leaf;
 } i386_cpu_info_t;
 
 #if defined(MACH_KERNEL_PRIVATE) && !defined(ASSEMBLER)
@@ -659,12 +711,15 @@ extern char *           cpuid_get_feature_names(uint64_t, char *, unsigned);
 extern char *           cpuid_get_extfeature_names(uint64_t, char *, unsigned);
 extern char *           cpuid_get_leaf7_feature_names(uint64_t, char *, unsigned);
 extern char *           cpuid_get_leaf7_extfeature_names(uint64_t, char *, unsigned);
+extern char *           cpuid_get_leaf7_sl1_feature_names(uint64_t, char *, unsigned);
+extern char *           cpuid_get_leaf7_sl1_extfeature_names(uint64_t, char *, unsigned);
 
 extern uint64_t         cpuid_features(void);
 extern uint64_t         cpuid_extfeatures(void);
 extern uint64_t         cpuid_leaf7_features(void);
 extern uint64_t         cpuid_leaf7_extfeatures(void);
 extern uint64_t         cpuid_leaf7_sl1_features(void);
+extern uint64_t         cpuid_leaf7_sl1_extfeatures(void);
 extern uint32_t         cpuid_family(void);
 extern uint32_t         cpuid_cpufamily(void);
 
