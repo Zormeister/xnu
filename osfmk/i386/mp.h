@@ -160,7 +160,7 @@ typedef enum    {KDP_XCPU_NONE = 0xffff, KDP_CURRENT_LCPU = 0xfffe} kdp_cpu_t;
 typedef uint32_t cpu_t;
 
 #if CONFIG_LARGE_CPUMASK
-typedef volatile _BitInt(512) cpumask_t;
+typedef volatile unsigned _BitInt(512) cpumask_t;
 #warning "CONFIG_LARGE_CPUMASK is ENGAGED, this is UNTESTED behaviour!"
 #else
 typedef volatile uint64_t cpumask_t;
