@@ -173,7 +173,13 @@ cpu_to_cpumask(cpu_t cpu)
 {
 	return (cpu < MAX_CPUS) ? (1ULL << cpu) : 0;
 }
+
+#if CONFIG_LARGE_CPUMASK
+/* Uh. How do I make this any better? */
+#define CPUMASK_ALL     0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+#else
 #define CPUMASK_ALL     0xffffffffffffffffULL
+#endif
 #define CPUMASK_SELF    cpu_to_cpumask(cpu_number())
 #define CPUMASK_OTHERS  (CPUMASK_ALL & ~CPUMASK_SELF)
 
