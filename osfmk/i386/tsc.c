@@ -46,6 +46,7 @@
 #include <kern/misc_protos.h>
 #include <kern/spl.h>
 #include <kern/assert.h>
+#include <kern/thread_call.h>
 #include <mach/vm_prot.h>
 #include <vm/pmap.h>
 #include <vm/vm_kern.h>         /* for kernel_map */
@@ -78,6 +79,12 @@ uint32_t        flex_ratio_max = 0;
 
 uint64_t        tsc_at_boot = 0;
 
+static uint32_t        periodic_sync_interval_msecs = 5000; /* 5 seconds */
+static uint64_t        periodic_sync_interval_abs;
+static uint64_t        periodic_sync_next_deadline;
+
+static timer_call_data_t        periodic_sync_tc;
+
 #define bit(n)          (1ULL << (n))
 #define bitmask(h, l)    ((bit(h)|(bit(h)-1)) & ~(bit(l)-1))
 #define bitfield(x, h, l) (((x) & bitmask(h,l)) >> l)
@@ -106,6 +113,23 @@ amd_15h_get_cpb_caps(void)
 	uint32_t cpbcap = inl(cfgDat);
 	ml_set_interrupts_enabled(intrs);
 	return cpbcap;
+}
+
+static void
+periodic_tsc_sync_write_value(void *arg)
+{
+    wrmsr64(MSR_P5_TSC, *(uint64_t *)arg);
+}
+
+static void
+periodic_tsc_sync_callback(thread_call_param_t param0 __unused, thread_call_param_t param1 __unused)
+{
+    uint64_t val = rdtsc64();
+
+    mp_cpus_call(CPUMASK_ALL, ASYNC, &periodic_tsc_sync_write_value, &val);
+
+    clock_deadline_for_periodic_event(periodic_sync_interval_abs, mach_absolute_time(), &periodic_sync_next_deadline);
+    timer_call_enter(&periodic_sync_tc, periodic_sync_next_deadline, TIMER_CALL_SYS_BACKGROUND);
 }
 
 /*
@@ -157,6 +181,7 @@ void
 tsc_init(void)
 {
 	boolean_t       N_by_2_bus_ratio = FALSE;
+	uint32_t        sync;
 
 	if (cpuid_vmm_present()) {
 		kprintf("VMM vendor %u TSC frequency %u KHz bus frequency %u KHz\n",
@@ -401,6 +426,15 @@ tsc_init(void)
 	    (uint32_t)(tscFCvtt2n >> 32), (uint32_t)tscFCvtt2n,
 	    (uint32_t)(tscFCvtn2t >> 32), (uint32_t)tscFCvtn2t,
 	    tscGranularity, N_by_2_bus_ratio ? " (N/2)" : "");
+
+	if (PE_parse_boot_argn("tscsync", &sync, sizeof(unsigned int))) {
+        if (sync == 1) {
+            clock_interval_to_absolutetime_interval(periodic_sync_interval_msecs, NSEC_PER_MSEC, &periodic_sync_interval_abs);
+            timer_call_setup(&periodic_sync_tc, periodic_tsc_sync_callback, NULL);
+            periodic_sync_next_deadline = mach_absolute_time() + periodic_sync_interval_abs;
+            timer_call_enter(&periodic_sync_tc, periodic_sync_next_deadline, TIMER_CALL_SYS_BACKGROUND);
+        }
+	}
 }
 
 void
