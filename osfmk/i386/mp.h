@@ -176,7 +176,7 @@ cpu_to_cpumask(cpu_t cpu)
 
 #if CONFIG_LARGE_CPUMASK
 /* Uh. How do I make this any better? */
-#define CPUMASK_ALL     0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+#define CPUMASK_ALL     0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffwb
 #else
 #define CPUMASK_ALL     0xffffffffffffffffULL
 #endif
