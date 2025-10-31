@@ -97,3 +97,11 @@ _csproc_forced_lv
 #exports for vmware/, virtualbox, ...
 _mach_vm_map
 _mach_vm_remap
+
+# xcpm stubs
+_xcpm_bios_mbox_cmd_read
+_xcpm_bios_mbox_cmd_unsafe_read
+_xcpm_bios_mbox_cmd_write
+_xcpm_is_hwp_enabled
+_xcpm_mbox_lock
+_xcpm_mbox_unlock

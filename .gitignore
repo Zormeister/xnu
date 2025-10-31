@@ -4,3 +4,5 @@ DEBUG_X86_64
 RELEASE_X86_64
 BUILD
 .cache
+*.DS_Store
+compile_commands.json

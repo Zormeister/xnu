@@ -1271,6 +1271,7 @@ mp_cpus_call_wait(boolean_t     intrs_enabled,
 
 			cpus_unresponsive = cpus_called & ~(*cpus_responded);
 			NMIPI_panic(cpus_unresponsive, CROSSCALL_TIMEOUT);
+#if CONFIG_LARGE_CPUMASK
 			panic("mp_cpus_call_wait() timeout, cpus: 0x%llx%llx%llx%llx%llx%llx%llx",
 			    (uint64_t)(((cpus_unresponsive) >> 447) & 0xFFFFFFFFFFFFFFFF),
 				(uint64_t)(((cpus_unresponsive) >> 383) & 0xFFFFFFFFFFFFFFFF),
@@ -1279,6 +1280,10 @@ mp_cpus_call_wait(boolean_t     intrs_enabled,
 				(uint64_t)(((cpus_unresponsive) >> 191) & 0xFFFFFFFFFFFFFFFF),
 				(uint64_t)(((cpus_unresponsive) >> 127) & 0xFFFFFFFFFFFFFFFF),
 				(uint64_t)(((cpus_unresponsive) >>  63) & 0xFFFFFFFFFFFFFFFF));
+#else
+            panic("mp_cpus_call_wait() timeout, cpus: 0x%llx",
+			    cpus_unresponsive);
+#endif
 		}
 	}
 }

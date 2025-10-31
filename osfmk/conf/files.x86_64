@@ -117,3 +117,5 @@ osfmk/i386/panic_hooks.c	standard
 osfmk/x86_64/machine_remote_time.c 		optional config_mach_bridge_send_time
 
 osfmk/i386/svm/svm_cpu.c            optional config_svm
+
+osfmk/x86_64/xcpm.c		standard
