@@ -424,6 +424,9 @@ SYSCTL_DECL(_kern_bridge);
 SYSCTL_DECL(_hw_features);
 #endif
 
+#if defined(BSD_KERNEL_PRIVATE) && SKYWALK
+#include <skywalk/os_sysctls_private.h>
+#endif  /* defined(BSD_KERNEL_PRIVATE) && SKYWALK */
 
 #ifndef SYSCTL_SKMEM_UPDATE_FIELD
 

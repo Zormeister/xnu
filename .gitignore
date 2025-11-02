@@ -3,3 +3,6 @@ DEVELOPMENT_X86_64
 DEBUG_X86_64
 RELEASE_X86_64
 BUILD
+.cache
+compile_commands.json
+.DS_Store

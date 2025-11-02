@@ -21,6 +21,7 @@ INSTINC_SUBDIRS = \
 	netkey \
 	nfs \
 	security \
+	skywalk \
 	pthread \
 	sys \
 	sys_private \
@@ -53,6 +54,7 @@ EXPINC_SUBDIRS = \
 	netinet6 \
 	netkey \
 	security \
+	skywalk \
 	pthread \
 	sys \
 	sys_private \
