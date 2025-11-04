@@ -392,9 +392,6 @@ struct __quantum {
 
 	uint32_t                __q_len;
 
-	/* QoS service class, see packet_svc_class_t */
-	uint32_t                __q_svc_class;  /* PKT_SC_* values */
-
 	/*
 	 * See notes on _QUM_{INTERNALIZE,EXTERNALIZE}() regarding
 	 * portion of this structure above __flags that gets copied.
@@ -402,7 +399,7 @@ struct __quantum {
 	 * require adjusting those macros as well.
 	 */
 	volatile uint16_t       __q_flags;      /* QUMF_* flags */
-	uint16_t                __q_pad[3];
+	uint16_t                __q_pad;
 } __attribute((aligned(sizeof(uint64_t))));
 
 /*
@@ -431,10 +428,6 @@ struct __user_quantum {
 	 * Userland specific.
 	 */
 	struct __user_buflet    qum_buf[1];             /* 1 buflet */
-	/*
-	 * use count for packet.
-	 */
-	uint16_t qum_usecnt;
 } __attribute((aligned(sizeof(uint64_t))));
 
 /*
@@ -537,20 +530,7 @@ struct __packet_com {
 		uint32_t __csum_data;
 	};
 
-	/* Compression generation count */
-	uint32_t __comp_gencnt;
-
-	/*
-	 * Trace ID for each sampled packet.
-	 * Non-zero ID indicates that the packet is being actively traced.
-	 */
-	packet_trace_id_t __trace_id;
-
-	/* Aggregation type */
-	uint8_t __aggr_type;                           /* PKT_AGGR_* values */
-	uint8_t __seg_cnt;                             /* Number of LRO-packets */
-
-	uint8_t __padding[2];
+	uint32_t __svc_class;
 
 	/*
 	 * See notes on _PKT_{INTERNALIZE,EXTERNALIZE}() regarding portion
@@ -566,7 +546,7 @@ struct __packet_com {
 
 struct __packet {
 	union {
-		uint64_t                __pkt_data[4];
+		uint64_t                __pkt_data[3];
 		struct __packet_com     __pkt_com;
 	};
 #define __p_link_flags          __pkt_com.__link_flags
@@ -576,10 +556,7 @@ struct __packet {
 #define __p_csum_rx             __pkt_com.__csum_rx
 #define __p_csum_tx             __pkt_com.__csum_tx
 #define __p_csum_data           __pkt_com.__csum_data
-#define __p_comp_gencnt         __pkt_com.__comp_gencnt
-#define __p_aggr_type           __pkt_com.__aggr_type
-#define __p_seg_cnt             __pkt_com.__seg_cnt
-#define __p_trace_id            __pkt_com.__trace_id
+#define __p_svc_class           __pkt_com.__svc_class
 #define __p_flags32             __pkt_com.__flags32
 #define __p_flags               __pkt_com.__flags
 };
@@ -630,7 +607,6 @@ struct __user_packet {
 #define pkt_qum_qflags          pkt_qum.qum_qflags
 #define pkt_length              pkt_qum.qum_len
 #define pkt_qum_buf             pkt_qum.qum_buf[0]
-#define pkt_svc_class           pkt_qum.qum_svc_class
 #ifdef KERNEL
 /*
  * We are using the first 4 bytes of flow_id as the AQM flow identifier.
@@ -653,10 +629,7 @@ struct __user_packet {
 #define pkt_csum_tx_start_off   pkt_com.__p_csum_tx.__csum_start_off
 #define pkt_csum_tx_stuff_off   pkt_com.__p_csum_tx.__csum_stuff_off
 #define pkt_csum_data           pkt_com.__p_csum_data
-#define pkt_comp_gencnt         pkt_com.__p_comp_gencnt
-#define pkt_aggr_type           pkt_com.__p_aggr_type
-#define pkt_seg_cnt             pkt_com.__p_seg_cnt
-#define pkt_trace_id            pkt_com.__p_trace_id
+#define pkt_svc_class           pkt_com.__p_svc_class
 #if BYTE_ORDER == LITTLE_ENDIAN
 #define pkt_pflags32            pkt_com.__p_flags32[0]
 #else /* BYTE_ORDER != LITTLE_ENDIAN */
@@ -679,6 +652,7 @@ struct __user_packet {
 	 */
 	const uint16_t  pkt_bufs_max;       /* maximum size of buflet chain */
 	const uint16_t  pkt_bufs_cnt;       /* buflet chain size */
+	struct __user_buflet pkt_bufs[1];
 } __attribute((aligned(sizeof(uint64_t))));
 
 /* the size of __user_packet structure for n total buflets */

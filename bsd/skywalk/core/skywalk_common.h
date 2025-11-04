@@ -680,7 +680,7 @@ sk_copy64_64x(uint64_t *src, uint64_t *dst, size_t l)
 	ret;                                                            \
 })
 
-#define _sk_realloc(probename, elem, oldsize, newsize, flags, tag)      \
+#define _sk_realloc(probename, addr, size, flags, tag)                  \
 ({                                                                      \
 	void *ret;                                                      \
 	kern_allocation_name_t prior;                                   \

@@ -49,40 +49,32 @@ struct kern_pbufpool_u_bft_bkt {
 	SLIST_HEAD(, __kern_buflet_ext) upp_head;
 };
 
+/* Offsets & Data dumped from dSYM. */
 struct kern_pbufpool {
 	decl_lck_mtx_data(, pp_lock);
 	uint32_t                pp_refcnt;
 	uint32_t                pp_flags;
-	uint16_t                pp_buflet_size;
-	uint16_t                pp_max_frags;
+	uint32_t                pp_max_frags;
+	uint32_t                pp_buflet_size;
 
 	/*
 	 * Caches
 	 */
+	struct skmem_cache      *pp_mdk_cache;
 	struct skmem_cache      *pp_buf_cache;
-	struct skmem_cache      *pp_kmd_cache;
-	struct skmem_cache      *pp_kbft_cache;
 
 	/*
 	 * Regions
 	 */
+	struct skmem_region     *pp_mdu_region;
+	struct skmem_region     *pp_mdk_region;
 	struct skmem_region     *pp_buf_region;
-	struct skmem_region     *pp_kmd_region;
-	struct skmem_region     *pp_umd_region;
-	struct skmem_region     *pp_ubft_region;
-	struct skmem_region     *pp_kbft_region;
 
 	/*
 	 * User packet pool: packet metadata hash table
 	 */
 	struct kern_pbufpool_u_bkt *pp_u_hash_table;
 	uint64_t                pp_u_bufinuse;
-
-	/*
-	 * User packet pool: buflet hash table
-	 */
-	struct kern_pbufpool_u_bft_bkt *pp_u_bft_hash_table;
-	uint64_t                pp_u_bftinuse;
 
 	void                    *pp_ctx;
 	pbuf_ctx_retain_fn_t    pp_ctx_retain;

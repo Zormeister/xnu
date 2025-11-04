@@ -240,9 +240,10 @@ pp_fini(void)
 }
 
 static struct kern_pbufpool *
-pp_alloc(zalloc_flags_t how)
+pp_alloc(boolean_t can_block)
 {
-	struct kern_pbufpool *pp = zalloc_flags(pp_zone, how | Z_ZERO);
+	/* SZ: TODO, this. */
+	struct kern_pbufpool *pp = NULL;
 
 	if (pp) {
 		lck_mtx_init(&pp->pp_lock, skmem_lock_grp, skmem_lock_attr);

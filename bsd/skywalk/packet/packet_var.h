@@ -52,33 +52,11 @@ struct __kern_buflet {
 	/*
 	 * Kernel specific.
 	 */
-	/* buffer control of the buffer object */
-	const struct skmem_bufctl *buf_ctl;
-#if !defined(__LP64__)
-	uint32_t __padding;
-#endif /* !__LP64__ */
-
-#define buf_objaddr     buf_ctl->bc_addr
-#define buf_objlim      buf_ctl->bc_lim
+	const obj_idx_t buf_idx_seg;
+	const uint32_t  buf_roff;
+	const sksegment *buf_seg;
 } __attribute((packed));
 
-struct __kern_buflet_ext {
-	/*
-	 * This is an overlay structure on nexus adapter.
-	 */
-	struct __kern_buflet kbe_overlay;
-	/*
-	 *  extended variant specific.
-	 */
-	/* mirrored user buflet */
-	struct __user_buflet const *kbe_buf_user;
-
-	/* buflet user packet pool hash bucket linkage */
-	SLIST_ENTRY(__kern_buflet_ext) kbe_buf_upp_link;
-
-	/* pid of the process using the buflet */
-	pid_t kbe_buf_pid;
-} __attribute((packed));
 
 #define KBUF_CTOR(_kbuf, _baddr, _bidxreg, _bc, _pp) do {               \
 	_CASSERT(sizeof ((_kbuf)->buf_addr) == sizeof (mach_vm_address_t));\
@@ -93,40 +71,12 @@ struct __kern_buflet_ext {
 	/* no need to construct user variant as it is done in externalize */ \
 } while (0)
 
-#define KBUF_EXT_CTOR(_kbuf, _ubuf, _baddr, _bidxreg, _bc,              \
-	    _bft_idx_reg, _pp) do {                                     \
-	ASSERT(_bft_idx_reg != OBJ_IDX_NONE);                           \
-	_CASSERT(sizeof((_kbuf)->buf_flag) == sizeof(uint16_t));        \
-	/* we don't set buf_nbft_addr here as during construction it */ \
-	/* is used by skmem batch alloc logic                        */ \
-	*__DECONST(uint16_t *, &(_kbuf)->buf_flag) = BUFLET_FLAG_EXTERNAL;\
-	BUF_NBFT_IDX(_kbuf, OBJ_IDX_NONE);                              \
-	BUF_BFT_IDX_REG(_kbuf, _bft_idx_reg);                           \
-	*__DECONST(struct __user_buflet **,                             \
-	&((struct __kern_buflet_ext *)(_kbuf))->kbe_buf_user) = (_ubuf);\
-	KBUF_CTOR(_kbuf, _baddr, _bidxreg, _bc, _pp);                   \
-} while (0)
-
 #define KBUF_INIT(_kbuf) do {                                           \
 	ASSERT((_kbuf)->buf_ctl != NULL);                               \
 	ASSERT((_kbuf)->buf_addr != 0);                                 \
 	ASSERT((_kbuf)->buf_dlim != 0);                                 \
 	/* kernel variant (deconst) */                                  \
 	BUF_INIT(_kbuf, 0, 0);                                          \
-} while (0)
-
-#define KBUF_EXT_INIT(_kbuf, _pp) do {                                  \
-	ASSERT((_kbuf)->buf_ctl != NULL);                               \
-	ASSERT((_kbuf)->buf_flag & BUFLET_FLAG_EXTERNAL);               \
-	ASSERT((_kbuf)->buf_bft_idx_reg != OBJ_IDX_NONE);               \
-	BUF_BADDR(_kbuf, (_kbuf)->buf_ctl->bc_addr);                    \
-	BUF_NBFT_ADDR(_kbuf, 0);                                        \
-	BUF_NBFT_IDX(_kbuf, OBJ_IDX_NONE);                              \
-	*__DECONST(uint16_t *, &(_kbuf)->buf_dlim) = (_pp)->pp_buflet_size;\
-	(_kbuf)->buf_dlen = 0;                                          \
-	(_kbuf)->buf_doff = 0;                                          \
-	((struct __kern_buflet_ext *)(_kbuf))->kbe_buf_pid = (pid_t)-1; \
-	((struct __kern_buflet_ext *)(_kbuf))->kbe_buf_upp_link.sle_next = NULL;\
 } while (0)
 
 /* initialize struct __user_buflet from struct __kern_buflet */
