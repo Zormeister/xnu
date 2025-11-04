@@ -109,35 +109,24 @@ typedef enum {
 	 * SKMEM_REGION_GUARD_TAIL, and make the appropriate changes in
 	 * skmem_region_init().
 	 */
-	SKMEM_REGION_GUARD_HEAD = 0,    /* leading guard page(s) */
-	SKMEM_REGION_SCHEMA,            /* channel layout */
+	SKMEM_REGION_SCHEMA = 0,        /* channel layout */
 	SKMEM_REGION_RING,              /* rings */
 	SKMEM_REGION_BUF,               /* rx/tx buffer */
-	SKMEM_REGION_RXBUF,             /* rx only buffers */
-	SKMEM_REGION_TXBUF,             /* tx only buffers */
-	SKMEM_REGION_UMD,               /* userland metadata */
+	SKMEM_REGION_MDU,               /* userland metadata */
 	SKMEM_REGION_TXAUSD,            /* tx/alloc/event user slot descriptors */
 	SKMEM_REGION_RXFUSD,            /* rx/free user slot descriptors */
-	SKMEM_REGION_UBFT,              /* userland buflet metadata */
 	SKMEM_REGION_USTATS,            /* statistics */
 	SKMEM_REGION_FLOWADV,           /* flow advisories */
 	SKMEM_REGION_NEXUSADV,          /* nexus advisories */
 	SKMEM_REGION_SYSCTLS,           /* sysctl */
-	SKMEM_REGION_GUARD_TAIL,        /* trailing guard page(s) */
 
 	/*
 	 * The following are NOT user task mappable.
 	 */
-	SKMEM_REGION_KMD,               /* rx/tx kernel metadata */
-	SKMEM_REGION_RXKMD,             /* rx only kernel metadata */
-	SKMEM_REGION_TXKMD,             /* tx only kernel metadata */
-	SKMEM_REGION_KBFT,              /* rx/tx kernel buflet metadata */
-	SKMEM_REGION_RXKBFT,            /* rx only kernel buflet metadata */
-	SKMEM_REGION_TXKBFT,            /* tx only kernel buflet metadata */
+	SKMEM_REGION_MDK,               /* rx/tx kernel metadata */
 	SKMEM_REGION_TXAKSD,            /* tx/alloc/event kernel slot descriptors */
 	SKMEM_REGION_RXFKSD,            /* rx/free kernel slot descriptors */
 	SKMEM_REGION_KSTATS,            /* kernel statistics snapshot */
-	SKMEM_REGION_INTRINSIC,         /* intrinsic objects */
 
 	SKMEM_REGIONS                   /* max */
 } skmem_region_id_t;
@@ -157,25 +146,24 @@ struct skmem_region_params {
 	const char              *srp_name;      /* (i) region name */
 	skmem_region_id_t       srp_id;         /* (i) region identifier */
 	uint32_t                srp_cflags;     /* (i) region creation flags */
-	uint32_t                srp_r_seg_size; /* (i) requested seg size */
-	uint32_t                srp_c_seg_size; /* (o) configured seg size */
-	uint32_t                srp_seg_cnt;    /* (o) number of segments */
+	size_t                  srp_r_seg_size; /* (i) requested seg size */
+	size_t                  srp_c_seg_size; /* (o) configured seg size */
+	size_t                  srp_seg_cnt;    /* (o) number of segments */
 
 	/*
 	 * Object parameters.
 	 */
-	uint32_t                srp_r_obj_size; /* (i) requested obj size */
-	uint32_t                srp_r_obj_cnt;  /* (i) requested obj count */
-	uint32_t                srp_c_obj_size; /* (o) configured obj size */
-	uint32_t                srp_c_obj_cnt;  /* (o) configured obj count */
-	size_t                  srp_align;      /* (i) object alignment */
+	size_t                  srp_r_obj_size; /* (i) requested obj size */
+	size_t                  srp_r_obj_cnt;  /* (i) requested obj count */
+	size_t                  srp_c_obj_size; /* (o) configured obj size */
+	size_t                  srp_c_obj_cnt;  /* (o) configured obj count */
 
 	/*
 	 * SKMEM_REGION_{UMD,KMD} specific parameters.
 	 */
 	nexus_meta_type_t       srp_md_type;    /* (i) metadata type */
 	nexus_meta_subtype_t    srp_md_subtype; /* (i) metadata subtype */
-	uint16_t                srp_max_frags;  /* (i) max frags per packet */
+	size_t                  srp_max_frags;  /* (i) max frags per packet */
 };
 
 typedef void (*sksegment_ctor_fn_t)(struct sksegment *,
@@ -195,10 +183,10 @@ struct skmem_region {
 	uint64_t                skr_meminuse;   /* memory in use */
 	uint64_t                skr_w_meminuse; /* wired memory in use */
 	uint64_t                skr_memtotal;   /* total memory in region */
+	uint64_t                skr_seginuse;   /* total unfreed segments */
+	uint64_t                skr_rescale;    /* # of hash table rescales */
 	uint64_t                skr_alloc;      /* number of allocations */
 	uint64_t                skr_free;       /* number of frees */
-	uint32_t                skr_seginuse;   /* total unfreed segments */
-	uint32_t                skr_rescale;    /* # of hash table rescales */
 
 	/*
 	 * Region properties.
@@ -209,12 +197,11 @@ struct skmem_region {
 	TAILQ_ENTRY(skmem_region) skr_link;     /* skmem_region linkage */
 	char                    skr_name[64];   /* region name */
 	uuid_t                  skr_uuid;       /* region uuid */
-	uint32_t                skr_mode;       /* skmem_region mode flags */
-	uint32_t                skr_size;       /* total region size */
 	IOSKMemoryBufferSpec    skr_bufspec;    /* IOSKMemoryBuffer spec */
 	IOSKRegionSpec          skr_regspec;    /* IOSKRegion spec */
+	uint32_t                skr_mode;       /* skmem_region mode flags */
 	IOSKRegionRef           skr_reg;        /* backing IOSKRegion */
-	struct zone             *skr_zreg;      /* backing zone (pseudo mode) */
+	size_t                  skr_size;       /* total region size */
 	void                    *skr_private;   /* opaque arg to callbacks */
 	struct skmem_cache      *skr_cache;     /* client slab/cache layer */
 
@@ -235,19 +222,19 @@ struct skmem_region {
 	 */
 	sksegment_ctor_fn_t     skr_seg_ctor;   /* segment constructor */
 	sksegment_dtor_fn_t     skr_seg_dtor;   /* segment destructor */
-	uint32_t                skr_seg_objs;   /* # of objects per segment */
+	struct sksegment        **skr_seg_lut;
+	size_t                  skr_seg_objs;   /* # of objects per segment */
 #define skr_seg_size    skr_params.srp_c_seg_size /* configured segment size */
 #define skr_seg_max_cnt skr_params.srp_seg_cnt  /* max # of segments */
-	uint32_t                skr_seg_bmap_len; /* # of skr_seg_bmap */
 	bitmap_t                *skr_seg_bmap;  /* segment bitmaps */
-	uint32_t                skr_seg_free_cnt; /* # of free segments */
-	uint32_t                skr_hash_initial; /* initial hash table size */
-	uint32_t                skr_hash_limit; /* hash table size limit */
-	uint32_t                skr_hash_shift; /* get to interesting bits */
-	uint32_t                skr_hash_mask;  /* hash table mask */
+	size_t                  skr_seg_bmap_len; /* # of skr_seg_bmap */
+	size_t                  skr_seg_free_cnt; /* # of free segments */
+	size_t                  skr_hash_initial; /* initial hash table size */
+	size_t                  skr_hash_limit; /* hash table size limit */
+	size_t                  skr_hash_shift; /* get to interesting bits */
+	size_t                  skr_hash_mask;  /* hash table mask */
 	struct sksegment_bkt    *skr_hash_table; /* alloc'd segment htable */
 	TAILQ_HEAD(segfreehead, sksegment) skr_seg_free; /* free segment list */
-	RB_HEAD(segtfreehead, sksegment) skr_seg_tfree; /* free tree */
 	uint32_t                skr_seg_waiters; /* # of waiter threads */
 
 	/*

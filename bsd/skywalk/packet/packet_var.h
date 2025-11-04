@@ -54,7 +54,7 @@ struct __kern_buflet {
 	 */
 	const obj_idx_t buf_idx_seg;
 	const uint32_t  buf_roff;
-	const sksegment *buf_seg;
+	const struct sksegment *buf_seg;
 } __attribute((packed));
 
 

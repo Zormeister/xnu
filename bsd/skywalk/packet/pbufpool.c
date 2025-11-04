@@ -80,13 +80,8 @@ pp_alloc_buflet_common(struct kern_pbufpool *pp, uint64_t *array,
 	(&(_pp)->pp_u_bft_hash_table[KERN_PBUFPOOL_U_HASH_INDEX(_i, \
 	KERN_PBUFPOOL_U_HASH_SIZE - 1)])
 
-static ZONE_DECLARE(pp_zone, SKMEM_ZONE_PREFIX ".mem.pp",
-    sizeof(struct kern_pbufpool), ZC_ZFREE_CLEARMEM);
-
 #define PP_U_HTBL_SIZE  \
 	(sizeof(struct kern_pbufpool_u_bkt) * KERN_PBUFPOOL_U_HASH_SIZE)
-static ZONE_DECLARE(pp_u_htbl_zone, SKMEM_ZONE_PREFIX ".mem.pp.htbl",
-    PP_U_HTBL_SIZE, ZC_ZFREE_CLEARMEM);
 
 static zone_t pp_zone = NULL;
 static zone_t pp_u_htbl_zone = NULL;
@@ -213,6 +208,9 @@ pp_init(void)
 	    sizeof(struct __packet_compl), sizeof(uint64_t),
 	    NULL, NULL, NULL, NULL, NULL, 0);
 
+	pp_zone = zinit(sizeof(struct kern_pbufpool), (sizeof(struct kern_pbufpool) * 100), 0, SKMEM_ZONE_PREFIX ".mem.pp");
+	pp_u_htbl_zone = zinit(PP_U_HTBL_SIZE, (PP_U_HTBL_SIZE * 100), 0, SKMEM_ZONE_PREFIX ".mem.pp.htbl");
+
 	return 0;
 }
 
@@ -243,7 +241,7 @@ static struct kern_pbufpool *
 pp_alloc(boolean_t can_block)
 {
 	/* SZ: TODO, this. */
-	struct kern_pbufpool *pp = NULL;
+	struct kern_pbufpool *pp = can_block ? zalloc(pp_zone) : zalloc_noblock(pp_zone);
 
 	if (pp) {
 		lck_mtx_init(&pp->pp_lock, skmem_lock_grp, skmem_lock_attr);
