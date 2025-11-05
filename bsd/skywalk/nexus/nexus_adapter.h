@@ -89,6 +89,7 @@ typedef enum {
 #endif /* CONFIG_NEXUS_NETIF */
 #if CONFIG_NEXUS_FLOWSWITCH
 	NA_FLOWSWITCH_VP,       /* struct nexus_vp_adapter */
+	NA_FLOWSWITCH_VP_WRAP,  /* a forbidden 12th option??? */
 #endif /* CONFIG_NEXUS_FLOWSWITCH */
 } nexus_adapter_type_t;
 
@@ -159,12 +160,6 @@ struct nexus_adapter {
 	 */
 	struct kern_nexus *na_nx;
 
-	/*
-	 * Standard refcount to control the lifetime of the adapter
-	 * (it should be equal to the lifetime of the corresponding ifp)
-	 */
-	volatile uint32_t na_refcount;
-
 	int na_si_users[NR_ALL];         /* # of users per global wait queue */
 	struct ch_selinfo na_si[NR_ALL]; /* global wait queues */
 
@@ -172,6 +167,13 @@ struct nexus_adapter {
 	 * Memory arena.
 	 */
 	struct skmem_arena *na_arena;
+	size_t na_arena_buf_req_size;
+	size_t na_arena_buf_cfg_size;
+	size_t na_arena_mdk_req_size;
+	size_t na_arena_mdk_cfg_size;
+	size_t na_arena_mdk_max_frags;
+
+	volatile uint32_t na_refcnt;
 
 	/*
 	 * Number of descriptor in each queue.
@@ -182,27 +184,6 @@ struct nexus_adapter {
 	uint32_t na_num_event_slots;
 
 	/*
-	 * Combined slot count of all rings.
-	 * Used for allocating slot_ctx and scratch memory.
-	 */
-	uint32_t na_total_slots;
-
-	/*
-	 * For tracking ring memory allocated by sk_alloc()
-	 */
-	size_t na_rings_mem_sz;
-
-	/*
-	 * Flow advisory (if applicable).
-	 */
-	const uint32_t na_flowadv_max;  /* max # of flow advisory entries */
-
-	/*
-	 * Shareable statistics (if applicable).
-	 */
-	const nexus_stats_type_t na_stats_type; /* stats type */
-
-	/*
 	 * Array of packet allocator and event rings
 	 */
 	struct __kern_channel_ring *na_alloc_rings;
@@ -210,6 +191,10 @@ struct nexus_adapter {
 	struct __kern_channel_ring *na_event_rings;
 
 	uint64_t na_ch_mit_ival;        /* mitigation interval */
+
+	const nexus_stats_type_t na_stats_type;
+
+	const uint32_t na_flowadv_max;
 
 	/*
 	 * The actual nexus domain associated with the adapter.
@@ -233,6 +218,11 @@ struct nexus_adapter {
 	void *na_tailroom; /* space below the rings array (used for leases) */
 
 #if CONFIG_NEXUS_FLOWSWITCH || CONFIG_NEXUS_NETIF
+    /*
+     * This does something I guess.
+     */
+    struct nexus_vp_adapter *na_wvp;
+
 	/*
 	 * Additional information attached to this adapter by other
 	 * Skywalk subsystems; currently used by flow switch and netif.
@@ -254,10 +244,10 @@ struct nexus_adapter {
 #endif /* CONFIG_NEXUS_FLOWSWITCH || CONFIG_NEXUS_NETIF */
 
 #if CONFIG_NEXUS_USER_PIPE
+    /* array of pipes that have this adapter as a parent */
+	struct nexus_upipe_adapter **na_pipes;
 	uint32_t na_next_pipe;  /* next free slot in the array */
 	uint32_t na_max_pipes;  /* size of the array */
-	/* array of pipes that have this adapter as a parent */
-	struct nexus_upipe_adapter **na_pipes;
 #endif /* CONFIG_NEXUS_USER_PIPE */
 
 	char na_name[NEXUS_ADAPTER_NAMELEN];    /* diagnostics */
@@ -316,6 +306,12 @@ struct nexus_adapter {
 	 */
 	int (*na_channel_event_notify)(struct nexus_adapter *,
 	    struct __kern_packet *, struct __kern_channel_event *, uint16_t);
+
+	/*
+	 * I don't know where these get sent to
+	 */
+	int (*na_if_adv_notify)(struct nexus_adapter *);
+
 	/*
 	 * na_config() is an optional callback for returning nexus-specific
 	 * configuration information.  This is implemented by nexus types
@@ -342,6 +338,9 @@ struct nexus_adapter {
 	 */
 	void (*na_free)(struct nexus_adapter *);
 
+	void (*na_kr_get_mem_info)(struct __kern_channel_ring *,
+	    channel_ring_mem_info_t);
+
 	/*
 	 * packet-chain-based callbacks for passing packets up the stack.
 	 * The inject variant is used by filters for rejecting packets
@@ -349,6 +348,9 @@ struct nexus_adapter {
 	 */
 	void (*na_rx)(struct nexus_adapter *,
 	    struct __kern_packet *, struct nexus_pkt_stats *);
+
+	void (*na_ring_rx)(struct __kern_channel_ring*,
+	    struct __kern_packet*);
 
 	/*
 	 * Linkage to list of to-be-destroyed nexus adapters.

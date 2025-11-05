@@ -964,6 +964,11 @@ typedef struct {
 } channel_ring_error_stats, *channel_ring_error_stats_t;
 
 typedef struct {
+    uint64_t crmi_buf_mem_total;
+    uint64_t crmi_buf_mem_inuse;
+} channel_ring_mem_info, *channel_ring_mem_info_t;
+
+typedef struct {
 	uint64_t        crsu_total_slots_transferred;
 	uint64_t        crsu_total_bytes_transferred;
 	uint64_t        crsu_number_of_syncs;

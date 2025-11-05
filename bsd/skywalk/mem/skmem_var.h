@@ -71,7 +71,7 @@ SYSCTL_DECL(_kern_skywalk_mem);
 #endif /* (DEVELOPMENT || DEBUG) */
 
 #define SKMEM_MEM_CONSTRAINED_DEVICE    \
-    (max_mem_actual <= (2ULL * 1024ULL * 1024ULL * 1024ULL))
+    (mem_actual <= (2ULL * 1024ULL * 1024ULL * 1024ULL))
 
 __BEGIN_DECLS
 extern void skmem_init(void);
