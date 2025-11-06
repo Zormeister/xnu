@@ -50,7 +50,6 @@
 
 /* Stubs based on symbol dump from 10.15.7 (19H2026). */
 /*
- *
  * com.apple.kpi.private:
  * U _xcpm_bios_mbox_cmd_read
  * U _xcpm_bios_mbox_cmd_unsafe_read
@@ -60,9 +59,11 @@
  * U _xcpm_mbox_unlock
  */
 
-XCPM_STUB(xcpm_bios_mbox_cmd_read);
-XCPM_STUB(xcpm_bios_mbox_cmd_unsafe_read);
-XCPM_STUB(xcpm_bios_mbox_cmd_write);
-XCPM_STUB(xcpm_is_hwp_enabled);
-XCPM_STUB(xcpm_mbox_lock);
-XCPM_STUB(xcpm_mbox_unlock);
+/* Symbols make mention of 'xcpm_mchbar', so I did some digging. */
+
+XCPM_STUB(xcpm_bios_mbox_cmd_read);             /* Reads BIOS_Mailbox_Interface_0_0_0_MCHBAR_PCU */
+XCPM_STUB(xcpm_bios_mbox_cmd_unsafe_read);      /* Reads BIOS_Mailbox_Interface_0_0_0_MCHBAR_PCU (presumably without a lock) */
+XCPM_STUB(xcpm_bios_mbox_cmd_write);            /* Writes BIOS_Mailbox_Interface_0_0_0_MCHBAR_PCU */
+XCPM_STUB(xcpm_is_hwp_enabled);                 /* Something. */
+XCPM_STUB(xcpm_mbox_lock);                      /* Locks the BIOS Mailbox lock? */
+XCPM_STUB(xcpm_mbox_unlock);                    /* Unlocks the BIOS Mailbox lock? */
