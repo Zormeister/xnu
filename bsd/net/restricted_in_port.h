@@ -34,6 +34,9 @@
 #include <kern/bits.h>
 
 #define PORT_FLAGS_LISTENER 0x00
+#if SKYWALK
+#define PORT_FLAGS_SKYWALK  0x01
+#endif /* SKYWALK */
 #define PORT_FLAGS_BSD      0x02
 #define PORT_FLAGS_PF       0x03
 #define PORT_FLAGS_MAX      0x03

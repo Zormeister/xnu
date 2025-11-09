@@ -380,8 +380,7 @@ struct __user_channel_ring {
 
 	const uint32_t  ring_num_slots; /* # of slots in the ring */
 	const uint32_t  ring_buf_size;  /* size of each buffer */
-	const uint16_t  ring_md_size;   /* size of each metadata */
-	const uint16_t  ring_bft_size;  /* size of each buflet metadata */
+	const uint32_t  ring_md_size;   /* size of each metadata */
 	const uint16_t  ring_id;        /* unused */
 	const uint16_t  ring_kind;      /* kind of ring (tx or rx) */
 
@@ -396,12 +395,6 @@ struct __user_channel_ring {
 	__attribute((aligned(sizeof(uint64_t))));
 	const mach_vm_offset_t  ring_sd_base    /* base of slot desc region */
 	__attribute((aligned(sizeof(uint64_t))));
-	/*
-	 * base of buflet metadata region
-	 * value of 0 means that external buflet metadata is not present.
-	 */
-	const mach_vm_offset_t  ring_bft_base
-	__attribute((aligned(sizeof(uint64_t))));
 
 	const volatile uint64_t ring_sync_time /* (k) time of last sync */
 	__attribute((aligned(sizeof(uint64_t))));
@@ -409,8 +402,6 @@ struct __user_channel_ring {
 	__attribute((aligned(sizeof(uint64_t))));
 	/* current working set for the packet allocator ring */
 	const volatile uint32_t ring_alloc_ws;
-	/* current working set for the buflet allocator ring */
-	const volatile uint32_t ring_alloc_buf_ws;
 };
 
 /* check if space is available in the ring */

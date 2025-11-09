@@ -119,6 +119,8 @@ struct nexus_vp_adapter {
 	 */
 	struct nexus_adapter vpna_up;
 
+	void *vpna_ft[8]; /* Opaque pointers according to DWARF - Flow Table? */
+
 	/*
 	 * Flow switch support:
 	 *

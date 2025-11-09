@@ -82,6 +82,9 @@
 #if NECP
 #include <net/necp.h>
 #endif /* NECP */
+#if SKYWALK
+#include <skywalk/os_channel.h>
+#endif /* SKYWALK */
 
 #include <security/audit/audit.h>
 #include <security/mac.h>
@@ -1464,6 +1467,12 @@ networking_memstatus_callout(proc_t p, uint32_t status)
 			    (struct necp_fd_data *)fp->f_fglob->fg_data);
 			break;
 #endif /* NECP */
+#if SKYWALK
+		case DTYPE_CHANNEL:
+			kern_channel_memstatus(p, status,
+			    (struct kern_channel *)fp_get_data(fp));
+			break;
+#endif /* SKYWALK */
 		default:
 			break;
 		}
@@ -1473,6 +1482,15 @@ networking_memstatus_callout(proc_t p, uint32_t status)
 	return 1;
 }
 
+#if SKYWALK
+/*
+ * Since we make multiple passes across the fileproc array, record the
+ * first MAX_CHANNELS channel handles found.  MAX_CHANNELS should be
+ * large enough to accomodate most, if not all cases.  If we find more,
+ * we'll go to the slow path during second pass.
+ */
+#define MAX_CHANNELS    8       /* should be more than enough */
+#endif /* SKYWALK */
 
 static int
 networking_defunct_callout(proc_t p, void *arg)
@@ -1482,6 +1500,13 @@ networking_defunct_callout(proc_t p, void *arg)
 	int level = args->level;
 	struct filedesc *fdp;
 	int i;
+#if SKYWALK
+	int i;
+	int channel_count = 0;
+	struct kern_channel *channel_array[MAX_CHANNELS];
+
+	bzero(&channel_array, sizeof(channel_array));
+#endif /* SKYWALK */
 
 	proc_fdlock(p);
 	fdp = p->p_fd;
@@ -1513,6 +1538,19 @@ networking_defunct_callout(proc_t p, void *arg)
 			}
 			break;
 #endif /* NECP */
+#if SKYWALK
+		case DTYPE_CHANNEL:
+			/* first pass: get channels and total count */
+			if (proc_getpid(p) == pid) {
+				if (channel_count < MAX_CHANNELS) {
+					channel_array[channel_count] =
+					    (struct kern_channel *)fg_get_data(fg);
+				}
+				++channel_count;
+			}
+			break;
+#endif /* SKYWALK */
+
 		default:
 			break;
 		}

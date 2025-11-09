@@ -106,11 +106,6 @@ struct nxprov_params {
 	uint32_t        nxp_capabilities;  /* nexus capabilities */
 	uint32_t        nxp_nexusadv_size; /* nexus advisory region size */
 	uint32_t        nxp_max_frags;     /* max fragments per packet */
-	/*
-	 * reject channel operations if the peer has closed the channel.
-	 * Only valid for user-pipe nexus.
-	 */
-	boolean_t       nxp_reject_on_close;
 } __attribute__((aligned(64)));
 
 /* valid values for nxp_flags */

@@ -510,7 +510,7 @@ skywalk_init(void)
 		ASSERT(skmem_tag_dump != NULL);
 
 		/* allocate space for sk_dump_buf */
-		sk_dump_buf = sk_alloc_data(SK_DUMP_BUF_SIZE, Z_WAITOK | Z_NOFAIL,
+		sk_dump_buf = sk_alloc(SK_DUMP_BUF_SIZE, Z_WAITOK | Z_NOFAIL,
 		    skmem_tag_dump);
 #endif /* (SK_LOG || DEVELOPMENT || DEBUG) */
 

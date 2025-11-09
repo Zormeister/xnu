@@ -522,12 +522,6 @@ os_channel_get_interface_advisory(const channel_t chd,
  */
 extern int
 os_channel_configure_interface_advisory(const channel_t chd, boolean_t enable);
-
-extern int
-os_channel_buflet_alloc(const channel_t chd, buflet_t *bft);
-
-extern int
-os_channel_buflet_free(const channel_t chd, buflet_t ubft);
 __END_DECLS
 #endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 #else /* KERNEL */

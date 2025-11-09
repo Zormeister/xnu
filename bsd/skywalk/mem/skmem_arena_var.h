@@ -130,8 +130,7 @@ struct skmem_arena_mmap_info {
 struct skmem_arena_nexus {
 	struct skmem_arena      arn_cmn;        /* common arena struct */
 
-	struct kern_pbufpool    *arn_rx_pp;     /* rx ppool handle */
-	struct kern_pbufpool    *arn_tx_pp;     /* tx ppool handle */
+	struct kern_pbufpool    *arn_pp;        /* ppool handle */
 	uint32_t                arn_mode;       /* mode flags */
 	nexus_meta_type_t       arn_md_type;    /* mdata regions type */
 	nexus_meta_subtype_t    arn_md_subtype; /* mdata regions subtype */

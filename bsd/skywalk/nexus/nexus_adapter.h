@@ -349,6 +349,7 @@ struct nexus_adapter {
 	void (*na_rx)(struct nexus_adapter *,
 	    struct __kern_packet *, struct nexus_pkt_stats *);
 
+	/* I don't know what this does either. */
 	void (*na_ring_rx)(struct __kern_channel_ring*,
 	    struct __kern_packet*);
 
@@ -374,11 +375,7 @@ struct nexus_adapter {
 #define NAF_EVENT_RING          0x1000  /* NA is providing event ring */
 #define NAF_CHANNEL_EVENT_ATTACHED 0x2000 /* kevent registered for ch events */
 #define NAF_ASYNC_DTOR          0x4000  /* async destroy */
-#define NAF_VIRTUAL_DEVICE      0x8000  /* netif adapter for virtual device */
-#define NAF_MODE_FSW            0x10000 /* NA is owned by fsw */
-#define NAF_MODE_LLW            0x20000 /* NA is owned by llw */
-#define NAF_LOW_LATENCY         0x40000 /* Low latency NA */
-#define NAF_DRAINING            0x80000 /* NA is being drained */
+
 /*
  * defunct allowed flag.
  * Currently used only by the parent nexus adapter of user-pipe nexus
@@ -388,11 +385,10 @@ struct nexus_adapter {
 #define NAF_KERNEL_ONLY (1U << 31) /* used internally, not usable by userland */
 
 #define NAF_BITS                                                        \
-	"\020\01ACTIVE\02HOST_ONLY\03SPEC_INIT\04NATIVE"                \
+	"\016\01ACTIVE\02HOST_ONLY\03SPEC_INIT\04NATIVE"                \
 	"\05MEM_NO_INIT\06SLOT_CONTEXT\07USER_PKT_POOL"                 \
 	"\010TX_MITIGATION\011RX_MITIGATION\012DEFUNCT\013MEM_LOANED"   \
 	"\014REJECT\015EVENT_RING\016EVENT_ATTACH\017ASYNC_DTOR"        \
-	"\020VIRTUAL\021MODE_FSW\022MODE_LLW\023LOW_LATENCY\024DRAINING" \
 	"\040KERNEL_ONLY"
 
 #define NA_FREE(na) do {                                                \

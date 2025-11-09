@@ -105,7 +105,6 @@ struct __kern_slot_desc {
 	union {
 		struct __kern_quantum *sd_qum;
 		struct __kern_packet *sd_pkt;
-		struct __kern_buflet *sd_buf;
 		void *sd_md;                    /* metadata address */
 	};
 

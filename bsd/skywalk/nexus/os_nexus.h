@@ -158,12 +158,6 @@ typedef enum {
 	NEXUS_ATTR_ADV_SIZE,            /* (g) nexus advisory region size */
 	NEXUS_ATTR_USER_CHANNEL,        /* (g/s) allow user channel open */
 	NEXUS_ATTR_MAX_FRAGS,           /* (g/s) max fragments in a packets */
-	/*
-	 * (g/s) reject channel operations on nexus if the peer has closed
-	 * the channel.
-	 * The os channel will appear as defunct to the active peer.
-	 */
-	NEXUS_ATTR_REJECT_ON_CLOSE,
 } nexus_attr_type_t;
 
 /*
@@ -718,112 +712,7 @@ struct kern_nexus_provider_init {
 	nxprov_sync_tx_fn_t     nxpi_sync_tx;           /* required */
 	nxprov_sync_rx_fn_t     nxpi_sync_rx;           /* required */
 	nxprov_tx_doorbell_fn_t nxpi_tx_doorbell;       /* required (netif) */
-	nxprov_sync_packets_fn_t nxpi_rx_sync_packets;  /* optional (netif) */
-	nxprov_sync_packets_fn_t nxpi_tx_sync_packets;  /* optional (netif) */
-	nxprov_capab_config_fn_t nxpi_config_capab;     /* optional (netif) */
 };
-
-/*
- * @typedef nxprov_qset_init_fn_t
- * @abstract Nexus provider netif qset setup callback.
- * @param nexus_prov Nexus provider handle.
- * @param nexus The nexus instance.
- * @param llink_ctx The context associated with the logical link owning this
- *                  qset (provider owned). Retreived during logical link
- *                  creation.
- * @param qset_idx The index of the qset within this logical link.
- * @param qset_id  The encoded id of the qset. Meant to be propagated to userspace
- *                 and passed down later during qset selection.
- * @param qset The netif qset to be initialized (xnu owned). Meant to be
- *             used for upcalls to xnu.
- * @param qset_ctx The qset context (provider owned output arg). Meant to
- *                 be used for downcalls to the provider involving this qset.
- * @result Non-zero result will abort the queue initialization.
- */
-typedef errno_t (*nxprov_qset_init_fn_t)(kern_nexus_provider_t nexus_prov,
-    kern_nexus_t nexus, void *llink_ctx, uint8_t qset_idx,
-    uint64_t qset_id, kern_netif_qset_t qset, void **qset_ctx);
-
-/*
- * @typedef nxprov_qset_fini_fn_t
- * @abstract Nexus provider netif qset teardown callback.
- * @param nexus_prov Nexus provider handle.
- * @param nexus The nexus instance.
- * @param qset_ctx The qset context retrieved from nxprov_qset_init_fn_t
- *                 (provider owned).
- * @discussion The provider must free any resources associated with the
- *      qset context set at nxprov_qset_init_fn_t() time, since the qset is
- *      no longer valid upon return.
- */
-typedef void (*nxprov_qset_fini_fn_t)(kern_nexus_provider_t nexus_prov,
-    kern_nexus_t nexus, void *qset_ctx);
-
-/*
- * @typedef nxprov_queue_init_fn_t
- * @abstract Nexus provider netif queue setup callback.
- * @param nexus_prov Nexus provider handle.
- * @param nexus The nexus instance.
- * @param qset_ctx The context associated with the qset owning this queue
- *                 (provider owned). Retreived from nxprov_qset_init_fn_t.
- * @param qidx The index of the queue within this qset.
- * @param queue The netif queue to be initialized (xnu owned). Meant to be
- *              used for upcalls to xnu.
- * @param tx True if the queue is used for TX direction, otherwise RX.
- * @param queue_ctx The queue context (provider owned output arg). Meant to
- *                  be used for downcalls to the provider involving this queue.
- * @result Non-zero result will abort the queue initialization.
- */
-typedef errno_t (*nxprov_queue_init_fn_t)(kern_nexus_provider_t nexus_prov,
-    kern_nexus_t nexus, void *qset_ctx, uint8_t qidx, bool tx,
-    kern_netif_queue_t queue, void **queue_ctx);
-
-/*
- * @typedef nxprov_queue_fini_fn_t
- * @abstract Nexus provider netif queue teardown callback.
- * @param nexus_prov Nexus provider handle.
- * @param nexus The nexus instance.
- * @param queue_ctx The queue context retrieved from nxprov_queue_init_fn_t
- *                  (provider owned).
- * @discussion The provider must free any resources associated with the
- *      queue context set at nxprov_queue_init_fn_t() time, since the queue is
- *      no longer valid upon return.
- */
-typedef void (*nxprov_queue_fini_fn_t)(kern_nexus_provider_t nexus_prov,
-    kern_nexus_t nexus, void *queue_ctx);
-
-/*
- * @typedef nxprov_tx_qset_notify_fn_t
- * @abstract Nexus provider TX notify callback, required for netif.
- * @param nexus_prov Nexus provider handle.
- * @param nexus The nexus instance.
- * @param qset_ctx The qset_ctx owned by the qset to be notified (provider
- *                 owned). Retrieved from nxprov_qset_init_fn_t.
- * @param flags unused for now.
- */
-typedef errno_t (*nxprov_tx_qset_notify_fn_t)(kern_nexus_provider_t
-    nexus_prov, kern_nexus_t nexus, void *qset_ctx, uint32_t flags);
-
-/*
- * Nexus provider initialization parameters specific to netif (version 2)
- */
-struct kern_nexus_netif_provider_init {
-	uint32_t                      nxnpi_version;       /* current version */
-	uint32_t                      nxnpi_flags;             /* see NXPIF_* */
-	nxprov_pre_connect_fn_t       nxnpi_pre_connect;       /* required */
-	nxprov_connected_fn_t         nxnpi_connected;         /* required */
-	nxprov_pre_disconnect_fn_t    nxnpi_pre_disconnect;    /* required */
-	nxprov_disconnected_fn_t      nxnpi_disconnected;      /* required */
-	nxprov_qset_init_fn_t         nxnpi_qset_init;         /* required */
-	nxprov_qset_fini_fn_t         nxnpi_qset_fini;         /* required */
-	nxprov_queue_init_fn_t        nxnpi_queue_init;        /* required */
-	nxprov_queue_fini_fn_t        nxnpi_queue_fini;        /* required */
-	nxprov_tx_qset_notify_fn_t    nxnpi_tx_qset_notify;    /* required */
-	nxprov_capab_config_fn_t      nxnpi_config_capab;      /* required */
-};
-
-#define KERN_NEXUS_PROVIDER_VERSION_1         1
-#define KERN_NEXUS_PROVIDER_VERSION_NETIF     2 /* specific to netif */
-#define KERN_NEXUS_PROVIDER_CURRENT_VERSION   KERN_NEXUS_PROVIDER_VERSION_1
 
 /*
  * Valid values for nxpi_flags.
@@ -885,40 +774,6 @@ struct kern_nexus_net_init {
 #define KERN_NEXUS_NET_VERSION_1                1
 #define KERN_NEXUS_NET_VERSION_2                2
 #define KERN_NEXUS_NET_CURRENT_VERSION          KERN_NEXUS_NET_VERSION_1
-
-struct kern_nexus_netif_llink_qset_init {
-	uint32_t    nlqi_flags;
-	uint8_t     nlqi_num_rxqs;
-	uint8_t     nlqi_num_txqs;
-};
-
-/*
- * nxnetllq_flags values.
- */
-/* default qset of the logical link */
-#define KERN_NEXUS_NET_LLINK_QSET_DEFAULT        0x1
-/* qset needs AQM */
-#define KERN_NEXUS_NET_LLINK_QSET_AQM            0x2
-/* qset is low latency */
-#define KERN_NEXUS_NET_LLINK_QSET_LOW_LATENCY    0x4
-/* qset in WMM mode */
-#define KERN_NEXUS_NET_LLINK_QSET_WMM_MODE       0x8
-
-typedef uint64_t kern_nexus_netif_llink_id_t;
-
-struct kern_nexus_netif_llink_init {
-	uint32_t        nli_flags;
-	uint8_t         nli_num_qsets;
-	void            *nli_ctx;
-	kern_nexus_netif_llink_id_t nli_link_id;
-	struct kern_nexus_netif_llink_qset_init *nli_qsets;
-};
-
-/*
- * nxnetll_flags values.
- */
-/* default logical link */
-#define KERN_NEXUS_NET_LLINK_DEFAULT        0x1
 
 __BEGIN_DECLS
 /*
@@ -982,22 +837,6 @@ extern errno_t kern_nexus_controller_read_provider_attr(
 	nexus_attr_t attr);
 extern void kern_nexus_controller_destroy(nexus_controller_t ctl);
 extern void kern_nexus_stop(const kern_nexus_t nx);
-
-/*
- * Netif specific.
- */
-extern errno_t kern_netif_queue_tx_dequeue(kern_netif_queue_t, uint32_t,
-    uint32_t, boolean_t *, uint64_t *);
-
-#define KERN_NETIF_QUEUE_RX_ENQUEUE_FLAG_FLUSH     0x0001
-extern void kern_netif_queue_rx_enqueue(kern_netif_queue_t, uint64_t,
-    uint32_t, uint32_t);
-
-extern errno_t kern_nexus_netif_llink_add(struct kern_nexus *,
-    struct kern_nexus_netif_llink_init *);
-
-extern errno_t kern_nexus_netif_llink_remove(struct kern_nexus *,
-    kern_nexus_netif_llink_id_t);
 
 /*
  * Misc.

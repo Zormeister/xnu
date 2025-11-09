@@ -686,116 +686,35 @@ sk_copy64_64x(uint64_t *src, uint64_t *dst, size_t l)
 	kern_allocation_name_t prior;                                   \
                                                                         \
 	prior = thread_set_allocation_name((tag));                      \
-	ret = krealloc_tag_bt((elem), (oldsize), (newsize),             \
-	    Z_ZERO | (flags), VM_KERN_MEMORY_SKYWALK);                  \
+	VM_ALLOC_SITE_STATIC(VM_TAG_BT, VM_KERN_MEMORY_SKYWALK);        \
+	ret = __REALLOC(addr, size, M_TEMP, flags, &site)               \
 	(void) thread_set_allocation_name(prior);                       \
-	DTRACE_SKYWALK5(probename, void *, (elem), size_t, (oldsize),   \
-	    size_t, (newsize), int, (flags), void *, ret);              \
-	ret;                                                            \
-})
-
-#define _sk_free(probename, elem, size)                                 \
-{                                                                       \
-	DTRACE_SKYWALK2(probename, void *, (elem), size_t, (size));     \
-	kfree((elem), (size));                                          \
-}
-
-#define _sk_alloc_type(probename, type, flags, tag)                     \
-({                                                                      \
-	void *ret;                                                      \
-	kern_allocation_name_t prior;                                   \
-                                                                        \
-	prior = thread_set_allocation_name((tag));                      \
-	/* XXX Modify this to use KT_PRIV_ACCT later  */                \
-	ret = kalloc_type_tag(type, Z_ZERO | (flags),                   \
-	    VM_KERN_MEMORY_SKYWALK);                                    \
-	(void) thread_set_allocation_name(prior);                       \
-	DTRACE_SKYWALK3(probename, char *, #type, int, (flags),         \
-	    void *, ret);                                               \
-	ret;                                                            \
-})
-
-#define _sk_alloc_type_array(probename, type, count, flags, tag)        \
-({                                                                      \
-	void *ret;                                                      \
-	kern_allocation_name_t prior;                                   \
-                                                                        \
-	prior = thread_set_allocation_name((tag));                      \
-	ret = kalloc_type_tag_bt(type, (count), Z_ZERO | (flags),       \
-	    VM_KERN_MEMORY_SKYWALK);                                    \
-	(void) thread_set_allocation_name(prior);                       \
-	DTRACE_SKYWALK4(probename, char *, #type, size_t, (count),      \
+	DTRACE_SKYWALK4(probename, void *, (addr), size_t, (size),      \
 	    int, (flags), void *, ret);                                 \
 	ret;                                                            \
 })
 
-#define _sk_alloc_type_header_array(probename, htype, type, count, flags, tag) \
-({                                                                      \
-	void *ret;                                                      \
-	kern_allocation_name_t prior;                                   \
-                                                                        \
-	prior = thread_set_allocation_name((tag));                      \
-	ret = kalloc_type_tag_bt(htype, type, (count), Z_ZERO | (flags),\
-	    VM_KERN_MEMORY_SKYWALK);                                    \
-	(void) thread_set_allocation_name(prior);                       \
-	DTRACE_SKYWALK5(probename, char *, #htype, char *, #type,       \
-	    size_t, (count), int, (flags), void *, ret);                \
-	ret;                                                            \
-})
-
-#define _sk_free_type(probename, type, elem)                            \
-{                                                                       \
-	DTRACE_SKYWALK2(probename, char *, #type, void *, (elem));      \
-	kfree_type(type, (elem));                                       \
+#define _sk_free(probename, elem)                                   \
+{                                                                   \
+	DTRACE_SKYWALK1(probename, void *, (elem));                     \
+	__FREE((elem), M_TEMP);                                         \
 }
 
-#define _sk_free_type_array(probename, type, count, elem)               \
-{                                                                       \
-	DTRACE_SKYWALK3(probename, char *, #type, size_t, (count),      \
-	    void *, (elem));                                            \
-	kfree_type(type, (count), (elem));                              \
-}
+#define _sk_alloc_type(probename, type, flags, tag) \
+    _sk_alloc(probename, sizeof(type), flags, tag)
 
-#define _sk_free_type_header_array(probename, htype, type, count, elem) \
-{                                                                       \
-	DTRACE_SKYWALK4(probename, char *, #htype, char *, #type,       \
-	    size_t, (count), void *, (elem));                           \
-	kfree_type(htype, type, (count), (elem));                       \
-}
+#define _sk_alloc_type_array(probename, type, count, flags, tag)        \
+    _sk_alloc(probename, (sizeof(type) * count), flags, tag)
 
-#define _sk_alloc_data(probename, size, flags, tag)                     \
-({                                                                      \
-	void *ret;                                                      \
-	kern_allocation_name_t prior;                                   \
-                                                                        \
-	prior = thread_set_allocation_name((tag));                      \
-	ret = kalloc_data_tag_bt((size), Z_ZERO | (flags),              \
-	    VM_KERN_MEMORY_SKYWALK);                                    \
-	(void) thread_set_allocation_name(prior);                       \
-	DTRACE_SKYWALK3(probename, size_t, (size), int, (flags),        \
-	    void *, ret);                                               \
-	ret;                                                            \
-})
+#define _sk_free_type(probename, type, elem) _sk_free(probename, elem)
 
-#define _sk_realloc_data(probename, elem, oldsize, newsize, flags, tag) \
-({                                                                      \
-	void *ret;                                                      \
-	kern_allocation_name_t prior;                                   \
-                                                                        \
-	prior = thread_set_allocation_name((tag));                      \
-	ret = krealloc_data_tag_bt((elem), (oldsize), (newsize),        \
-	    Z_ZERO | (flags), VM_KERN_MEMORY_SKYWALK);                  \
-	(void) thread_set_allocation_name(prior);                       \
-	DTRACE_SKYWALK5(probename, void *, (elem), size_t, (oldsize),   \
-	    size_t, (newsize), int, (flags), void *, ret);              \
-	ret;                                                            \
-})
+#define _sk_free_type_array(probename, type, count, elem) _sk_free(probename, elem)
 
-#define _sk_free_data(probename, elem, size)                            \
-{                                                                       \
-	DTRACE_SKYWALK2(probename, void *, (elem), size_t, (size));     \
-	kfree_data((elem), (size));                                     \
-}
+#define _sk_alloc_data(probename, size, flags, tag) _sk_alloc(probename, size, flags, tag)
+
+#define _sk_realloc_data(probename, addr, size, flags, tag) _sk_realloc(prodename, addr, size, flags, tag)
+
+#define _sk_free_data(probename, elem) _sk_free(probename, elem)
 
 #define sk_alloc(size, flags, tag)                                      \
 	_sk_alloc(sk_alloc, size, flags, tag)
@@ -812,19 +731,11 @@ sk_copy64_64x(uint64_t *src, uint64_t *dst, size_t l)
 #define sk_alloc_type_array(type, count, flags, tag)                    \
 	_sk_alloc_type_array(sk_alloc_type_array, type, count, flags, tag)
 
-#define sk_alloc_type_header_array(htype, type, count, flags, tag)      \
-	_sk_alloc_type_header_array(sk_alloc_type_header_array, htype,  \
-	type, count, flags, tag)
-
 #define sk_free_type(type, elem)                                        \
 	_sk_free_type(sk_free_type, type, elem)
 
 #define sk_free_type_array(type, count, elem)                           \
 	_sk_free_type_array(sk_free_type_array, type, count, elem)
-
-#define sk_free_type_header_array(htype, type, count, elem)             \
-	_sk_free_type_header_array(sk_free_type_header_array, htype,    \
-	type, count, elem)
 
 #define sk_alloc_data(size, flags, tag)                                 \
 	_sk_alloc_data(sk_alloc_data, size, flags, tag)

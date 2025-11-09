@@ -49,9 +49,6 @@ typedef enum cht_verb {
 	CHTV_DEBUG = 3,
 } cht_verb_t;
 
-static LCK_GRP_DECLARE(cht_lock_group, "CHT_LOCK");
-static LCK_ATTR_DECLARE(cht_lock_attr, 0, 0);
-
 static lck_grp_attr_t *cht_group_attr = NULL;
 static lck_attr_t *cht_lock_attr = NULL;
 static lck_grp_t *cht_lock_group;
@@ -427,17 +424,17 @@ cuckoo_hashtable_create(struct cuckoo_hashtable_params *p)
 	}
 
 	for (i = 0; i < n_buckets; i++) {
-		lck_mtx_init(&buckets[i]._lock, &cht_lock_group, &cht_lock_attr);
+		lck_mtx_init(&buckets[i]._lock, cht_lock_group, cht_lock_attr);
 	}
 
-	lck_mtx_init(&h->_lock, &cht_lock_group, &cht_lock_attr);
+	lck_mtx_init(&h->_lock, cht_lock_group, cht_lock_attr);
 
 	h->_n_entries = 0;
 	h->_n_buckets = n_buckets;
 	h->_capacity = h->_rcapacity = h->_n_buckets * _CHT_BUCKET_SLOTS;
 	h->_bitmask = n_buckets - 1;
 	h->_buckets = buckets;
-	lck_rw_init(&h->_resize_lock, &cht_lock_group, &cht_lock_attr);
+	lck_rw_init(&h->_resize_lock, cht_lock_group, cht_lock_attr);
 	h->_busy = false;
 	h->_resize_waiters = 0;
 

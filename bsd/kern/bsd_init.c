@@ -192,6 +192,9 @@
 #include <net/if_pflog.h>
 #endif
 
+#if SKYWALK
+#include <skywalk/os_skywalk_private.h>
+#endif /* SKYWALK */
 
 #include <pexpert/pexpert.h>
 #include <machine/pal_routines.h>
@@ -865,6 +868,10 @@ bsd_init(void)
 	flow_divert_init();
 #endif  /* FLOW_DIVERT */
 #endif /* SOCKETS */
+#if SKYWALK
+	bsd_init_kprintf("calling skywalk_init\n");
+	(void) skywalk_init();
+#endif /* SKYWALK */
 	kernproc->p_fd->fd_cdir = NULL;
 	kernproc->p_fd->fd_rdir = NULL;
 

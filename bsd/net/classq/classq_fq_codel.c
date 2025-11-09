@@ -94,6 +94,12 @@ fq_alloc(classq_pkt_type_t ptype)
 	if (ptype == QP_MBUF) {
 		MBUFQ_INIT(&fq->fq_mbufq);
 	}
+#if SKYWALK
+	else {
+		VERIFY(ptype == QP_PACKET);
+		KPKTQ_INIT(&fq->fq_kpktq);
+	}
+#endif /* SKYWALK */
 	return fq;
 }
 
@@ -149,6 +155,12 @@ fq_head_drop(fq_if_t *fqs, fq_t *fq)
 	case QP_MBUF:
 		*pkt_flags &= ~PKTF_PRIV_GUARDED;
 		break;
+#if SKYWALK
+	case QP_PACKET:
+		/* sanity check */
+		ASSERT((*pkt_flags & ~PKT_F_COMMON_MASK) == 0);
+		break;
+#endif /* SKYWALK */
 	default:
 		VERIFY(0);
 		/* NOTREACHED */
@@ -180,6 +192,12 @@ fq_addq(fq_if_t *fqs, pktsched_pkt_t *pkt, fq_if_classq_t *fq_cl)
 		VERIFY(!(*pkt_flags & PKTF_PRIV_GUARDED));
 		*pkt_flags |= PKTF_PRIV_GUARDED;
 		break;
+#if SKYWALK
+	case QP_PACKET:
+		/* sanity check */
+		ASSERT((*pkt_flags & ~PKT_F_COMMON_MASK) == 0);
+		break;
+#endif /* SKYWALK */
 	default:
 		VERIFY(0);
 		/* NOTREACHED */
@@ -424,6 +442,12 @@ fq_getq_flow(fq_if_t *fqs, fq_t *fq, pktsched_pkt_t *pkt)
 	case QP_MBUF:
 		*pkt_flags &= ~PKTF_PRIV_GUARDED;
 		break;
+#if SKYWALK
+	case QP_PACKET:
+		/* sanity check */
+		ASSERT((*pkt_flags & ~PKT_F_COMMON_MASK) == 0);
+		break;
+#endif /* SKYWALK */
 	default:
 		VERIFY(0);
 		/* NOTREACHED */

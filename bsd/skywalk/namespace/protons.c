@@ -38,8 +38,9 @@
 static int __protons_inited = 0;
 
 decl_lck_mtx_data(static, protons_lock);
-static LCK_GRP_DECLARE(protons_lock_group, "protons_lock");
-static LCK_MTX_DECLARE(protons_lock, &protons_lock_group);
+static lck_attr_t *protons_lock_attr = NULL;
+static lck_grp_t *protons_lock_group = NULL;
+static lck_grp_attr_t *protons_lock_group_attr = NULL;
 
 #define PROTONS_LOCK()                    \
 	lck_mtx_lock(&protons_lock)
@@ -76,8 +77,7 @@ RB_PROTOTYPE_PREV(protons_token_tree, protons_token, pt_link, pt_cmp);
 RB_GENERATE_PREV(protons_token_tree, protons_token, pt_link, pt_cmp);
 static struct protons_token_tree protons_tokens;
 
-static ZONE_DECLARE(protons_token_zone, SKMEM_ZONE_PREFIX ".protons.token",
-    sizeof(struct protons_token), ZC_NONE);
+static zone_t protons_token_zone = NULL;
 
 static struct protons_token *
 protons_token_alloc(bool can_block)
@@ -266,6 +266,11 @@ protons_init(void)
 {
 	VERIFY(__protons_inited == 0);
 
+	protons_lock_group_attr = lck_grp_attr_alloc_init();
+	protons_lock_group = lck_grp_alloc_init("protons_lock", protons_lock_group_attr);
+	protons_lock_attr = lck_attr_alloc_init();
+	lck_mtx_init(&protons_lock, protons_lock_group, protons_lock_attr);
+
 	RB_INIT(&protons_tokens);
 
 	protons_init_netinet_protocol();
@@ -315,7 +320,7 @@ protons_stats_sysctl SYSCTL_HANDLER_ARGS
 			buffer_space = SK_SYSCTL_ALLOC_MAX;
 		}
 		allocated_space = buffer_space;
-		buffer = sk_alloc_data(allocated_space, Z_WAITOK, skmem_tag_sysctl_buf);
+		buffer = sk_alloc_data(allocated_space, M_WAITOK, skmem_tag_sysctl_buf);
 		if (__improbable(buffer == NULL)) {
 			return ENOBUFS;
 		}

@@ -85,7 +85,69 @@ fq_if_append_mbuf(classq_pkt_t *pkt, classq_pkt_t *next_pkt)
 	pkt->cp_mbuf->m_nextpkt = next_pkt->cp_mbuf;
 }
 
+#if SKYWALK
+static void
+fq_if_append_pkt(classq_pkt_t *pkt, classq_pkt_t *next_pkt)
+{
+	pkt->cp_kpkt->pkt_nextpkt = next_pkt->cp_kpkt;
+}
+#endif /* SKYWALK */
 
+#if SKYWALK
+static boolean_t
+fq_getq_flow_kpkt(fq_if_t *fqs, fq_if_classq_t *fq_cl, fq_t *fq,
+    int64_t byte_limit, u_int32_t pkt_limit, classq_pkt_t *head,
+    classq_pkt_t *tail, u_int32_t *byte_cnt, u_int32_t *pkt_cnt,
+    boolean_t *qempty, u_int32_t pflags)
+{
+	u_int32_t plen;
+	pktsched_pkt_t pkt;
+	boolean_t limit_reached = FALSE;
+	struct ifclassq *ifq = fqs->fqs_ifq;
+	struct ifnet *ifp = ifq->ifcq_ifp;
+
+	/*
+	 * Assert to make sure pflags is part of PKT_F_COMMON_MASK;
+	 * all common flags need to be declared in that mask.
+	 */
+	ASSERT((pflags & ~PKT_F_COMMON_MASK) == 0);
+
+	while (fq->fq_deficit > 0 && limit_reached == FALSE &&
+	    !KPKTQ_EMPTY(&fq->fq_kpktq)) {
+		_PKTSCHED_PKT_INIT(&pkt);
+		fq_getq_flow(fqs, fq, &pkt);
+		ASSERT(pkt.pktsched_ptype == QP_PACKET);
+
+		plen = pktsched_get_pkt_len(&pkt);
+		fq->fq_deficit -= plen;
+		pkt.pktsched_pkt_kpkt->pkt_pflags |= pflags;
+
+		if (head->cp_kpkt == NULL) {
+			*head = pkt.pktsched_pkt;
+		} else {
+			ASSERT(tail->cp_kpkt != NULL);
+			ASSERT(tail->cp_kpkt->pkt_nextpkt == NULL);
+			tail->cp_kpkt->pkt_nextpkt = pkt.pktsched_pkt_kpkt;
+		}
+		*tail = pkt.pktsched_pkt;
+		tail->cp_kpkt->pkt_nextpkt = NULL;
+		fq_cl->fcl_stat.fcl_dequeue++;
+		fq_cl->fcl_stat.fcl_dequeue_bytes += plen;
+		*pkt_cnt += 1;
+		*byte_cnt += plen;
+
+		ifclassq_set_packet_metadata(ifq, ifp, &pkt.pktsched_pkt);
+
+		/* Check if the limit is reached */
+		if (*pkt_cnt >= pkt_limit || *byte_cnt >= byte_limit) {
+			limit_reached = TRUE;
+		}
+	}
+
+	*qempty = KPKTQ_EMPTY(&fq->fq_kpktq);
+	return limit_reached;
+}
+#endif /* SKYWALK */
 
 static boolean_t
 fq_getq_flow_mbuf(fq_if_t *fqs, fq_if_classq_t *fq_cl, fq_t *fq,
@@ -400,6 +462,11 @@ fq_if_dequeue_classq_multi(struct ifclassq *ifq, u_int32_t maxpktcnt,
 		append_pkt = fq_if_append_mbuf;
 		break;
 
+#if SKYWALK
+	case QP_PACKET:
+		append_pkt = fq_if_append_pkt;
+		break;
+#endif /* SKYWALK */
 
 	default:
 		VERIFY(0);
@@ -526,6 +593,11 @@ fq_if_dequeue_sc_classq_multi(struct ifclassq *ifq, mbuf_svc_class_t svc,
 		append_pkt = fq_if_append_mbuf;
 		break;
 
+#if SKYWALK
+	case QP_PACKET:
+		append_pkt = fq_if_append_pkt;
+		break;
+#endif /* SKYWALK */
 
 	default:
 		VERIFY(0);
@@ -893,7 +965,11 @@ fq_if_hash_pkt(fq_if_t *fqs, u_int32_t flowid, mbuf_svc_class_t svc_class,
 		}
 	}
 	if (fq == NULL && create == TRUE) {
+#if SKYWALK
+		ASSERT((ptype == QP_MBUF) || (ptype == QP_PACKET));
+#else /* !SKYWALK */
 		ASSERT(ptype == QP_MBUF);
+#endif /* !SKYWALK */
 
 		/* If the flow is not already on the list, allocate it */
 		IFCQ_CONVERT_LOCK(fqs->fqs_ifq);
@@ -1005,6 +1081,12 @@ fq_if_drop_packet(fq_if_t *fqs)
 	case QP_MBUF:
 		*pkt_flags &= ~PKTF_PRIV_GUARDED;
 		break;
+#if SKYWALK
+	case QP_PACKET:
+		/* sanity check */
+		ASSERT((*pkt_flags & ~PKT_F_COMMON_MASK) == 0);
+		break;
+#endif /* SKYWALK */
 	default:
 		VERIFY(0);
 		/* NOTREACHED */
@@ -1112,6 +1194,11 @@ fq_if_dequeue(fq_if_t *fqs, fq_if_classq_t *fq_cl, u_int32_t pktlimit,
 		fq_getq_flow_fn = fq_getq_flow_mbuf;
 		break;
 
+#if SKYWALK
+	case QP_PACKET:
+		fq_getq_flow_fn = fq_getq_flow_kpkt;
+		break;
+#endif /* SKYWALK */
 
 	default:
 		VERIFY(0);
