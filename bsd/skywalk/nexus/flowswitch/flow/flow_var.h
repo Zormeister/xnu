@@ -85,7 +85,7 @@ struct flow_owner_bucket {
 	uint16_t                fob_open_waiters;
 	uint16_t                fob_close_waiters;
 	uint16_t                fob_dtor_waiters;
-	const size_t            fob_idx;
+	const uint32_t          fob_idx;
 };
 
 #define FOBF_OPEN_BUSY          0x1     /* flow open monitor */
@@ -119,7 +119,6 @@ struct flow_owner {
 	pid_t                   fo_pid;
 	bool                    fo_nx_port_pid_bound;
 	bool                    fo_nx_port_destroyed;
-	bool                    fo_low_latency;
 	nexus_port_t            fo_nx_port;
 	uuid_t                  fo_key;
 
@@ -176,7 +175,7 @@ typedef enum {
 
 struct flow_track_rtt {
 	uint64_t        frtt_timestamp; /* tracked segment timestamp */
-	uint64_t        frtt_last;      /* previous net_uptime(rate limiting) */
+	uint32_t        frtt_last;      /* previous net_uptime(rate limiting) */
 	uint32_t        frtt_seg_begin; /* tracked segment begin SEQ */
 	uint32_t        frtt_seg_end;   /* tracked segment end SEQ */
 	uint32_t        frtt_usec;      /* avg RTT in usec */
@@ -230,98 +229,72 @@ TAILQ_HEAD(flow_entry_list, flow_entry);
 typedef void (*flow_action_t)(struct nx_flowswitch *fsw, struct flow_entry *fe);
 
 struct flow_entry {
-	/**** Common Group ****/
-	os_refcnt_t             fe_refcnt;
 	struct flow_key         fe_key;
-	uint32_t                fe_flags;
 	uint32_t                fe_key_hash;
 	struct cuckoo_node      fe_cnode;
-
-	uuid_t                  fe_uuid __sk_aligned(8);
-	nexus_port_t            fe_nx_port;
-	uint32_t                fe_laddr_gencnt;
-	uint32_t                fe_want_nonviable;
-	uint32_t                fe_want_withdraw;
-	uint8_t                 fe_transport_protocol;
-
-	/**** Rx Group ****/
-	uint16_t                fe_rx_frag_count;
-	uint32_t                fe_rx_pktq_bytes;
-	struct pktq             fe_rx_pktq;
-	TAILQ_ENTRY(flow_entry) fe_rx_link;
-	flow_action_t           fe_rx_process;
-	uint32_t                fe_rx_largest_msize; /* used for mbuf batch allocation */
-	bool                    fe_rx_nodelay;
-
-	/**** Tx Group ****/
-	bool                    fe_tx_is_cont_frag;
-	uint32_t                fe_tx_frag_id;
-	struct pktq             fe_tx_pktq;
-	TAILQ_ENTRY(flow_entry) fe_tx_link;
-	flow_action_t           fe_tx_process;
-
-	uuid_t                  fe_eproc_uuid __sk_aligned(8);
-	flowadv_idx_t           fe_adv_idx;
-	kern_packet_svc_class_t fe_svc_class;
-	uint32_t                fe_policy_id;   /* policy id matched to flow */
-
-	/**** Misc Group ****/
-	struct nx_flowswitch *  const fe_fsw;
-	struct ns_token         *fe_port_reservation;
-	struct protons_token    *fe_proto_reservation;
-	void                    *fe_ipsec_reservation;
-
-	struct flow_track       fe_ltrack;      /* local endpoint state */
-	struct flow_track       fe_rtrack;      /* remote endpoint state */
-
+	RB_ENTRY(flow_entry)    fe_id_link;
+	os_refcnt_t             fe_refcnt;
+	struct nx_flowswitch   *fe_fsw;
 	/*
 	 * Flow stats are kept externally stand-alone, refcnt'ed by various
 	 * users (e.g. flow_entry, necp_client_flow, etc.)
 	 */
-	struct flow_stats       *fe_stats;
-	struct flow_route       *fe_route;
+	struct flow_stats        *fe_stats;
+	struct flow_route        *fe_route;
+	struct flow_owner * const fe_fo;
 
-	RB_ENTRY(flow_entry)    fe_id_link;
+	uuid_t                  fe_rule_id __sk_aligned(8);
+	uuid_t                  fe_euuid __sk_aligned(8);
+	uint32_t                fe_policy_id;
+	uint32_t                fe_flags;
+
+	nexus_port_t            fe_nx_port;
+	uint8_t                 fe_transport_protocol;
+	union sockaddr_in_4_6   fe_laddr;       /* local IP address */
+	union sockaddr_in_4_6   fe_faddr;       /* remote IP address */
+
+	struct ns_token         *fe_port_reservation;
+	struct protons_token    *fe_proto_reservation;
+	void                    *fe_ipsec_reservation;
+
+	uint32_t                fe_laddr_gencnt;
+	uint32_t                fe_want_nonviable;
+	uint32_t                fe_want_withdraw;
+
+	kern_packet_svc_class_t fe_svc_class;
+	flowadv_idx_t           fe_adv_idx;
+
+	struct flow_track       fe_ltrack;      /* local endpoint state */
+	struct flow_track       fe_rtrack;      /* remote endpoint state */
 
 	TAILQ_ENTRY(flow_entry) fe_linger_link;
 	uint64_t                fe_linger_expire; /* expiration deadline */
 	uint32_t                fe_linger_wait;   /* linger time (seconds) */
 
-	pid_t                   fe_pid;
-	pid_t                   fe_epid;
-	char                    fe_proc_name[FLOW_PROCESS_NAME_LENGTH];
-	char                    fe_eproc_name[FLOW_PROCESS_NAME_LENGTH];
-
-	uint32_t                fe_inp_flowhash; /* flowhash for looking up inpcb */
-
-	/* Logical link related information */
-	struct netif_qset      *fe_qset;
+	pid_t                   fe_owner_pid;
+	pid_t                   fe_effective_pid;
+	char                    fe_owner_proc_name[FLOW_PROCESS_NAME_LENGTH];
+	char                    fe_effective_name[FLOW_PROCESS_NAME_LENGTH];
 };
 
 /* valid values for fe_flags */
-#define FLOWENTF_INITED         0x00000001 /* {src,dst} states initialized */
-#define FLOWENTF_TRACK          0x00000010 /* enable state tracking */
-#define FLOWENTF_CONNECTED      0x00000020 /* connected mode */
-#define FLOWENTF_LISTENER       0x00000040 /* listener mode */
-#define FLOWENTF_QOS_MARKING    0x00000100 /* flow can have qos marking */
-#define FLOWENTF_LOW_LATENCY    0x00000200 /* low latency flow */
-#define FLOWENTF_WAIT_CLOSE     0x00001000 /* defer free after close */
-#define FLOWENTF_CLOSE_NOTIFY   0x00002000 /* notify NECP upon tear down */
-#define FLOWENTF_EXTRL_PORT     0x00004000 /* port reservation is held externally */
-#define FLOWENTF_EXTRL_PROTO    0x00008000 /* proto reservation is held externally */
-#define FLOWENTF_ABORTED        0x01000000 /* has sent RST to peer */
-#define FLOWENTF_NONVIABLE      0x02000000 /* disabled; awaiting tear down */
-#define FLOWENTF_WITHDRAWN      0x04000000 /* flow has been withdrawn */
-#define FLOWENTF_TORN_DOWN      0x08000000 /* torn down and awaiting destroy */
-#define FLOWENTF_HALF_CLOSED    0x10000000 /* flow is half closed */
+#define FLOWENTF_TRACK          0x00000001 /* enable state tracking */
+#define FLOWENTF_INITED         0x00000002 /* {src,dst} states initialized */
+#define FLOWENTF_CONNECTED      0x00000004 /* connected mode */
+#define FLOWENTF_QOS_MARKING    0x00000008 /* flow can have qos marking */
+#define FLOWENTF_WAIT_CLOSE     0x00000010 /* defer free after close */
+#define FLOWENTF_CLOSE_NOTIFY   0x02000000 /* notify NECP upon tear down */
+#define FLOWENTF_ABORTED        0x04000000 /* has sent RST to peer */
+#define FLOWENTF_NONVIABLE      0x08000000 /* disabled; awaiting tear down */
+#define FLOWENTF_WITHDRAWN      0x10000000 /* flow has been withdrawn */
+#define FLOWENTF_TORN_DOWN      0x20000000 /* torn down and awaiting destroy */
 #define FLOWENTF_DESTROYED      0x40000000 /* not in RB trees anymore */
 #define FLOWENTF_LINGERING      0x80000000 /* destroyed and in linger list */
 
 #define FLOWENTF_BITS                                            \
-    "\020\01INITED\05TRACK\06CONNECTED\07LISTNER\011QOS_MARKING" \
-    "\012LOW_LATENCY\015WAIT_CLOSE\016CLOSE_NOTIFY\017EXT_PORT"  \
-    "\020EXT_PROTO\031ABORTED\032NONVIABLE\033WITHDRAWN\034TORN_DOWN" \
-    "\035HALF_CLOSED\037DESTROYED\40LINGERING"
+    "\020\01TRACK\02INITED\03CONNECTED\04QOS_MARKING\05WAIT_CLOSE" \
+    "\032CLOSE_NOTIFY\033ABORTED\034NONVIABLE\035WITHDRAWN\036TORN_DOWN"  \
+    "\037DESTROYED\40LINGERING"
 
 TAILQ_HEAD(flow_entry_linger_head, flow_entry);
 

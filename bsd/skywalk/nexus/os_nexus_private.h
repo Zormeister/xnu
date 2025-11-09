@@ -309,7 +309,6 @@ typedef enum {
 	NXCFG_CMD_FLOW_ADD =    20,     /* bind namespace to a nexus port */
 	NXCFG_CMD_FLOW_DEL =    21,     /* unbind namespace from a nexus port */
 	NXCFG_CMD_NETEM =       30,     /* config packet scheduler */
-	NXCFG_CMD_GET_LLINK_INFO = 40,  /* collect llink info */
 } nxcfg_cmd_t;
 
 #define NX_SPEC_IF_NAMELEN      64
@@ -371,7 +370,6 @@ struct nx_flow_req {
 	pid_t                   nfr_epid;
 	flowadv_idx_t           nfr_flowadv_idx;
 	uuid_t                  nfr_bind_key;
-	uint64_t                nfr_qset_id;
 	// below is reserved kernel-only fields
 	union {
 #ifdef KERNEL
@@ -387,17 +385,16 @@ struct nx_flow_req {
 			pid_t                   nfr_pid;
 			uint32_t                nfr_saddr_gencnt;
 			void                    *nfr_ipsec_reservation;
-			uint32_t                nfr_inp_flowhash;
 #if defined(__LP64__)
-			uint8_t                 _nfr_kernel_pad[4];
+			uint8_t                 _nfr_kernel_pad[0];
 #else  /* !__LP64__ */
-			uint8_t                 _nfr_kernel_pad[36];
+			uint8_t                 _nfr_kernel_pad[32];
 #endif /* !__LP64__ */
 			char                    _nfr_kernel_field_end[0];
 		};
 #endif  /* KERNEL */
 		struct {
-			uint8_t                 _nfr_opaque[80];
+			uint8_t                 _nfr_opaque[72];
 			/* should be at the same offset as _nfr_kernel_field_end above */
 			char                    _nfr_common_field_end[0];
 		};
@@ -513,31 +510,6 @@ nx_flow_req_externalize(struct nx_flow_req *req)
 }
 #endif /* KERNEL */
 
-struct nx_qset_info {
-	uint64_t        nqi_id;
-	uint16_t        nqi_flags;
-	uint8_t         nqi_num_rx_queues;
-	uint8_t         nqi_num_tx_queues;
-};
-
-#define NETIF_LLINK_MAX_QSETS 256
-struct nx_llink_info {
-	uuid_t          nli_netif_uuid;            /* nexus netif instance uuid */
-	uint64_t        nli_link_id;
-	uint16_t        nli_link_id_internal;
-	uint8_t         nli_state;
-	uint8_t         nli_flags;
-	uint16_t        nli_qset_cnt;
-	struct nx_qset_info nli_qset[NETIF_LLINK_MAX_QSETS];
-};
-
-#define NETIF_LLINK_INFO_VERSION  0x01
-struct nx_llink_info_req {
-	uint16_t        nlir_version;
-	uint16_t        nlir_llink_cnt;
-	struct nx_llink_info nlir_llink[0];
-};
-
 /*
  * Nexus controller descriptor.
  */
@@ -632,8 +604,6 @@ extern int __os_nexus_flow_add(const nexus_controller_t ncd,
     const uuid_t nx_uuid, const struct nx_flow_req *nfr);
 extern int __os_nexus_flow_del(const nexus_controller_t ncd,
     const uuid_t nx_uuid, const struct nx_flow_req *nfr);
-extern int __os_nexus_get_llink_info(const nexus_controller_t ncd,
-    const uuid_t nx_uuid, const struct nx_llink_info_req *nlir, size_t len);
 
 __END_DECLS
 #endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
