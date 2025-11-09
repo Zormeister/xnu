@@ -164,14 +164,13 @@ struct nxprov_reg {
 #define NXPREQ_IFINDEX          (1U << 17)      /* 0x00020000 */
 #define NXPREQ_USER_CHANNEL     (1U << 18)      /* 0x00040000 */
 #define NXPREQ_MAX_FRAGS        (1U << 19)      /* 0x00080000 */
-#define NXPREQ_REJECT_ON_CLOSE  (1U << 20)      /* 0x00100000 */
 
 #define NXPREQ_BITS                                                     \
 	"\020\01TX_RINGS\02RX_RINGS\03TX_SLOTS\04RX_SLOTS\05BUF_SIZE"   \
 	"\06META_SIZE\07STATS_SIZE\010ANONYMOUS\011EXTRA_BUFS\012PIPES" \
 	"\013EXTENSIONS\014MHINTS\015FLOWADV_MAX\016QMAP"               \
 	"\017CKSUM_OFFLOAD\020USER_PKT_POOL\021CAPABS\022NEXUSADV_SIZE" \
-	"\023IFINDEX\024USER_CHANNEL\025MAX_FRAGS\026REJ_CLOSE"
+	"\023IFINDEX\024USER_CHANNEL\025MAX_FRAGS"
 
 /*
  * Nexus provider registration entry.  Also argument for NXOPT_NEXUS_PROV_ENTRY.
@@ -575,11 +574,6 @@ struct nexus_attr {
 	uint64_t        nxa_nexusadv_size;      /* size of advisory region */
 	uint64_t        nxa_user_channel;       /* user channel open allowed */
 	uint64_t        nxa_max_frags;  /* max fragments per packet */
-	/*
-	 * reject channel operations if the nexus peer has closed the channel.
-	 * valid only for user-pipe nexus.
-	 */
-	uint64_t        nxa_reject_on_close;
 };
 
 /*
@@ -607,7 +601,6 @@ struct nexus_attr {
 #define NXA_REQ_IFINDEX         (1ULL << 17)    /* 0x0000000000020000 */
 #define NXA_REQ_USER_CHANNEL    (1ULL << 18)    /* 0x0000000000040000 */
 #define NXA_REQ_MAX_FRAGS       (1ULL << 19)    /* 0x0000000000080000 */
-#define NXA_REQ_REJECT_ON_CLOSE (1ULL << 20)    /* 0x0000000000100000 */
 
 #ifndef KERNEL
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)

@@ -126,11 +126,6 @@ __nexus_attr_set(const nexus_attr_t nxa, const nexus_attr_type_t type,
 		nxa->nxa_max_frags = value;
 		break;
 
-	case NEXUS_ATTR_REJECT_ON_CLOSE:
-		nxa->nxa_requested |= NXA_REQ_REJECT_ON_CLOSE;
-		nxa->nxa_reject_on_close = (value != 0);
-		break;
-
 	case NEXUS_ATTR_FLOWADV_MAX:
 	case NEXUS_ATTR_STATS_SIZE:
 	case NEXUS_ATTR_SLOT_META_SIZE:
@@ -236,9 +231,6 @@ __nexus_attr_get(const nexus_attr_t nxa, const nexus_attr_type_t type,
 		*value = nxa->nxa_max_frags;
 		break;
 
-	case NEXUS_ATTR_REJECT_ON_CLOSE:
-		*value = nxa->nxa_reject_on_close;
-		break;
 
 	default:
 		err = EINVAL;
@@ -274,7 +266,6 @@ __nexus_attr_from_params(nexus_attr_t nxa, const struct nxprov_params *p)
 	nxa->nxa_nexusadv_size = p->nxp_nexusadv_size;
 	nxa->nxa_user_channel = !!(p->nxp_flags & NXPF_USER_CHANNEL);
 	nxa->nxa_max_frags = p->nxp_max_frags;
-	nxa->nxa_reject_on_close = (p->nxp_reject_on_close != 0);
 }
 
 __attribute__((always_inline))
@@ -373,15 +364,6 @@ __nexus_provider_reg_prepare(struct nxprov_reg *reg, const nexus_name_t name,
 			}
 			reg->nxpreg_requested |= NXPREQ_MAX_FRAGS;
 			p->nxp_max_frags = (uint32_t)nxa->nxa_max_frags;
-		}
-		if (nxa->nxa_requested & NXA_REQ_REJECT_ON_CLOSE) {
-			if (type != NEXUS_TYPE_USER_PIPE) {
-				err = EINVAL;
-				goto done;
-			}
-			reg->nxpreg_requested |= NXPREQ_REJECT_ON_CLOSE;
-			p->nxp_reject_on_close =
-			    (nxa->nxa_reject_on_close != 0);
 		}
 	}
 done:

@@ -385,7 +385,7 @@ struct nexus_adapter {
 #define NAF_KERNEL_ONLY (1U << 31) /* used internally, not usable by userland */
 
 #define NAF_BITS                                                        \
-	"\016\01ACTIVE\02HOST_ONLY\03SPEC_INIT\04NATIVE"                \
+	"\020\01ACTIVE\02HOST_ONLY\03SPEC_INIT\04NATIVE"                \
 	"\05MEM_NO_INIT\06SLOT_CONTEXT\07USER_PKT_POOL"                 \
 	"\010TX_MITIGATION\011RX_MITIGATION\012DEFUNCT\013MEM_LOANED"   \
 	"\014REJECT\015EVENT_RING\016EVENT_ATTACH\017ASYNC_DTOR"        \
@@ -524,10 +524,6 @@ NAKR(struct nexus_adapter *na, enum txrx t)
 #define NA_KERNEL_ONLY(_na)     (((_na)->na_flags & NAF_KERNEL_ONLY) != 0)
 #define NA_OWNED_BY_ANY(_na) \
 	(NA_KERNEL_ONLY(_na) || ((_na)->na_channels > 0))
-#define NA_OWNED_BY_FSW(_na) \
-	(((_na)->na_flags & NAF_MODE_FSW) != 0)
-#define NA_OWNED_BY_LLW(_na) \
-	(((_na)->na_flags & NAF_MODE_LLW) != 0)
 
 /*
  * Whether the adapter has been activated via na_activate() call.

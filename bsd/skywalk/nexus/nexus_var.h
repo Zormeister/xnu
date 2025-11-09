@@ -204,7 +204,6 @@ struct kern_nexus {
 	uint32_t                nx_refcnt;
 	volatile uint32_t       nx_flags;
 	void                    *nx_ctx;
-	nexus_ctx_release_fn_t  nx_ctx_release;
 	struct kern_nexus_provider *nx_prov;
 	uint64_t                nx_id;
 	uuid_t                  nx_uuid;
@@ -216,8 +215,8 @@ struct kern_nexus {
 	decl_lck_rw_data(, nx_ch_if_adv_lock);
 	STAILQ_HEAD(, kern_channel) nx_ch_if_adv_head;
 	void                    *nx_arg;
-	struct kern_pbufpool    *nx_rx_pp;
 	struct kern_pbufpool    *nx_tx_pp;
+	struct kern_pbufpool    *nx_rx_pp;
 	struct kern_nexus_advisory nx_adv;
 
 	/* nexus port */
@@ -252,9 +251,7 @@ struct kern_nexus_provider {
 	struct nxctl                    *nxprov_ctl;
 	uuid_t                          nxprov_uuid;
 	struct kern_nexus_domain_provider *nxprov_dom_prov;
-	union {
-		struct kern_nexus_provider_init nxprov_ext;
-	};
+	struct kern_nexus_provider_init nxprov_ext;
 	struct nxprov_params            *nxprov_params;
 	struct skmem_region_params      nxprov_region_params[SKMEM_REGIONS];
 };
@@ -263,19 +260,14 @@ struct kern_nexus_provider {
 #define NXPROVF_ATTACHED        0x1     /* attached to global list */
 #define NXPROVF_CLOSED          0x2     /* attached but closed */
 #define NXPROVF_EXTERNAL        0x4     /* external nexus provider */
-#define NXPROVF_VIRTUAL_DEVICE  0x8     /* device is virtual (no DMA) */
-
-#define NXPROV_LLINK(_nxp) \
-	((_nxp)->nxprov_params->nxp_flags & NXPF_NETIF_LLINK)
 
 #define NXPROVF_BITS    \
-	"\020\01ATTACHED\02CLOSED\03EXTERNAL\04VIRTUALDEV"
+	"\020\01ATTACHED\02CLOSED\03EXTERNAL"
 
 #define NX_ANONYMOUS_PROV(_nx)  \
 	(NX_PROV(_nx)->nxprov_params->nxp_flags & NXPF_ANONYMOUS)
 #define NX_USER_CHANNEL_PROV(_nx) \
 	(NX_PROV(_nx)->nxprov_params->nxp_flags & NXPF_USER_CHANNEL)
-#define NX_LLINK_PROV(_nx)    NXPROV_LLINK(NX_PROV(_nx))
 
 /*
  * Nexus domain provider.
@@ -410,10 +402,10 @@ struct nxdom {
 #define NXDOM_MAX(_dom, var)    ((_dom)->nxdom_##var.nb_max)
 
 extern struct nexus_controller kernnxctl;
-extern lck_grp_t nexus_lock_group;
-extern lck_grp_t nexus_mbq_lock_group;
-extern lck_grp_t nexus_pktq_lock_group;
-extern lck_attr_t nexus_lock_attr;
+extern lck_grp_t *nexus_lock_group;
+extern lck_grp_t *nexus_mbq_lock_group;
+extern lck_grp_t *nexus_pktq_lock_group;
+extern lck_attr_t *nexus_lock_attr;
 extern kern_allocation_name_t skmem_tag_nx_key;
 extern kern_allocation_name_t skmem_tag_nx_port_info;
 
