@@ -254,7 +254,6 @@ struct kern_nexus_provider {
 	struct kern_nexus_domain_provider *nxprov_dom_prov;
 	union {
 		struct kern_nexus_provider_init nxprov_ext;
-		struct kern_nexus_netif_provider_init nxprov_netif_ext;
 	};
 	struct nxprov_params            *nxprov_params;
 	struct skmem_region_params      nxprov_region_params[SKMEM_REGIONS];
