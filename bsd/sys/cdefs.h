@@ -559,9 +559,19 @@
 #endif /* PLATFORM_DriverKit */
 #ifdef PLATFORM_MacOSX
 /* Platform: MacOSX */
+#if defined(__i386__)
 #define __DARWIN_ONLY_64_BIT_INO_T      0
-/* #undef __DARWIN_ONLY_UNIX_CONFORMANCE (automatically set for 64-bit) */
+#define __DARWIN_ONLY_UNIX_CONFORMANCE  0
 #define __DARWIN_ONLY_VERS_1050         0
+#elif defined(__x86_64__)
+#define __DARWIN_ONLY_64_BIT_INO_T      0
+#define __DARWIN_ONLY_UNIX_CONFORMANCE  1
+#define __DARWIN_ONLY_VERS_1050         0
+#else
+#define __DARWIN_ONLY_64_BIT_INO_T      1
+#define __DARWIN_ONLY_UNIX_CONFORMANCE  1
+#define __DARWIN_ONLY_VERS_1050         1
+#endif
 #endif /* PLATFORM_MacOSX */
 #endif /* KERNEL */
 
