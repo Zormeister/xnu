@@ -139,6 +139,22 @@ struct nexus_vp_adapter {
 
 #define VPNA(_na)       ((struct nexus_vp_adapter *)(_na))
 
+/* I guess this is a FSW_VP_WRAP? */
+struct nexus_wrap_adapter {
+	struct nexus_vp_adapter wna_up;
+
+	/* Hardware Nexus Adapter? */
+	struct nexus_adapter   *wna_hwna;
+
+	/* Hardware Channel? */
+	struct kern_channel    *wna_hw_ch;
+
+	/* Flowswitch channel? */
+	struct kern_channel    *wna_fsw_ch;
+
+	uint16_t               wna_tx_headroom;
+};
+
 #define NEXUS_PROVIDER_FLOW_SWITCH      "com.apple.nexus.flowswitch"
 
 /* fsw_state_flags */
@@ -173,6 +189,9 @@ struct nx_flowswitch {
 	uint32_t                fsw_tx_rings;
 	uint32_t                fsw_rx_rings;
 
+	uint32_t                fsw_ft_ports;
+	void                   *fsw_ft[8];
+
 	struct kern_nexus       *fsw_nx;
 
 	/* packet type enqueued by the class queues */
@@ -184,7 +203,7 @@ struct nx_flowswitch {
 	pkt_copy_from_mbuf_t    *fsw_pkt_copy_from_mbuf;
 	pkt_copy_to_mbuf_t      *fsw_pkt_copy_to_mbuf;
 
-	uint8_t                 fsw_frame_headroom;
+	uint16_t                fsw_frame_headroom;
 	uint32_t                fsw_src_lla_gencnt;
 	uint32_t                fsw_pending_nonviable;
 	uint32_t                fsw_low_power_gencnt;
@@ -195,7 +214,6 @@ struct nx_flowswitch {
 	uuid_t                  fsw_agent_uuid;
 	struct ifnet            *fsw_ifp;        /* host interface */
 	struct nexus_adapter    *fsw_nifna;      /* netif adapter */
-	uint32_t                fsw_state_flags; /* FSW_STATEF_* */
 
 	union {
 		uint64_t _buf[1];
@@ -211,6 +229,9 @@ struct nx_flowswitch {
 	    struct __kern_packet *);
 	sa_family_t (*fsw_demux)(struct nx_flowswitch *,
 	    struct __kern_packet *);
+	errno_t (*fsw_deq_packets)(struct nx_flowswitch *,
+		uint32_t, uint32_t, struct __kern_packet **,
+		boolean_t, boolean_t *, kern_packet_svc_class_t);
 
 	struct fsw_stats        fsw_stats;
 

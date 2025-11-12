@@ -419,66 +419,6 @@ struct nx_flow_req {
 	"\06LISTENER\07OVERRIDE_ADDRESS_SELECTION\010USE_STABLE_ADDRESS" \
 	"\011ALLOC_FLOWADV\012ASIS\013LOW_LATENCY"
 
-struct flow_ip_addr {
-	union {
-		struct in_addr  _v4;
-		struct in6_addr _v6;
-		uint8_t         _addr8[16];
-		uint16_t        _addr16[8];
-		uint32_t        _addr32[4];
-		uint64_t        _addr64[2];
-	};
-};
-
-struct flow_key {
-	uint16_t                fk_mask;
-	uint8_t                 fk_ipver;
-	uint8_t                 fk_proto;
-	uint16_t                fk_sport;
-	uint16_t                fk_dport;
-	struct flow_ip_addr     fk_src;
-	struct flow_ip_addr     fk_dst;
-	uint64_t                fk_pad[1];      /* pad to 48 bytes */
-} __attribute__((__aligned__(16)));
-
-#define fk_src4                 fk_src._v4
-#define fk_dst4                 fk_dst._v4
-#define fk_src6                 fk_src._v6
-#define fk_dst6                 fk_dst._v6
-
-#define FLOW_KEY_LEN            sizeof(struct flow_key)
-#define FK_HASH_SEED            0xabcd
-
-#define FKMASK_IPVER            (((uint16_t)1) << 0)
-#define FKMASK_PROTO            (((uint16_t)1) << 1)
-#define FKMASK_SRC              (((uint16_t)1) << 2)
-#define FKMASK_SPORT            (((uint16_t)1) << 3)
-#define FKMASK_DST              (((uint16_t)1) << 4)
-#define FKMASK_DPORT            (((uint16_t)1) << 5)
-
-#define FKMASK_2TUPLE           (FKMASK_PROTO | FKMASK_SPORT)
-#define FKMASK_3TUPLE           (FKMASK_2TUPLE | FKMASK_IPVER | FKMASK_SRC)
-#define FKMASK_4TUPLE           (FKMASK_3TUPLE | FKMASK_DPORT)
-#define FKMASK_5TUPLE           (FKMASK_4TUPLE | FKMASK_DST)
-#define FKMASK_IPFLOW1          FKMASK_PROTO
-#define FKMASK_IPFLOW2          (FKMASK_IPFLOW1 | FKMASK_IPVER | FKMASK_SRC)
-#define FKMASK_IPFLOW3          (FKMASK_IPFLOW2 | FKMASK_DST)
-#define FKMASK_IDX_MAX          7
-
-extern const struct flow_key fk_mask_2tuple;
-extern const struct flow_key fk_mask_3tuple;
-extern const struct flow_key fk_mask_4tuple;
-extern const struct flow_key fk_mask_5tuple;
-extern const struct flow_key fk_mask_ipflow1;
-extern const struct flow_key fk_mask_ipflow2;
-extern const struct flow_key fk_mask_ipflow3;
-
-#define FLOW_KEY_CLEAR(_fk) do {                                        \
-	_CASSERT(FLOW_KEY_LEN == 48);                                   \
-	_CASSERT(FLOW_KEY_LEN == sizeof(struct flow_key));              \
-	sk_zero_48(_fk);                                                \
-} while (0)
-
 #ifdef KERNEL
 /* mask off userland-settable bits */
 #define NXFLOWREQF_MASK \

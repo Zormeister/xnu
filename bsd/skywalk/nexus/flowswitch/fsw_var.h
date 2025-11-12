@@ -91,6 +91,9 @@ extern size_t fsw_mib_get(struct nx_flowswitch *fsw,
 extern int fsw_attach_vp(struct kern_nexus *nx, struct kern_channel *ch,
     struct chreq *chr, struct nxbind *nxb, struct proc *p,
     struct nexus_vp_adapter **vpna);
+extern int fsw_attach_vp_wrap(struct kern_nexus *nx, struct kern_channel *ch,
+    struct chreq *chr, struct nxbind *nxb, struct proc *p,
+    struct nexus_vp_adapter **vpna);
 extern int fsw_ctl(struct kern_nexus *nx, nxcfg_cmd_t nc_cmd, struct proc *p,
     void *data);
 extern int fsw_ctl_detach(struct kern_nexus *nx, struct proc *p,
@@ -125,6 +128,12 @@ extern int fsw_vp_na_create(struct kern_nexus *nx, struct chreq *chr,
     struct nexus_vp_adapter **ret);
 extern void fsw_vp_channel_error_stats_fold(struct fsw_stats *fs,
     struct __nx_stats_channel_errors *es);
+
+// wrap related
+extern int fsw_wrap_init(void);
+extern void fsw_wrap_uninit(void);
+extern void fsw_wrap_dtor(struct nx_flowswitch *fsw);
+
 
 // classq related
 extern void fsw_classq_setup(struct nx_flowswitch *fsw,

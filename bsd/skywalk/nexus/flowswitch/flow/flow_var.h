@@ -173,6 +173,63 @@ typedef enum {
 	FT_STATE_MAX = 255
 } flow_track_state_t;
 
+union __ip_addr {
+	struct in_addr  _v4;
+	struct in6_addr _v6;
+	uint8_t         _addr8[16];
+	uint16_t        _addr16[8];
+	uint32_t        _addr32[4];
+	uint64_t        _addr64[2];
+};
+
+struct flow_key {
+	uint8_t                 fk_ipver;
+	uint8_t                 fk_proto;
+	uint16_t                fk_sport;
+	union __ip_addr         fk_src;
+	union __ip_addr         fk_dst;
+	uint16_t                fk_dport;
+	uint16_t                fk_mask;
+} __attribute__((__aligned__(16)));
+
+#define fk_src4                 fk_src._v4
+#define fk_dst4                 fk_dst._v4
+#define fk_src6                 fk_src._v6
+#define fk_dst6                 fk_dst._v6
+
+#define FLOW_KEY_LEN            sizeof(struct flow_key)
+#define FK_HASH_SEED            0xabcd
+
+#define FKMASK_IPVER            (((uint16_t)1) << 0)
+#define FKMASK_PROTO            (((uint16_t)1) << 1)
+#define FKMASK_SRC              (((uint16_t)1) << 2)
+#define FKMASK_SPORT            (((uint16_t)1) << 3)
+#define FKMASK_DST              (((uint16_t)1) << 4)
+#define FKMASK_DPORT            (((uint16_t)1) << 5)
+
+#define FKMASK_2TUPLE           (FKMASK_PROTO | FKMASK_SPORT)
+#define FKMASK_3TUPLE           (FKMASK_2TUPLE | FKMASK_IPVER | FKMASK_SRC)
+#define FKMASK_4TUPLE           (FKMASK_3TUPLE | FKMASK_DPORT)
+#define FKMASK_5TUPLE           (FKMASK_4TUPLE | FKMASK_DST)
+#define FKMASK_IPFLOW1          FKMASK_PROTO
+#define FKMASK_IPFLOW2          (FKMASK_IPFLOW1 | FKMASK_IPVER | FKMASK_SRC)
+#define FKMASK_IPFLOW3          (FKMASK_IPFLOW2 | FKMASK_DST)
+#define FKMASK_IDX_MAX          7
+
+extern const struct flow_key fk_mask_2tuple;
+extern const struct flow_key fk_mask_3tuple;
+extern const struct flow_key fk_mask_4tuple;
+extern const struct flow_key fk_mask_5tuple;
+extern const struct flow_key fk_mask_ipflow1;
+extern const struct flow_key fk_mask_ipflow2;
+extern const struct flow_key fk_mask_ipflow3;
+
+#define FLOW_KEY_CLEAR(_fk) do {                                        \
+	_CASSERT(FLOW_KEY_LEN == 48);                                   \
+	_CASSERT(FLOW_KEY_LEN == sizeof(struct flow_key));              \
+	sk_zero_48(_fk);                                                \
+} while (0)
+
 struct flow_track_rtt {
 	uint64_t        frtt_timestamp; /* tracked segment timestamp */
 	uint32_t        frtt_last;      /* previous net_uptime(rate limiting) */
@@ -505,6 +562,7 @@ struct flow_mgr {
 	uuid_t          fm_uuid;
 	RB_ENTRY(flow_mgr) fm_link;
 
+	uint64_t fm_flow_count;
 	struct cuckoo_hashtable *fm_flow_table;
 	size_t   fm_flow_hash_count[FKMASK_IDX_MAX]; /* # of flows with mask */
 	uint16_t fm_flow_hash_masks[FKMASK_IDX_MAX];
@@ -523,8 +581,6 @@ struct flow_mgr {
 	const size_t    fm_route_id_buckets_cnt; /* total # of frib */
 	const size_t    fm_route_id_bucket_sz;   /* size of each frib */
 	const size_t    fm_route_id_bucket_tot_sz; /* allocated size of each frib */
-
-	struct flow_entry *fm_host_fe;
 };
 
 /*
