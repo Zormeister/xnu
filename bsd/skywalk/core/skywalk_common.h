@@ -673,7 +673,7 @@ sk_copy64_64x(uint64_t *src, uint64_t *dst, size_t l)
                                                                         \
 	prior = thread_set_allocation_name((tag));                      \
 	VM_ALLOC_SITE_STATIC(VM_TAG_BT, VM_KERN_MEMORY_SKYWALK);        \
-	ret = __MALLOC(size, M_TEMP, M_ZERO | flags, &site);            \
+	ret = __MALLOC((size), M_TEMP, (M_ZERO | (flags)), &site);      \
 	(void) thread_set_allocation_name(prior);                       \
 	DTRACE_SKYWALK3(probename, size_t, (size), int, (flags),        \
 	    void *, ret);                                               \
@@ -722,8 +722,8 @@ sk_copy64_64x(uint64_t *src, uint64_t *dst, size_t l)
 #define sk_realloc(elem, oldsize, newsize, flags, tag)                  \
 	_sk_realloc(sk_realloc, elem, oldsize, newsize, flags, tag)
 
-#define sk_free(elem, size)                                             \
-	_sk_free(sk_free, elem, size)
+#define sk_free(elem)                                             \
+	_sk_free(sk_free, elem)
 
 #define sk_alloc_type(type, flags, tag)                                 \
 	_sk_alloc_type(sk_alloc_type, type, flags, tag)
@@ -744,8 +744,8 @@ sk_copy64_64x(uint64_t *src, uint64_t *dst, size_t l)
 	_sk_realloc_data(sk_realloc_data, elem, oldsize, newsize,       \
 	flags, tag)
 
-#define sk_free_data(elem, size)                                        \
-	_sk_free_data(sk_free_data, elem, size)
+#define sk_free_data(elem)                                        \
+	_sk_free_data(sk_free_data, elem)
 
 /*
  * The skn_ variants are meant to be used if you need to use two or more

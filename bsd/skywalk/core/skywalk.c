@@ -314,7 +314,7 @@ skywalk_fini(void)
 			skmem_tag_dump = NULL;
 		}
 		if (sk_dump_buf != NULL) {
-			sk_free_data(sk_dump_buf, SK_DUMP_BUF_SIZE);
+			sk_free_data(sk_dump_buf);
 			sk_dump_buf = NULL;
 		}
 #endif /* (SK_LOG || DEVELOPMENT || DEBUG) */
@@ -510,7 +510,7 @@ skywalk_init(void)
 		ASSERT(skmem_tag_dump != NULL);
 
 		/* allocate space for sk_dump_buf */
-		sk_dump_buf = sk_alloc(SK_DUMP_BUF_SIZE, Z_WAITOK | Z_NOFAIL,
+		sk_dump_buf = sk_alloc(SK_DUMP_BUF_SIZE, M_NOWAIT,
 		    skmem_tag_dump);
 #endif /* (SK_LOG || DEVELOPMENT || DEBUG) */
 

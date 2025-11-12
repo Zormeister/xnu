@@ -1529,35 +1529,22 @@ typedef enum {
 	/*
 	 * The following are user task mappable.
 	 */
-	SREG_GUARD_HEAD = 0,    /* leading guard page(s) */
 	SREG_SCHEMA,            /* channel layout */
 	SREG_RING,              /* rings */
 	SREG_BUF,               /* rx/tx buffers */
-	SREG_RXBUF,             /* rx only buffers */
-	SREG_TXBUF,             /* tx only buffers */
-	SREG_UMD,               /* userland metadata */
-	SREG_TXAUSD,            /* tx/alloc user slot descriptors */
-	SREG_RXFUSD,            /* rx/free user slot descriptors */
-	SREG_UBFT,              /* userland buflet metadata */
+	SREG_MDU,               /* userland metadata */
 	SREG_USTATS,            /* statistics */
 	SREG_FLOWADV,           /* flow advisories */
 	SREG_NEXUSADV,          /* nexus advisories */
 	SREG_SYSCTLS,           /* sysctl */
-	SREG_GUARD_TAIL,        /* trailing guard page(s) */
 
 	/*
 	 * The following are NOT user task mappable.
 	 */
-	SREG_KMD,               /* rx/tx kernel metadata */
-	SREG_RXKMD,             /* rx only kernel metadata */
-	SREG_TXKMD,             /* tx only kernel metadata */
-	SREG_KBFT,              /* rx/tx kernel buflet metadata */
-	SREG_RXKBFT,            /* rx only kernel buflet metadata */
-	SREG_TXKBFT,            /* tx only kernel buflet metadata */
+	SREG_MDK,               /* rx/tx kernel metadata */
 	SREG_TXAKSD,            /* tx/alloc kernel slot descriptors */
 	SREG_RXFKSD,            /* rx/free kernel slot descriptors */
 	SREG_KSTATS,            /* kernel statistics snapshot */
-	SREG_INSTRINSIC,        /* intrinsic objects */
 
 	SREG_MAX                /* max */
 } sk_stats_region_id_t;

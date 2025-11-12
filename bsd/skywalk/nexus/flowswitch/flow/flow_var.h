@@ -934,7 +934,7 @@ extern struct flow_entry *flow_owner_create_entry(struct flow_owner *,
     struct flow_route *, int *);
 extern int flow_owner_destroy_entry(struct flow_owner *, uuid_t, bool, void *);
 extern struct flow_owner *flow_owner_find_by_pid(struct flow_owner_bucket *,
-    pid_t, void *, bool);
+    pid_t, void *);
 extern int flow_owner_flowadv_index_alloc(struct flow_owner *, flowadv_idx_t *);
 extern void flow_owner_flowadv_index_free(struct flow_owner *, flowadv_idx_t);
 extern uint32_t flow_owner_activate_nexus_port(struct flow_mgr *,

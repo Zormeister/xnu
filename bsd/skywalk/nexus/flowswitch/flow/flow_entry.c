@@ -60,7 +60,6 @@ __sk_aligned(16) =
 	.fk_src._addr64[1] = 0,
 	.fk_dst._addr64[0] = 0,
 	.fk_dst._addr64[1] = 0,
-	.fk_pad[0] = 0,
 };
 
 const struct flow_key fk_mask_3tuple
@@ -75,7 +74,6 @@ __sk_aligned(16) =
 	.fk_src._addr64[1] = 0xffffffffffffffffULL,
 	.fk_dst._addr64[0] = 0,
 	.fk_dst._addr64[1] = 0,
-	.fk_pad[0] = 0,
 };
 
 const struct flow_key fk_mask_4tuple
@@ -90,7 +88,6 @@ __sk_aligned(16) =
 	.fk_src._addr64[1] = 0xffffffffffffffffULL,
 	.fk_dst._addr64[0] = 0,
 	.fk_dst._addr64[1] = 0,
-	.fk_pad[0] = 0,
 };
 
 const struct flow_key fk_mask_5tuple
@@ -105,7 +102,6 @@ __sk_aligned(16) =
 	.fk_src._addr64[1] = 0xffffffffffffffffULL,
 	.fk_dst._addr64[0] = 0xffffffffffffffffULL,
 	.fk_dst._addr64[1] = 0xffffffffffffffffULL,
-	.fk_pad[0] = 0,
 };
 
 const struct flow_key fk_mask_ipflow1
@@ -120,7 +116,6 @@ __sk_aligned(16) =
 	.fk_src._addr64[1] = 0,
 	.fk_dst._addr64[0] = 0,
 	.fk_dst._addr64[1] = 0,
-	.fk_pad[0] = 0,
 };
 
 const struct flow_key fk_mask_ipflow2
@@ -135,7 +130,6 @@ __sk_aligned(16) =
 	.fk_src._addr64[1] = 0xffffffffffffffffULL,
 	.fk_dst._addr64[0] = 0,
 	.fk_dst._addr64[1] = 0,
-	.fk_pad[0] = 0,
 };
 
 const struct flow_key fk_mask_ipflow3
@@ -150,17 +144,12 @@ __sk_aligned(16) =
 	.fk_src._addr64[1] = 0xffffffffffffffffULL,
 	.fk_dst._addr64[0] = 0xffffffffffffffffULL,
 	.fk_dst._addr64[1] = 0xffffffffffffffffULL,
-	.fk_pad[0] = 0,
 };
 
 struct flow_owner *
-flow_owner_find_by_pid(struct flow_owner_bucket *fob, pid_t pid, void *context,
-    bool low_latency)
+flow_owner_find_by_pid(struct flow_owner_bucket *fob, pid_t pid, void *context)
 {
-	struct flow_owner find = { .fo_context = context, .fo_pid = pid,
-		                   .fo_low_latency = low_latency};
-
-	ASSERT(low_latency == true || low_latency == false);
+	struct flow_owner find = { .fo_context = context, .fo_pid = pid};
 	FOB_LOCK_ASSERT_HELD(fob);
 	return RB_FIND(flow_owner_tree, &fob->fob_owner_head, &find);
 }
