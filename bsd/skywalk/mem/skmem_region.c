@@ -151,6 +151,10 @@ static LCK_GRP_DECLARE(skmem_region_lock_grp, "skmem_region");
 static LCK_MTX_DECLARE_ATTR(skmem_region_lock, &skmem_region_lock_grp,
     &skmem_region_lock_attr);
 
+static lck_grp_attr_t *skmem_region_lock_grp_attr;
+static lck_grp_t *skmem_region_lock_grp;
+static lck_attr_t *skmem_region_lock_attr;
+
 /* protected by skmem_region_lock */
 static TAILQ_HEAD(, skmem_region) skmem_region_head;
 
@@ -493,16 +497,12 @@ skmem_region_params_config(struct skmem_region_params *srp)
 	 */
 	if (srp->srp_r_seg_size == 0) {
 		switch (srp->srp_id) {
-		case SKMEM_REGION_UMD:
-		case SKMEM_REGION_KMD:
-		case SKMEM_REGION_RXKMD:
-		case SKMEM_REGION_TXKMD:
+		case SKMEM_REGION_MDU:
+		case SKMEM_REGION_MDK:
 			srp->srp_r_seg_size = skmem_md_seg_size;
 			break;
 
 		case SKMEM_REGION_BUF:
-		case SKMEM_REGION_RXBUF:
-		case SKMEM_REGION_TXBUF:
 			/*
 			 * Use the effective driver buffer segment size,
 			 * since it reflects any randomization done at
@@ -680,7 +680,7 @@ skmem_region_create(const char *name, struct skmem_region_params *srp,
 	    (srp->srp_c_seg_size % srp->srp_c_obj_size) == 0);
 	ASSERT(srp->srp_c_obj_size <= srp->srp_c_seg_size);
 
-	skr = zalloc_flags(skr_zone, Z_WAITOK | Z_ZERO);
+	skr = zalloc(skr_zone);
 	skr->skr_params.srp_r_seg_size = srp->srp_r_seg_size;
 	skr->skr_seg_size = srp->srp_c_seg_size;
 	skr->skr_size = (srp->srp_c_seg_size * srp->srp_seg_cnt);
@@ -696,7 +696,7 @@ skmem_region_create(const char *name, struct skmem_region_params *srp,
 		skr->skr_hash_initial = SKMEM_REGION_HASH_INITIAL;
 		skr->skr_hash_limit = SKMEM_REGION_HASH_LIMIT;
 		skr->skr_hash_table = sk_alloc_type_array(struct sksegment_bkt,
-		    skr->skr_hash_initial, Z_WAITOK | Z_NOFAIL,
+		    skr->skr_hash_initial, M_WAITOK,
 		    skmem_tag_segment_hash);
 		skr->skr_hash_mask = (skr->skr_hash_initial - 1);
 		skr->skr_hash_shift = flsll(srp->srp_c_seg_size) - 1;
@@ -725,11 +725,10 @@ skmem_region_create(const char *name, struct skmem_region_params *srp,
 	skr->skr_seg_dtor = dtor;
 	skr->skr_private = private;
 
-	lck_mtx_init(&skr->skr_lock, &skmem_region_lock_grp,
-	    &skmem_region_lock_attr);
+	lck_mtx_init(&skr->skr_lock, skmem_region_lock_grp,
+	    skmem_region_lock_attr);
 
 	TAILQ_INIT(&skr->skr_seg_free);
-	RB_INIT(&skr->skr_seg_tfree);
 
 	skr->skr_id = srp->srp_id;
 	uuid_generate_random(skr->skr_uuid);
@@ -825,7 +824,7 @@ skmem_region_create(const char *name, struct skmem_region_params *srp,
 		ASSERT(skr->skr_seg_max_cnt != 0);
 		skr->skr_seg_bmap_len = BITMAP_LEN(skr->skr_seg_max_cnt);
 		skr->skr_seg_bmap = sk_alloc_data(BITMAP_SIZE(skr->skr_seg_max_cnt),
-		    Z_WAITOK | Z_NOFAIL, skmem_tag_segment_bmap);
+		    M_NOWAIT, skmem_tag_segment_bmap);
 		ASSERT(BITMAP_SIZE(skr->skr_seg_max_cnt) ==
 		    (skr->skr_seg_bmap_len * sizeof(*skr->skr_seg_bmap)));
 
@@ -844,8 +843,8 @@ skmem_region_create(const char *name, struct skmem_region_params *srp,
 		char zone_name[64];
 		(void) snprintf(zone_name, sizeof(zone_name), "%s.reg.%s",
 		    SKMEM_ZONE_PREFIX, name);
-		skr->skr_zreg = zone_create(zone_name, skr->skr_c_obj_size,
-		    ZC_ZFREE_CLEARMEM | ZC_DESTRUCTIBLE);
+		skr->skr_zreg = zinit(skr->skr_c_obj_size,
+		                    (skr->skr_c_obj_size * skr->skr_c_obj_cnt), 0, zone_name);
 	} else {
 		/* create a backing IOSKRegion object */
 		if ((skr->skr_reg = IOSKRegionCreate(&skr->skr_regspec,
@@ -946,7 +945,7 @@ skmem_region_destroy(struct skmem_region *skr)
 		assert(bitmap_is_full(skr->skr_seg_bmap, skr->skr_seg_max_cnt));
 #endif /* DEBUG || DEVELOPMENT */
 
-		sk_free_data(skr->skr_seg_bmap, BITMAP_SIZE(skr->skr_seg_max_cnt));
+		sk_free_data(skr->skr_seg_bmap);
 		skr->skr_seg_bmap = NULL;
 		skr->skr_seg_bmap_len = 0;
 	}
